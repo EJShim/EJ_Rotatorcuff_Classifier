@@ -9,7 +9,10 @@ from Manager.Mgr import E_Manager
 from GUI.VolumeRenderingWidget import E_VolumeRenderingWidget
 
 
-iconPath = "D:/Projects/EJModelNet/icons"
+
+curPath = os.path.dirname(os.path.realpath(__file__))
+rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
+iconPath = rootPath + "/icons"
 
 class E_MainWindow(QMainWindow):
     def __init__(self, parent = None):

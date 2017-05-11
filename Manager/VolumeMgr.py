@@ -192,7 +192,7 @@ class E_VolumeManager:
         return np.array_equal(ori, axl)
 
 
-    def AddVolume(self, volumeArray, spacing = [1.0, 0.5, 0.5], origin = [0, 0, 0]):
+    def AddVolume(self, volumeArray, spacing = [1.0, 1.0, 1.0], origin = [0, 0, 0]):
         data_string = volumeArray.tostring()
         dim = volumeArray.shape
 

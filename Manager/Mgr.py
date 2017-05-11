@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import QApplication
 #Theano
 import theano
 import theano.tensor as T
-import theano.sandbox.cuda.basic_ops as scuda
 import lasagne
 
 #utils
@@ -25,8 +24,8 @@ dim = 32
 #define argument path
 curPath = os.path.dirname(os.path.realpath(__file__))
 rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
-weightPath = rootPath + "\\NetworkData\\weights\\VRN.npz"
-modelPath = rootPath + "\\NetworkData\\data\\modelnet40_reshaped_test.npz"
+weightPath = rootPath + "/NetworkData/weights/VRN.npz"
+modelPath = rootPath + "/NetworkData/volume/rotatorcuff_train.npz"
 
 class E_Manager:
     def __init__(self, mainFrm):
@@ -281,7 +280,12 @@ class E_Manager:
         randIdx = random.randint(0, len(xt))
 
         #Draw Object
-        self.DrawVoxelArray(xt[randIdx])
+        # print(xt[randIdx].shape)
+        arr = xt[randIdx].reshape(32, 32, 32)
+        self.VolumeMgr.AddVolume(arr)
+        self.Redraw2D()
+
+        # self.DrawVoxelArray(xt[randIdx])
 
 
         log = labels.label[int(yt[randIdx])]

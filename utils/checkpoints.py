@@ -4,7 +4,7 @@ import _pickle as pickle
 import warnings
 import numpy as np
 
-from path import Path
+# from path import Path
 
 import lasagne
 
@@ -22,9 +22,9 @@ def save_weights(fname, l_out, metadata=None):
         param_dict['metadata'] = pickle.dumps(metadata)
     logging.info('saving {} parameters to {}'.format(len(params), fname))
     # try to avoid half-written files
-    fname = Path(fname)
+    fname = os.path(fname)
     if fname.exists():
-        tmp_fname = Path(fname.stripext() + '.tmp.npz') # TODO yes, this is a hack
+        tmp_fname = os.path(fname.stripext() + '.tmp.npz') # TODO yes, this is a hack
         np.savez_compressed(str(tmp_fname), **param_dict)
         tmp_fname.rename(fname)
     else:
