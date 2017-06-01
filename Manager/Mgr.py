@@ -33,7 +33,6 @@ class E_Manager:
 
         #Initialize Managers
         self.VolumeMgr = E_VolumeManager(self)
-
         self.renderer = [0, 0]
         #Ax, Cor, SAg
         self.m_sliceRenderer = [0, 0, 0]

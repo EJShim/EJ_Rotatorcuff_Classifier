@@ -1,3 +1,9 @@
 import numpy as np
-import scipy.ndimage
-import theano
+
+
+a = np.array([1.0, 1.0, 1.0])
+b = np.array([1.0, 2.0, 3.0])
+
+c = np.subtract(a, b)
+
+print(c)
