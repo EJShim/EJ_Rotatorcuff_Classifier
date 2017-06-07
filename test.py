@@ -6,4 +6,4 @@ b = np.array([1.0, 2.0, 3.0])
 
 c = np.subtract(a, b)
 
-print(c)
+print(cs)

@@ -68,8 +68,6 @@ def MakeVolumeDataWithResampled(volume, xPos = 0.5, yPos = 0.5, rot = 0):
 
 
 
-
-
 def ImportVolume(dataPath):
     volumeBuffer = []
 
@@ -173,6 +171,7 @@ np.savez_compressed( dataPath, features=X, targets=y )
 #Chcek -
 xt = np.load(dataPath)['features']
 yt = np.load(dataPath)['targets']
+
 
 print(xt.shape)
 print(yt.shape)

@@ -25,7 +25,7 @@ dim = 32
 curPath = os.path.dirname(os.path.realpath(__file__))
 rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 weightPath = rootPath + "/NetworkData/weights/VRN.npz"
-modelPath = rootPath + "/NetworkData/volume/rotatorcuff_train.npz"
+modelPath = rootPath + "/NetworkData/volume/modelnet40_rot_test.npz"
 
 class E_Manager:
     def __init__(self, mainFrm):
