@@ -11,7 +11,10 @@ import math
 import os
 
 import sys, os
-sys.path.insert(0, os.getcwd())
+#Add Root Dir
+cwd = os.path.dirname(os.path.realpath(__file__))
+rootDir = os.path.abspath(os.path.join(cwd, os.pardir))
+sys.path.insert(0, rootDir)
 sys.setrecursionlimit(2000)
 
 import numpy as np
@@ -20,8 +23,6 @@ import theano
 import theano.tensor as T
 import lasagne
 
-# import sys
-# sys.path.insert(0, 'C:\Users\Andy\Generative-and-Discriminative-Voxel-Modeling')
 from utils import checkpoints, metrics_logging
 from collections import OrderedDict
 
@@ -274,9 +275,10 @@ def main(args):
 
             # mlog.log(epoch=str(epoch).encode(), itr=str(itr).encode(), closs=str(closs).encode(),c_acc=str(c_acc).encode())
 
-        # Every Nth epoch, save weights
+        # Every Nth epoch, save weights[:-3]
         if not (epoch%cfg['checkpoint_every_nth']):
-            checkpoints.save_weights(weights_fname, model['l_out'], epoch, {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
+            fname = str(weights_fname[:-3]) + "_epoch_" + str(epoch) + ".npz"
+            checkpoints.save_weights(fname, model['l_out'], epoch, {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
 
 
 

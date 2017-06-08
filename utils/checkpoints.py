@@ -3,10 +3,8 @@ import logging
 import _pickle as pickle
 import warnings
 import numpy as np
-
-# from path import Path
-
 import lasagne
+
 
 def save_weights(fname, l_out, metadata=None):
     """ assumes all params have unique names.
@@ -21,14 +19,16 @@ def save_weights(fname, l_out, metadata=None):
     if metadata is not None:
         param_dict['metadata'] = pickle.dumps(metadata)
     logging.info('saving {} parameters to {}'.format(len(params), fname))
+
+
     # try to avoid half-written files
-    fname = os.path(fname)
-    if fname.exists():
-        tmp_fname = os.path(fname.stripext() + '.tmp.npz') # TODO yes, this is a hack
-        np.savez_compressed(str(tmp_fname), **param_dict)
-        tmp_fname.rename(fname)
-    else:
-        np.savez_compressed(str(fname), **param_dict)
+    # fname = os.path(fname)
+    # if fname.exists():
+    #     tmp_fname = os.path(fname.stripext() + '.tmp.npz') # TODO yes, this is a hack
+    #     np.savez_compressed(str(tmp_fname), **param_dict)
+    #     tmp_fname.rename(fname)
+    # else:
+    np.savez_compressed(str(fname), **param_dict)
 
 
 def load_weights(fname, l_out):

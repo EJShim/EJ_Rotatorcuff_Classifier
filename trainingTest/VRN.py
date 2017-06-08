@@ -27,7 +27,7 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
 lr_schedule = { 0: 0.002,12:0.0002}
 
-cfg = {'batch_size' : 8,
+cfg = {'batch_size' : 24,
        'learning_rate' : lr_schedule,
        'decay_rate' : 0,
        'reg' : 0.001,

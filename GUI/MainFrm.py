@@ -211,6 +211,7 @@ class E_MainWindow(QMainWindow):
 
         if len(fileSeries) == 0: return
 
+
         #Import Volume
         self.Mgr.VolumeMgr.ImportVolume(fileSeries)
 

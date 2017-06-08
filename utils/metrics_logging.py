@@ -2,15 +2,16 @@
 import time
 import json
 import logging
+import os
 
-from path import Path
 
 class MetricsLogger(object):
 
     def __init__(self, fname, reinitialize=False):
-        self.fname = Path(fname)
+        self.fname = fname
         self.reinitialize = reinitialize
-        if self.fname.exists():
+
+        if os.path.exists(self.fname):
             if self.reinitialize:
                 logging.warn('{} exists, deleting'.format(self.fname))
                 self.fname.remove()
