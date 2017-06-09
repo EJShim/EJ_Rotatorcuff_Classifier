@@ -1,59 +1,70 @@
 import gdcm
 import numpy
 
-def get_gdcm_to_numpy_typemap():
-    """Returns the GDCM Pixel Format to numpy array type mapping."""
-    _gdcm_np = {gdcm.PixelFormat.UINT8  :numpy.int8,
-                gdcm.PixelFormat.INT8   :numpy.uint8,
-                #gdcm.PixelFormat.UINT12 :numpy.uint12,
-                #gdcm.PixelFormat.INT12  :numpy.int12,
-                gdcm.PixelFormat.UINT16 :numpy.uint16,
-                gdcm.PixelFormat.INT16  :numpy.int16,
-                gdcm.PixelFormat.UINT32 :numpy.uint32,
-                gdcm.PixelFormat.INT32  :numpy.int32,
-                #gdcm.PixelFormat.FLOAT16:numpy.float16,
-                gdcm.PixelFormat.FLOAT32:numpy.float32,
-                gdcm.PixelFormat.FLOAT64:numpy.float64 }
-    return _gdcm_np
 
-def get_numpy_array_type(gdcm_pixel_format):
-    """Returns a numpy array typecode given a GDCM Pixel Format."""
-    return get_gdcm_to_numpy_typemap()[gdcm_pixel_format]
+dataset = None
 
-def gdcm_to_numpy(image):
-    """Converts a GDCM image to a numpy array.
-    """
-    pf = image.GetPixelFormat()
+class DataElement(object):
+    def __init__(self, swig_element, name, value):
+        self._swig_element = swig_element
 
-    assert pf.GetScalarType() in get_gdcm_to_numpy_typemap().keys(), \
-           "Unsupported array type %s"%pf
+        self.name = name
+        self.value = value
+        self.VR = str(swig_element.GetVR()).strip()
+        self.VL = str(swig_element.GetVL()).strip()
 
-    shape = image.GetDimension(0) * image.GetDimension(1), pf.GetSamplesPerPixel()
-    if image.GetNumberOfDimensions() == 3:
-      shape = shape[0] * image.GetDimension(2), shape[1]
+        tg = swig_element.GetTag()
 
-    dtype = get_numpy_array_type(pf.GetScalarType())
-    print("Dtype : ", dtype)
+        self.tag = {
+            "group": hex(int(tg.GetGroup())),
+            "element": hex(int(tg.GetElement())),
+            "str": str(swig_element.GetTag()).strip()
+        }
 
-    gdcm_array = image.GetBuffer()
-    gdcm_array = str(gdcm_array, 'utf-8')
+    def __repr__(self):
+        return "<DataElement {0} {1}>".format(self.name, self.tag('str'))
 
-    result = numpy.fromstring(gdcm_array, dtype=dtype)
-    result.shape = shape
-    return result
+    def __str__(self):
+        return str(self.name)
+
+def walk(fn):
+    if dataset == None:
+        return
+
+    if not hasattr(fn, "__call__"):
+        raise TypeError("wal kdataset requires a function as its parameters")
+
+
+    iterator = dataset.GetDES().begin()
+
+
+    while not iterator.equal(dataset.GetDES().end()):
+        data_element = iterator.next()
+        yield fn(data_element)
+
+
+
 
 if __name__ == "__main__":
-  import sys
-  r = gdcm.ImageReader()
-  r.SetFileName("/home/ej/data/RCT/RCT/1/ser001img00001.dcm"  )
-  if not r.Read():
-    sys.exit(1)
+    import sys
+    r = gdcm.ImageReader()
+    r.SetFileName("/home/ej/data/RCT/RCT/1/ser001img00001.dcm"  )
+    if not r.Read():
+        print("cannot read")
+        sys.exit(1)
 
-  numpy_array = gdcm_to_numpy( r.GetImage() )
-  print (numpy_array)\
+    _file = r.GetFile()
+    _str_filter = gdcm.StringFilter()
+    _str_filter.SetFile(_file)
 
-# import numpy as np
-#
-# a = np.array(list(b'hello world'))
-#
-# print(a)
+    dataset = _file.GetDataSet()
+
+
+    def ds(data_element):
+        value = _str_filter.ToStringPair(data_element.GetTag())
+        if value[1]:
+            return DataElement(data_element, value[0].strip(), value[1].strip())
+
+    results = [data for data in walk(ds) if data is not None]
+
+    print(results)
