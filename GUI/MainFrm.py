@@ -7,6 +7,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import sys, os
 from Manager.Mgr import E_Manager
 from GUI.VolumeRenderingWidget import E_VolumeRenderingWidget
+from GUI.ListWidget import E_ListWidget
 
 
 
@@ -149,6 +150,11 @@ class E_MainWindow(QMainWindow):
         predAction.triggered.connect(self.onRandomPred)
         networkToolbar.addAction(predAction)
 
+
+        renderAction = QAction(QIcon(iconPath + "/051-badge.png"), "Render Data", self)
+        renderAction.triggered.connect(self.onRenderData)
+        networkToolbar.addAction(renderAction)
+
     def InitSliceViewWidget(self):
         layout = QVBoxLayout()
 
@@ -222,6 +228,14 @@ class E_MainWindow(QMainWindow):
     def onRandomPred(self):
         self.Mgr.RandomPrediction()
 
+    def onRenderData(self):
+        # widget = E_ListWidget()
+        # widget.setFocus();
+        # widget.show()
+        lab = QLabel("as")
+        lab.show()
+
+
     def onMeshViewState(self, state):
         if state == 2: #show
             self.m_vtkWidget[0].show()
@@ -233,6 +247,8 @@ class E_MainWindow(QMainWindow):
             self.m_vtkWidget[1].show()
         else:
             self.m_vtkWidget[1].hide()
+
+
     def onSliceViewState(self, state):
         if state==2:
             self.m_sliceViewWidget.show()
