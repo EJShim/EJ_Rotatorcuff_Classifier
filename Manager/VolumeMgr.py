@@ -181,8 +181,8 @@ class E_VolumeManager:
 
 
         #Add To Renderer
-        print("Volume Array Dim : ", volumeArray.shape)
-        print("Processed Volume DAta : ", volumeData.shape)
+        # print("Volume Array Dim : ", volumeArray.shape)
+        # print("Processed Volume DAta : ", volumeData.shape)
         self.AddVolume(volumeData, renderSpacing)
 
     def IsAxial(self, orientation):
