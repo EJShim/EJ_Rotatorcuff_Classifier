@@ -78,6 +78,7 @@ class E_Manager:
         #Initialize
         self.InitObject()
         self.InitTextActor()
+        self.InitData()
 
 
     def InitObject(self):
@@ -269,6 +270,18 @@ class E_Manager:
         self.mainFrm.trainAction.setEnabled(False)
         self.bInitNetowrk = True;
 
+    def InitData(self):
+        yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
+
+        for i in range(len(yt)):
+            item = 'tear'
+            if yt[i] == 0:
+                item = 'non-tear'
+
+            self.mainFrm.m_listWidget.insertItem(i, item)
+
+
+
     def RandomPrediction(self):
         #Get Features and Target Data
         xt = np.asarray(np.load(modelPath)['features'], dtype=np.float32)
@@ -291,6 +304,13 @@ class E_Manager:
 
         #Predict 3D object
         self.PredictObject(xt[randIdx], log)
+
+    def RenderPreProcessedObject(self, idx):
+        xt = np.asarray(np.load(modelPath)['features'], dtype=np.float32)
+
+        arr = xt[idx].reshape(32, 32, 32)
+        self.VolumeMgr.AddVolume(arr)
+        self.Redraw2D()
 
 
 

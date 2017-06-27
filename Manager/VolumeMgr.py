@@ -306,11 +306,16 @@ class E_VolumeManager:
         #spacing to [1, 1, 1]
         new_spacing = np.array([1, 1, 1])
 
+
         resize_factor = spacing / new_spacing
         new_real_shape = volume.shape * resize_factor
         new_shape = np.round(new_real_shape)
         real_resize_factor = new_shape / volume.shape
         new_spacing = spacing / real_resize_factor
+
+        real_resize_factor = np.absolute(real_resize_factor)
+
+        print(real_resize_factor)
 
         new_volume = scipy.ndimage.zoom(volume, real_resize_factor, mode='nearest')
 

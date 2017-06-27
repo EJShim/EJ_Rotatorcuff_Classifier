@@ -11,6 +11,8 @@ def ResampleVolumeData(volume, spacing):
     new_real_shape = volume.shape * resize_factor
     new_shape = np.round(new_real_shape)
     real_resize_factor = new_shape / volume.shape
+    real_resize_factor = np.absolute(real_resize_factor)
+
     new_spacing = spacing / real_resize_factor
 
     new_volume = scipy.ndimage.zoom(volume, real_resize_factor, mode='nearest')
@@ -26,7 +28,7 @@ def IsAxial(orientation):
 
 
 
-def MakeVolumeDataWithResampled(volume, xPos = 0.5, yPos = 0.5, rot = 0):
+def MakeVolumeDataWithResampled(volume, xPos, yPos, rot):
         # return volume, spacing
 
         if np.argmin(volume.shape) == 0:
@@ -66,9 +68,7 @@ def MakeVolumeDataWithResampled(volume, xPos = 0.5, yPos = 0.5, rot = 0):
         return volume
 
 
-
-
-def ImportVolume(dataPath):
+def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
     volumeBuffer = []
 
     fileList = os.listdir(dataPath)
@@ -76,7 +76,15 @@ def ImportVolume(dataPath):
     for i in range( len(fileList) ):
         bAxial = False
 
-        mu = mudicom.load(  os.path.join(dataPath,fileList[i])  )
+        filePath = os.path.join(dataPath,fileList[i])
+        extension = os.path.splitext(filePath)[1]
+
+
+        if not extension == ".dcm":
+            print("file Extension error : ", extension)
+            return None
+
+        mu = mudicom.load(  filePath  )
 
         #Load Image
         img = mu.image.numpy
@@ -125,31 +133,61 @@ def ImportVolume(dataPath):
 
 
     #Calculate Crop Region Start Position and Dimension(Length)
-    volumeData = MakeVolumeDataWithResampled(volumeArray)
+    volumeData = MakeVolumeDataWithResampled(volumeArray,  xPos, yPos, rot)
 
     return volumeData
 
 
 
 ##Main Function
-RAW_DATA_PATH = "D:\\Patient Data\\ROTATORCUFF\\Volume"
+RAW_DATA_PATH = "/home/ej/data/RCT"
 
 #Import path
 classes = os.listdir(RAW_DATA_PATH)
 XData = []
 yData = []
 
-for className in range(len(classes)):
+print("convert RCT and non-RCT data from", RAW_DATA_PATH, ",with ", classes)
+
+for className in range(len(classes)): #Class Directory : RCT and non-RCT
     classPath =  os.path.join(RAW_DATA_PATH, classes[className])
     subdirs = os.listdir( classPath )
 
-    for i in range(len(subdirs)):
-        print( "Processing [", classes[className] , "] Data : ", subdirs[i] );
-        dataPath = os.path.join( classPath, subdirs[i] )
+    for patient in range(len(subdirs)):#Patient Directory
+        patientDataPath = os.path.join( classPath, subdirs[patient] )
 
-        data = ImportVolume(dataPath)
-        XData.append(data)
-        yData.append(className)
+        if not os.path.isdir(patientDataPath):
+            print(patientDataPath, ": Not a proper DIR")
+            continue
+        else:
+            # print( "Processing [", classes[className] , "] Data : ", subdirs[patient] );
+            dataSeries = os.listdir(patientDataPath)
+
+            for volume in range(len(dataSeries)): #Series Directory
+                volumeDataPath = os.path.join(patientDataPath, dataSeries[volume])
+
+
+                if not os.path.isdir(volumeDataPath): #if not directory,
+                    continue
+                else:
+                    dicomSeries = os.listdir(volumeDataPath)
+                    if len(dicomSeries) < 10 or len(dicomSeries) > 50: #if Number of slice is less than 5,
+                        print("slice number error")
+                        continue
+
+
+                    print( "Processing [", classes[className] , "] Data : [", subdirs[patient], "] -->", dataSeries[volume] );
+
+                    #Import Volume
+                    try:
+                        data = ImportVolume(volumeDataPath, 0.5, 0.5, 0)
+                        if data == None:
+                            continue
+
+                        XData.append(data)
+                        yData.append(className)
+                    except Exception:
+                        continue
 
 X = np.asarray(XData)
 X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
@@ -158,14 +196,14 @@ print("Processing Done!")
 
 
 #Save File
-saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "NetworkData\\volume" )
+saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
 print("Save Data in ", saveDir)
 
 if not(os.path.exists(saveDir) ):
     os.mkdir(saveDir, 0o777)
 
 
-dataPath = os.path.join(saveDir, "rotatorcuff_train.npz")
+dataPath = os.path.join(saveDir, "rotatorcuff_train-TEST.npz")
 np.savez_compressed( dataPath, features=X, targets=y )
 
 #Chcek -

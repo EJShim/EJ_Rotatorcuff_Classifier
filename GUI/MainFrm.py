@@ -7,7 +7,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import sys, os
 from Manager.Mgr import E_Manager
 from GUI.VolumeRenderingWidget import E_VolumeRenderingWidget
-from GUI.ListWidget import E_ListWidget
+from GUI.VolumeListWidget import E_VolumeListWidget
 
 
 
@@ -24,6 +24,10 @@ class E_MainWindow(QMainWindow):
         #Central Widget
         self.m_centralWidget = QWidget()
         self.setCentralWidget(self.m_centralWidget)
+
+
+        #Volume List Dialog
+        self.m_volumeListDlg = E_VolumeListWidget()
 
         #vtk Renderer Widget
         self.m_vtkWidget = [0, 0]
@@ -95,6 +99,12 @@ class E_MainWindow(QMainWindow):
         checkLayout = QVBoxLayout()
         checkWidget.setLayout(checkLayout)
 
+        #Show/hide Volume List
+        listViewCheck = QCheckBox("List View")
+        listViewCheck.setCheckState(0)
+        listViewCheck.stateChanged.connect(self.onListViewState)
+        checkLayout.addWidget(listViewCheck)
+
         meshViewCheck = QCheckBox("Mesh View")
         meshViewCheck.setCheckState(2)
         meshViewCheck.stateChanged.connect(self.onMeshViewState)
@@ -150,11 +160,6 @@ class E_MainWindow(QMainWindow):
         predAction.triggered.connect(self.onRandomPred)
         networkToolbar.addAction(predAction)
 
-
-        renderAction = QAction(QIcon(iconPath + "/051-badge.png"), "Render Data", self)
-        renderAction.triggered.connect(self.onRenderData)
-        networkToolbar.addAction(renderAction)
-
     def InitSliceViewWidget(self):
         layout = QVBoxLayout()
 
@@ -172,6 +177,10 @@ class E_MainWindow(QMainWindow):
         MainLayout = QHBoxLayout()
         self.m_centralWidget.setLayout(MainLayout)
 
+        self.m_listWidget = E_VolumeListWidget(self)
+        self.m_listWidget.hide()
+        MainLayout.addWidget(self.m_listWidget)
+
 
         for i in range(2):
             self.m_vtkWidget[i]
@@ -180,7 +189,7 @@ class E_MainWindow(QMainWindow):
         MainLayout.addWidget(self.m_sliceViewWidget)
 
         #dock widget
-        dockwidget = QDockWidget("Log Area")
+        dockwidget = QDockWidget("LOG")
         dockwidget.setFeatures(QDockWidget.DockWidgetMovable)
 
         font = QFont()
@@ -190,9 +199,10 @@ class E_MainWindow(QMainWindow):
         dockwidget.setWidget(self.m_logWidget)
         self.addDockWidget(Qt.BottomDockWidgetArea, dockwidget)
 
-        MainLayout.setStretch(0, 2)
+        MainLayout.setStretch(0, 0.5)
         MainLayout.setStretch(1, 2)
-        MainLayout.setStretch(2, 1)
+        MainLayout.setStretch(2, 2)
+        MainLayout.setStretch(3, 1)
 
 
     def InitManager(self):
@@ -228,13 +238,11 @@ class E_MainWindow(QMainWindow):
     def onRandomPred(self):
         self.Mgr.RandomPrediction()
 
-    def onRenderData(self):
-        # widget = E_ListWidget()
-        # widget.setFocus();
-        # widget.show()
-        lab = QLabel("as")
-        lab.show()
-
+    def onListViewState(self, state):
+        if state == 2:
+            self.m_listWidget.show()
+        else:
+            self.m_listWidget.hide()
 
     def onMeshViewState(self, state):
         if state == 2: #show
