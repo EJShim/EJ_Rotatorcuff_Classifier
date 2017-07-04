@@ -224,10 +224,9 @@ for path in paths:
                 #Import Volume
                 try:
                     data = ImportVolume(path, xPos/(10), yPos/(10), rot)
+
                     if data == None:
                         continue
-
-
 
                     if random.random() > 1.0: #80% rate Training Set
                         XData.append(data)
@@ -300,31 +299,35 @@ for path in paths:
 #                                 except Exception:
 #                                     continue
 #
-# X = np.asarray(XData)
-# X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
-# y = np.asarray(yData)
-#
-#
-# XT = np.asarray(xtData)
-# XT = XT.reshape(XT.shape[0], 1, XT.shape[1], XT.shape[2], XT.shape[3])
-# YT = np.asarray(ytData)
-# ZT = np.asarray(ztData)
-#
-# print("Processing Done!")
-#
-#
-# #Save File
-# print("Save Data in ", saveDir)
-#
-# if not(os.path.exists(saveDir) ):
-#     os.mkdir(saveDir, 0o777)
-#
-#
-# trainPath = os.path.join(saveDir, "rotatorcuff_train.npz")
-# np.savez_compressed( trainPath, features=X, targets=y)
-#
-# testPath = os.path.join(saveDir, "rotatorcuff_test.npz")
-# np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
-#
-# print("Training Data :" , X.shape[0])
-# print("Test Data :", XT.shape[0])
+
+#Save File
+print("Save Data in ", saveDir)
+
+if not(os.path.exists(saveDir) ):
+    os.mkdir(saveDir, 0o777)
+
+
+X = np.asarray(XData)
+if not len(X) == 0:
+    X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
+    y = np.asarray(yData)
+
+
+    trainPath = os.path.join(saveDir, "rotatorcuff_train.npz")
+    np.savez_compressed( trainPath, features=X, targets=y)
+
+
+XT = np.asarray(xtData)
+if not len(XT) == 0:
+    XT = XT.reshape(XT.shape[0], 1, XT.shape[1], XT.shape[2], XT.shape[3])
+    YT = np.asarray(ytData)
+    ZT = np.asarray(ztData)
+
+    testPath = os.path.join(saveDir, "rotatorcuff_test.npz")
+    np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
+
+
+print("Training Data :" , X.shape[0])
+print("Test Data :", XT.shape[0])
+
+print("Processing Done!")
