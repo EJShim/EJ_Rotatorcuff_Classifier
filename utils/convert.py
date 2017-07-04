@@ -2,6 +2,7 @@ import os, sys
 import mudicom
 import numpy as np
 import scipy.ndimage
+import random
 
 def ResampleVolumeData(volume, spacing):
     #spacing to [1, 1, 1]
@@ -29,53 +30,54 @@ def IsAxial(orientation):
 
 
 def MakeVolumeDataWithResampled(volume, xPos, yPos, rot):
-        # return volume, spacing
+    # return volume, spacing
 
-        if np.argmin(volume.shape) == 0:
-            rDim = volume.shape[0]
+    if np.argmin(volume.shape) == 0:
+        rDim = volume.shape[0]
 
-            #Possible X Range
-            xMax = volume.shape[1] - rDim
-            yMax = volume.shape[2] - rDim
+        #Possible X Range
+        xMax = volume.shape[1] - rDim
+        yMax = volume.shape[2] - rDim
 
-            xMin = int(xMax * xPos)
-            yMin = int(yMax * yPos)
+        xMin = int(xMax * xPos)
+        yMin = int(yMax * yPos)
 
-            volume = volume[:, xMin:,yMin:]
-            volume = volume[:, :rDim,:rDim]
-        else:
-            rDim = volume.shape[2]
+        volume = volume[:, xMin:,yMin:]
+        volume = volume[:, :rDim,:rDim]
+    else:
+        rDim = volume.shape[2]
 
-            #Possible X, Y Range
-            xMax = volume.shape[0] - rDim
-            yMax = volume.shape[1] - rDim
+        #Possible X, Y Range
+        xMax = volume.shape[0] - rDim
+        yMax = volume.shape[1] - rDim
 
-            xMin = int(xMax * xPos)
-            yMin = int(yMax * yPos)
+        xMin = int(xMax * xPos)
+        yMin = int(yMax * yPos)
 
-            #Crop Volume
-            volume = volume[xMin:,yMin:, :]
-            volume = volume[:rDim,:rDim, :]
+        #Crop Volume
+        volume = volume[xMin:,yMin:, :]
+        volume = volume[:rDim,:rDim, :]
 
 
-        #Resample Volume ARray , update spacing info
-        rDim = 32
-        volume = scipy.ndimage.zoom(volume, ( rDim / volume.shape[0], rDim /volume.shape[1] , rDim / volume.shape[2]), order=5)
+    #Resample Volume ARray , update spacing info
+    rDim = 32
+    volume = scipy.ndimage.zoom(volume, ( rDim / volume.shape[0], rDim /volume.shape[1] , rDim / volume.shape[2]), order=5)
 
-        #rotate around y-axis
-        volume = np.rot90(volume, rot)
+    #rotate around y-axis
+    volume = np.rot90(volume, rot)
 
-        return volume
+    return volume
 
 
 def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
     volumeBuffer = []
+    bAxial = False
+
 
     fileList = os.listdir(dataPath)
+    fileList.sort()
 
     for i in range( len(fileList) ):
-        bAxial = False
-
         filePath = os.path.join(dataPath,fileList[i])
         extension = os.path.splitext(filePath)[1]
 
@@ -128,6 +130,7 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
         #Axis(0,2 changes the z-dimension)
         volumeArray = np.rot90(volumeArray, 3, axes=(0,2))
         renderSpacing = [renderSpacing[1], renderSpacing[2], renderSpacing[0]]
+
     else:
         volumeArray = np.rot90(volumeArray, 3, axes=(1,2))
 
@@ -135,17 +138,32 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
     #Calculate Crop Region Start Position and Dimension(Length)
     volumeData = MakeVolumeDataWithResampled(volumeArray,  xPos, yPos, rot)
 
+
+    #Normalize VolumeData
+    volumeData = (volumeData * 255.0) / np.amax(volumeData)
+
+
     return volumeData
 
 
 
-##Main Function
-RAW_DATA_PATH = "/home/ej/data/RCT"
+##Main Functionls
+
+RAW_DATA_PATH = "/home/ej/data/RCT/Train"
+saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
+
 
 #Import path
 classes = os.listdir(RAW_DATA_PATH)
+
+#For Training Set
 XData = []
 yData = []
+
+#For Test Set
+xtData = []
+ytData = []
+ztData = []
 
 print("convert RCT and non-RCT data from", RAW_DATA_PATH, ",with ", classes)
 
@@ -171,45 +189,65 @@ for className in range(len(classes)): #Class Directory : RCT and non-RCT
                     continue
                 else:
                     dicomSeries = os.listdir(volumeDataPath)
-                    if len(dicomSeries) < 10 or len(dicomSeries) > 50: #if Number of slice is less than 5,
+                    if len(dicomSeries) < 16 or len(dicomSeries) > 50: #if Number of slice is less than 5,
                         print("slice number error")
                         continue
 
 
-                    print( "Processing [", classes[className] , "] Data : [", subdirs[patient], "] -->", dataSeries[volume] );
 
-                    #Import Volume
-                    try:
-                        data = ImportVolume(volumeDataPath, 0.5, 0.5, 0)
-                        if data == None:
-                            continue
+                    for rot in range(4): #Rotation
+                        for xPos in range(2, 8): #ROI Position X
+                            for yPos in range(2, 8): #ROI Position Y
+                                print( "Processing [", classes[className] , "] Data : [", subdirs[patient], "] -->", dataSeries[volume], "rot ", rot*90, xPos, yPos );
+                                Anot = "[" + classes[className] + "]/[" + subdirs[patient] + "] ser" + dataSeries[volume] + "rot" + str(rot*90)
+                                #Import Volume
+                                try:
+                                    data = ImportVolume(volumeDataPath, xPos/10, yPos/10, rot)
+                                    if data == None:
+                                        continue
 
-                        XData.append(data)
-                        yData.append(className)
-                    except Exception:
-                        continue
+
+
+                                    if random.random() > 0.2: #80% rate Training Set
+                                        XData.append(data)
+                                        yData.append(className)
+                                    else: #20% rate Test Set
+                                        xtData.append(data)
+                                        ytData.append(className)
+                                        ztData.append(Anot)
+
+                                except Exception:
+                                    continue
 
 X = np.asarray(XData)
 X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
 y = np.asarray(yData)
+
+
+XT = np.asarray(xtData)
+XT = XT.reshape(XT.shape[0], 1, XT.shape[1], XT.shape[2], XT.shape[3])
+YT = np.asarray(ytData)
+ZT = np.asarray(ztData)
+
 print("Processing Done!")
 
 
 #Save File
-saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
 print("Save Data in ", saveDir)
 
 if not(os.path.exists(saveDir) ):
     os.mkdir(saveDir, 0o777)
 
 
-dataPath = os.path.join(saveDir, "rotatorcuff_train-TEST.npz")
-np.savez_compressed( dataPath, features=X, targets=y )
+trainPath = os.path.join(saveDir, "rotatorcuff_train.npz")
+np.savez_compressed( trainPath, features=X, targets=y)
+
+testPath = os.path.join(saveDir, "rotatorcuff_test.npz")
+np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
+
 
 #Chcek -
-xt = np.load(dataPath)['features']
-yt = np.load(dataPath)['targets']
-
-
-print(xt.shape)
-print(yt.shape)
+xTrain = np.load(trainPath)['features']
+xTest = np.load(testPath)['features']
+print("Train Data:", xTrain.shape)
+print("Test Data:", xTest.shape)
