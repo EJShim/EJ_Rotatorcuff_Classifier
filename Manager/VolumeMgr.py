@@ -171,18 +171,15 @@ class E_VolumeManager:
         self.m_volumeArray = volumeArray
 
 
-
         #Calculate Crop Region Start Position and Dimension(Length)
         # volumeData = volumeArray
         # volumeData, renderSpacing = self.MakeVolumeData(volumeArray, renderSpacing)
         xp = self.Mgr.mainFrm.m_rangeSlider[0].value() / 1000
         yp = self.Mgr.mainFrm.m_rangeSlider[1].value() / 1000
+
         volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
 
-
-        #Add To Renderer
-        # print("Volume Array Dim : ", volumeArray.shape)
-        # print("Processed Volume DAta : ", volumeData.shape)
+        volumeData = (volumeData * 255.0) / np.amax(volumeData)
         self.AddVolume(volumeData, renderSpacing)
 
     def IsAxial(self, orientation):
@@ -193,6 +190,7 @@ class E_VolumeManager:
 
 
     def AddVolume(self, volumeArray, spacing = [1.0, 1.0, 1.0], origin = [0, 0, 0]):
+        
         data_string = volumeArray.tostring()
         dim = volumeArray.shape
 
@@ -314,8 +312,8 @@ class E_VolumeManager:
         new_spacing = spacing / real_resize_factor
 
         real_resize_factor = np.absolute(real_resize_factor)
-
-        print(real_resize_factor)
+        #
+        # print(real_resize_factor)
 
         new_volume = scipy.ndimage.zoom(volume, real_resize_factor, mode='nearest')
 

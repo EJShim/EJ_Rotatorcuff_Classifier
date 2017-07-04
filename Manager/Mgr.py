@@ -271,14 +271,12 @@ class E_Manager:
         self.bInitNetowrk = True;
 
     def InitData(self):
-        yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
+        zt = np.asarray(np.load(modelPath)['targets'])
 
-        for i in range(len(yt)):
-            item = 'tear'
-            if yt[i] == 0:
-                item = 'non-tear'
 
-            self.mainFrm.m_listWidget.insertItem(i, item)
+        for i in range(len(zt)):
+
+            self.mainFrm.m_listWidget.insertItem(i, str(zt[i]))
 
 
 
@@ -308,7 +306,7 @@ class E_Manager:
     def RenderPreProcessedObject(self, idx):
         xt = np.asarray(np.load(modelPath)['features'], dtype=np.float32)
 
-        arr = xt[idx].reshape(32, 32, 32)
+        arr = xt[idx][0]
         self.VolumeMgr.AddVolume(arr)
         self.Redraw2D()
 
