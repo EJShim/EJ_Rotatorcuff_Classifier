@@ -244,3 +244,6 @@ np.savez_compressed( trainPath, features=X, targets=y)
 
 testPath = os.path.join(saveDir, "rotatorcuff_test.npz")
 np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
+
+print(X.shape)
+print(XT.shape)
