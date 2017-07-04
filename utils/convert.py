@@ -151,6 +151,12 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
 
 RAW_DATA_PATH = "/home/ej/data/RCT/Test"
 saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
+ROI_MIN = 5;
+ROI_MAX = 6;
+ROI_RESOLUTION = 1
+
+
+
 
 
 #Import path
@@ -167,18 +173,64 @@ ztData = []
 
 print("convert RCT and non-RCT data from", RAW_DATA_PATH, ",with ", classes)
 
+total = 0
+
+
 for className in range(len(classes)): #Class Directory : RCT and non-RCT
+
+
     classPath =  os.path.join(RAW_DATA_PATH, classes[className])
     subdirs = os.listdir( classPath )
 
     for patient in range(len(subdirs)):#Patient Directory
+
+        patientDataPath = os.path.join( classPath, subdirs[patient] )
+
+        if not os.path.isdir(patientDataPath):
+            continue
+        else:
+            dataSeries = os.listdir(patientDataPath)
+            for volume in range(len(dataSeries)): #Series Directory
+                volumeDataPath = os.path.join(patientDataPath, dataSeries[volume])
+
+
+                if not os.path.isdir(volumeDataPath): #if not directory,
+                    continue
+                else:
+                    dicomSeries = os.listdir(volumeDataPath)
+                    if len(dicomSeries) < 16 or len(dicomSeries) > 50: #if Number of slice is less than 5,
+                        continue
+
+                    total += 1
+
+
+
+
+#Data augmentation according to rotation and ROI clipping
+augfac = int((ROI_MAX - ROI_MIN) / ROI_RESOLUTION)
+total *= 4 * augfac
+
+
+print("Total expected Training + Test Data :", total)
+
+
+
+
+
+current = 0
+for className in range(len(classes)): #Class Directory : RCT and non-RCT
+
+    classPath =  os.path.join(RAW_DATA_PATH, classes[className])
+    subdirs = os.listdir( classPath )
+
+    for patient in range(len(subdirs)):#Patient Directory
+
         patientDataPath = os.path.join( classPath, subdirs[patient] )
 
         if not os.path.isdir(patientDataPath):
             print(patientDataPath, ": Not a proper DIR")
             continue
         else:
-            # print( "Processing [", classes[className] , "] Data : ", subdirs[patient] );
             dataSeries = os.listdir(patientDataPath)
 
             for volume in range(len(dataSeries)): #Series Directory
@@ -196,10 +248,14 @@ for className in range(len(classes)): #Class Directory : RCT and non-RCT
 
 
                     for rot in range(4): #Rotation
-                        for xPos in range(5, 6): #ROI Position X
-                            for yPos in range(5, 6): #ROI Position Y
-                                print( "Processing [", classes[className] , "] Data : [", subdirs[patient], "] -->", dataSeries[volume], "rot ", rot*90, xPos, yPos );
-                                Anot = "[" + classes[className] + "]/[" + subdirs[patient] + "] ser" + dataSeries[volume] + "rot" + str(rot*90)
+                        for xPos in range(ROI_MIN, ROI_MAX): #ROI Position X
+                            for yPos in range(ROI_MIN, ROI_MAX): #ROI Position Y
+                                print("(", current, "/", total , ")[", classes[className] , "][", subdirs[patient], "][", dataSeries[volume], "rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
+
+
+                                Anot = "[" + classes[className] + "][" + subdirs[patient] + "] ser" + dataSeries[volume] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
+
+                                current += 1;
                                 #Import Volume
                                 try:
                                     data = ImportVolume(volumeDataPath, xPos/10, yPos/10, rot)
@@ -245,5 +301,5 @@ np.savez_compressed( trainPath, features=X, targets=y)
 testPath = os.path.join(saveDir, "rotatorcuff_test.npz")
 np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
 
-print(X.shape)
-print(XT.shape)
+print("Training Data :" , X.shape[0])
+print("Test Data :", XT.shape[0])
