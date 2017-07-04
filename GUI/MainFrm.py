@@ -199,10 +199,10 @@ class E_MainWindow(QMainWindow):
         dockwidget.setWidget(self.m_logWidget)
         self.addDockWidget(Qt.BottomDockWidgetArea, dockwidget)
 
-        MainLayout.setStretch(0, 0.5)
+        MainLayout.setStretch(0, 1)
         MainLayout.setStretch(1, 2)
         MainLayout.setStretch(2, 2)
-        MainLayout.setStretch(3, 1)
+        MainLayout.setStretch(3, 0.5)
 
 
     def InitManager(self):
