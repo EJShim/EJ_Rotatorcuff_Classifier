@@ -149,7 +149,7 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
 
 ##Main Functionls
 
-RAW_DATA_PATH = "/home/ej/data/RCT/Train"
+RAW_DATA_PATH = "/home/ej/data/RCT/Test"
 saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
 
 
@@ -196,8 +196,8 @@ for className in range(len(classes)): #Class Directory : RCT and non-RCT
 
 
                     for rot in range(4): #Rotation
-                        for xPos in range(2, 8): #ROI Position X
-                            for yPos in range(2, 8): #ROI Position Y
+                        for xPos in range(5, 6): #ROI Position X
+                            for yPos in range(5, 6): #ROI Position Y
                                 print( "Processing [", classes[className] , "] Data : [", subdirs[patient], "] -->", dataSeries[volume], "rot ", rot*90, xPos, yPos );
                                 Anot = "[" + classes[className] + "]/[" + subdirs[patient] + "] ser" + dataSeries[volume] + "rot" + str(rot*90)
                                 #Import Volume
@@ -244,10 +244,3 @@ np.savez_compressed( trainPath, features=X, targets=y)
 
 testPath = os.path.join(saveDir, "rotatorcuff_test.npz")
 np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
-
-
-#Chcek -
-xTrain = np.load(trainPath)['features']
-xTest = np.load(testPath)['features']
-print("Train Data:", xTrain.shape)
-print("Test Data:", xTest.shape)
