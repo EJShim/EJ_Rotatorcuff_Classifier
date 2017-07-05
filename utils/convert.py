@@ -151,8 +151,9 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
 
 RAW_DATA_PATH = "/home/ej/data/RCT/Test"
 saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
-ROI_MIN = 5;
-ROI_MAX = 6;
+ROI_MIN = 4
+ROI_MAX = 7
+TEST_DATA_RATE = 1.0
 
 
 #Import path
@@ -170,22 +171,22 @@ ztData = []
 print("convert RCT and non-RCT data from", RAW_DATA_PATH, ",with ", classes)
 paths = []
 
-for className in range(len(classes)): #Class Directory : RCT and non-RCT
+for className in classes: #Class Directory : RCT and non-RCT
 
 
-    classPath =  os.path.join(RAW_DATA_PATH, classes[className])
+    classPath =  os.path.join(RAW_DATA_PATH, className)
     subdirs = os.listdir( classPath )
 
-    for patient in range(len(subdirs)):#Patient Directory
+    for patient in subdirs:#Patient Directory
 
-        patientDataPath = os.path.join( classPath, subdirs[patient] )
+        patientDataPath = os.path.join( classPath, patient )
 
         if not os.path.isdir(patientDataPath):
             continue
         else:
             dataSeries = os.listdir(patientDataPath)
-            for volume in range(len(dataSeries)): #Series Directory
-                volumeDataPath = os.path.join(patientDataPath, dataSeries[volume])
+            for volume in dataSeries: #Series Directory
+                volumeDataPath = os.path.join(patientDataPath, volume)
 
 
                 if not os.path.isdir(volumeDataPath): #if not directory,
@@ -203,7 +204,7 @@ for className in range(len(classes)): #Class Directory : RCT and non-RCT
 #Data augmentation according to rotation and ROI clipping
 augfac = (ROI_MAX - ROI_MIN)
 
-total = len(paths) *4 * augfac
+total = len(paths) * 4 * augfac * augfac -1
 current = 0
 print("Total expected Training + Test Data :", total)
 
@@ -228,7 +229,7 @@ for path in paths:
                     if data == None:
                         continue
 
-                    if random.random() > 1.0: #80% rate Training Set
+                    if random.random() > TEST_DATA_RATE: #80% rate Training Set
                         XData.append(data)
                         yData.append(className)
                     else: #20% rate Test Set
@@ -239,66 +240,7 @@ for path in paths:
                 except Exception:
                     continue
 
-#
-#
-# current = 0
-# for className in range(len(classes)): #Class Directory : RCT and non-RCT
-#
-#     classPath =  os.path.join(RAW_DATA_PATH, classes[className])
-#     subdirs = os.listdir( classPath )
-#
-#     for patient in range(len(subdirs)):#Patient Directory
-#Train
-#         patientDataPath = os.path.join( classPath, subdirs[patient] )
-#
-#         if not os.path.isdir(patientDataPath):
-#             print(patientDataPath, ": Not a proper DIR")
-#             continue
-#         else:
-#             dataSeries = os.listdir(patientDataPath)
-#
-#             for volume in range(len(dataSeries)): #Series Directory
-#                 volumeDataPath = os.path.join(patientDataPath, dataSeries[volume])
-#
-#
-#                 if not os.path.isdir(volumeDataPath): #if not directory,
-#                     continue
-#                 else:
-#                     dicomSeries = os.listdir(volumeDataPath)
-#                     if len(dicomSeries) < 16 or len(dicomSeries) > 50: #if Number of slice is less than 5,
-#                         print("slice number error")
-#                         continue
-#
-#
-#
-#                     for rot in range(4): #Rotation
-#                         for xPos in range(ROI_MIN, ROI_MAX): #ROI Position X
-#                             for yPos in range(ROI_MIN, ROI_MAX): #ROI Position Y
-#                                 print("(", current, "/", total , ")[", classes[className] , "][", subdirs[patient], "][", dataSeries[volume], "rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
-#
-#
-#                                 Anot = "[" + classes[className] + "][" + subdirs[patient] + "] ser" + dataSeries[volume] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
-#
-#                                 current += 1;
-#                                 #Import Volume
-#                                 try:
-#                                     data = ImportVolume(volumeDataPath, xPos/(10), yPos/(10), rot)
-#                                     if data == None:
-#                                         continue
-#
-#
-#
-#                                     if random.random() > 1.0: #80% rate Training Set
-#                                         XData.append(data)
-#                                         yData.append(className)
-#                                     else: #20% rate Test Set
-#                                         xtData.append(data)
-#                                         ytData.append(className)
-#                                         ztData.append(Anot)
-#
-#                                 except Exception:
-#                                     continue
-#
+
 
 #Save File
 print("Save Data in ", saveDir)
