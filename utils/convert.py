@@ -295,7 +295,7 @@ try:
         ZT = np.asarray(ztData)
 
         saveName = str(num_patients) + "patients_rotatorcuff_test_" + str(XT.shape[0]) + "_" + str(resolution) + "d.npz"
-        testPath = os.path.join(saveDir, "rotatorcuff_test_5Sample_64.npz")
+        testPath = os.path.join(saveDir, SaveName)
         np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
 
 except Exception as e:
