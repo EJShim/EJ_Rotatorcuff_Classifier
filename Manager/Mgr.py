@@ -28,7 +28,7 @@ rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 
 #Network, Weight, Model Path
 import trainingTest.VRN_64 as config_module
-weightPath = rootPath + "/VRN_test_epoch_381499894953.5200565.npz"
+weightPath = rootPath + "/NetworkData/weights/64_5/VRN_test_epoch_381499894953.5200565.npz"
 modelPath = rootPath + "/NetworkData/volume/rotatorcuff_test_5Sample_64.npz"
 
 class E_Manager:
@@ -341,7 +341,7 @@ class E_Manager:
             camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
             for i in range(colorMap.shape[1]):
                 camsum = camsum + pWeight[0][i] * colorMap[0,i,:,:,:]
-
+            # camsum = (camsum * 255.0) / np.amax(camsum)
             camsum = scipy.ndimage.zoom(camsum, 16)
             self.VolumeMgr.AddClassActivationMap(camsum)
 

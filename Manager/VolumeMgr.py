@@ -195,7 +195,6 @@ class E_VolumeManager:
 
         volumeData = (volumeData * 255.0) / np.amax(volumeData)
         self.AddVolume(volumeData, renderSpacing)
-
         self.Mgr.PredictObject(volumeData)
 
     def IsAxial(self, orientation):
@@ -207,6 +206,8 @@ class E_VolumeManager:
     def AddClassActivationMap(self, camArray):
         ata_string = camArray.tostring()
         dim = camArray.shape
+
+        print("class min : ", np.amin(camArray), ", max : ", np.amax(camArray))
 
         imgData = vtk.vtkImageData()
         imgData.SetOrigin([0, 0, 0])
@@ -224,13 +225,14 @@ class E_VolumeManager:
         colorFunction = vtk.vtkColorTransferFunction()
         opacityFunction = vtk.vtkPiecewiseFunction()
         scalarRange = imgData.GetScalarRange()
+        print("Scalar Range:",scalarRange)
         volumeProperty = vtk.vtkVolumeProperty()
 
-        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.5, 0.0, 0.0, 1.0)
-        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.70, 0.0, 1.0, 0.0)
+        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.9998, 0.0, 0.0, 1.0)
+        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.9999, 0.0, 1.0, 0.0)
         colorFunction.AddRGBPoint(scalarRange[1], 1.0, 0.0, 0.0)
 
-        opacityFunction.AddPoint((scalarRange[0] + scalarRange[1])*0.5, 0.0)
+        opacityFunction.AddPoint((scalarRange[0] + scalarRange[1])*0.0, 0.0)
         opacityFunction.AddPoint(scalarRange[1], 0.05)
 
         volumeProperty.SetColor(colorFunction)
@@ -277,6 +279,8 @@ class E_VolumeManager:
 
         data_string = volumeArray.tostring()
         dim = volumeArray.shape
+        print("min: ", np.amin(volumeArray), ", max : ", np.amax(volumeArray))
+
 
         imgData = vtk.vtkImageData()
         imgData.SetOrigin(origin)
@@ -482,6 +486,9 @@ class E_VolumeManager:
         if self.m_volumeArray == None: return
 
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
+        volumeData = (volumeData * 255.0) / np.amax(volumeData)
 
+
+        opacityFunction.AddPoint((scalarRange[0] + scalarRange[1])*0.9, 0.0)
         self.AddVolume(volumeData, [1, 1, 1])
         self.Mgr.PredictObject(volumeData)
