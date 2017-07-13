@@ -13,9 +13,9 @@ from lasagne.layers import Layer
 import theano
 import theano.tensor as T
 
-from theano.sandbox.cuda import dnn
-from theano.sandbox.cuda.basic_ops import gpu_contiguous, gpu_alloc_empty
-from theano.sandbox.cuda.dnn import GpuDnnConvDesc,  GpuDnnConv3dGradI
+from theano.sandbox.gpuarray import dnn
+from theano.sandbox.gpuarray.basic_ops import gpu_contiguous, gpu_alloc_empty
+from theano.sandbox.gpuarray.dnn import GpuDnnConvDesc,  GpuDnnConv3dGradI
 from lasagne.utils import as_tuple
 
 
@@ -27,8 +27,8 @@ __all__ = [
         ]
 
 
-        
-# cuDNN based 3d conv layer with support for fractionally strided convolutions.       
+
+# cuDNN based 3d conv layer with support for fractionally strided convolutions.
 class Conv3dDNNLayer(Layer):
     def __init__(self, input_layer, num_filters, filter_size,
             strides=(1,1,1),
@@ -54,7 +54,7 @@ class Conv3dDNNLayer(Layer):
         else:
             self.strides = tuple(strides)
         self.flip_filters = flip_filters
-        
+
         if nonlinearity is None:
             self.nonlinearity = lasagne.nonlinearities.identity
         else:
@@ -82,12 +82,12 @@ class Conv3dDNNLayer(Layer):
             self.pad = tuple(pad)
 
         self.W = self.add_param(W, self.get_W_shape(), name='W')
-        
+
         if b is None:
             self.b = None
         else:
             self.b = self.add_param(b, (num_filters,), name='b', regularizable=False)
-        
+
 
     def get_W_shape(self):
         num_input_channels = self.input_shape[1]
@@ -105,7 +105,7 @@ class Conv3dDNNLayer(Layer):
         # this assumes strides = 1
         #out_dim = (video_shape-(2*np.floor(kernel_shape/2.))).astype(np.int32)
         #out_dim = ( (volume_shape-filter_size) + 1).astype(np.int32)
-        
+
         if any([s<1.0 for s in self.strides]):
             strides = np.asarray([int(1.0/s) for s in self.strides]).astype(np.float32)
             out_dim = ( (volume_shape -1)*strides + filter_size - 2*pad).astype(np.int32)
@@ -115,10 +115,10 @@ class Conv3dDNNLayer(Layer):
         return (batch_size, self.num_filters, out_dim[0], out_dim[1], out_dim[2])
 
     def get_output_for(self, input, *args, **kwargs):
-        
+
         conv_mode = 'conv' if self.flip_filters else 'cross'
 
-        
+
         # Fractionally strided convolutions
         if any([s<1.0 for s in self.strides]):
             subsample=tuple([int(1.0/s) for s in self.strides])
@@ -132,9 +132,9 @@ class Conv3dDNNLayer(Layer):
                                     subsample = subsample,
                                     border_mode = self.pad,
                                     conv_mode = conv_mode
-                                    )                      
+                                    )
             conved = T.grad(base.sum(), wrt = image, known_grads = {base: input})
-                                    
+
         else:
             conved = dnn.dnn_conv3d(img = input,
                                     kerns = self.W,
@@ -143,7 +143,7 @@ class Conv3dDNNLayer(Layer):
                                     conv_mode = conv_mode
                                     )
 
-        
+
         if self.b is None:
             activation = conved
         else:
@@ -151,8 +151,8 @@ class Conv3dDNNLayer(Layer):
 
         return self.nonlinearity(activation)
 
-        
-# Repeat upscale 3d layer       
+
+# Repeat upscale 3d layer
 class Upscale3DLayer(Layer):
     def __init__(self, incoming, scale_factor, **kwargs):
         super(Upscale3DLayer, self).__init__(incoming, **kwargs)
@@ -182,7 +182,5 @@ class Upscale3DLayer(Layer):
             upscaled = T.extra_ops.repeat(upscaled, b, 3)
         if a > 1:
             upscaled = T.extra_ops.repeat(upscaled, a, 2)
-         
-        return upscaled        
 
-
+        return upscaled

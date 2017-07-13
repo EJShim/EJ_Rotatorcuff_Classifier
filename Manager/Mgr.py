@@ -3,6 +3,7 @@ from vtk.util.numpy_support import vtk_to_numpy
 import os
 import numpy as np
 import random
+import scipy.ndimage
 
 from PyQt5.QtWidgets import QApplication
 
@@ -19,13 +20,16 @@ from Manager.VolumeMgr import E_VolumeManager
 from NetworkData import labels
 
 v_res = 1
-dim = 32
 
 #define argument path
 curPath = os.path.dirname(os.path.realpath(__file__))
 rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
-weightPath = rootPath + "/NetworkData/weights/VRN.npz"
-modelPath = rootPath + "/NetworkData/volume/rotatorcuff_test.npz"
+
+
+#Network, Weight, Model Path
+import trainingTest.VRN_64 as config_module
+weightPath = rootPath + "/VRN_test_epoch_381499894953.5200565.npz"
+modelPath = rootPath + "/NetworkData/volume/rotatorcuff_test_5Sample_64.npz"
 
 class E_Manager:
     def __init__(self, mainFrm):
@@ -43,9 +47,6 @@ class E_Manager:
         self.predFunc = None
         self.predList = None
         self.testFunc = None
-
-
-        # print(len(labels.label))
 
         for i in range(2):
             interactor = E_InteractorStyle(self, i)
@@ -129,7 +130,7 @@ class E_Manager:
         poly.DeepCopy(transFilter.GetOutput())
 
         #Set Voxel Space Resolution nxnxn
-        resolution = 32
+        resolution = self.VolumeMgr.resolution
         bounds = [0, 0, 0, 0, 0, 0]
         center = poly.GetCenter()
         poly.GetBounds(bounds)
@@ -175,12 +176,9 @@ class E_Manager:
 
 
         scalarData = vtk_to_numpy( imgstenc.GetOutput().GetPointData().GetScalars() )
-        # print(scalarData)
         self.DrawVoxelArray(scalarData)
 
         self.PredictObject(scalarData)
-
-        # self.AddVolumeData(imgstenc.GetOutputPort())
 
     def Redraw(self):
         for i in range(2):
@@ -244,8 +242,7 @@ class E_Manager:
 
     def InitNetwork(self):
         self.SetLog("Import Pre-trained Network..")
-        import NetworkData.graph.VRN as config_module
-        # config_module = __import__('VRN', weightPath[:-3])
+
 
 
         self.SetLog("Import Completed.")
@@ -256,7 +253,7 @@ class E_Manager:
 
         #Compile Functions
         self.SetLog('Compiling Theano Functions..')
-        self.testFunc, tvars, model, self.predFunc, self.predList = self.MakeFunctions(cfg, model)
+        self.testFunc, tvars, model, self.predFunc, self.predList, self.predWeights, self.colorMap = self.MakeFunctions(cfg, model)
 
 
         #Load Weights
@@ -290,18 +287,18 @@ class E_Manager:
         randIdx = random.randint(0, len(xt))
 
         #Draw Object
-        # print(xt[randIdx].shape)
-        arr = xt[randIdx].reshape(32, 32, 32)
+        resolution = self.VolumeMgr.resolution
+        arr = xt[randIdx].reshape(resolution, resolution, resolution)
         self.VolumeMgr.AddVolume(arr)
         self.Redraw2D()
 
         # self.DrawVoxelArray(xt[randIdx])
 
 
-        log = labels.label[int(yt[randIdx])]
+        log = labels.rt[int(yt[randIdx])]
 
         #Predict 3D object
-        self.PredictObject(xt[randIdx], log)
+        self.PredictObject(arr, log)
 
     def RenderPreProcessedObject(self, idx):
         xt = np.asarray(np.load(modelPath)['features'], dtype=np.float32)
@@ -311,22 +308,42 @@ class E_Manager:
         self.Redraw2D()
 
 
+        if self.bInitNetowrk:
+            #Predict
+            yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
+            log = labels.rt[int(yt[idx])]
+
+            #Predict 3D object
+            self.PredictObject(xt[idx], log)
+
+
 
     def PredictObject(self, inputData, groundTruth = "unknown"):
 
         #Predict Object
         if self.bInitNetowrk:
-            inputData = np.asarray(inputData.reshape(1, 1, 64, 64, 8), dtype=np.float32)
-            inputData = 4.0 * inputData - 1.0
+            resolution = self.VolumeMgr.resolution
+            inputData = np.asarray(inputData.reshape(1, 1, resolution, resolution, resolution), dtype=np.float32)
+            #inputData = 4.0 * inputData - 1.0
 
             pred = self.predFunc(inputData)
+            colorMap = self.colorMap(inputData)
             pList = self.predList(inputData)
+            pWeight = self.predWeights(inputData)
 
             #Show Log
             gtlog = "Label : " + groundTruth
             self.groundTruthLog.SetInput(gtlog)
-            log = "Predicted : " + labels.label[int(pred)] + " -> " + str(pList[0][int(pred)] * 100.0) + "%"
+            log = "Predicted : " + labels.rt[int(pred)] + " -> " + str(pList[0][int(pred)] * 100.0) + "%"
             self.predLog.SetInput(log)
+
+            #Compute Class Activation Map
+            camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
+            for i in range(colorMap.shape[1]):
+                camsum = camsum + pWeight[0][i] * colorMap[0,i,:,:,:]
+
+            camsum = scipy.ndimage.zoom(camsum, 16)
+            self.VolumeMgr.AddClassActivationMap(camsum)
 
             self.Redraw()
 
@@ -355,13 +372,22 @@ class E_Manager:
         #Output Layer
         l_out = model['l_out']
 
+        #Global Pooling Layer
+        l_weight = model['l_weight']
+        l_color = model['l_color']
+
         #Batch Parameters
         batch_index = T.iscalar('batch_index')
         test_batch_slice = slice(batch_index*cfg['n_rotations'], (batch_index+1)*cfg['n_rotations'])
 
         #Get Output
+        weight = lasagne.layers.get_output(l_weight, X, deterministic=True)
         y_hat_deterministic = lasagne.layers.get_output(l_out, X, deterministic=True)
         softmax = T.nnet.softmax(y_hat_deterministic)
+
+        #Get ColorMap
+        color_map = lasagne.layers.get_output(l_color, X, deterministic=True)
+        colorMap_fn = theano.function([X], color_map)
 
         #Average Across Rotation Examples
         pred = T.argmax(T.sum(y_hat_deterministic, axis=0))
@@ -374,17 +400,18 @@ class E_Manager:
 
         pred_fn = theano.function([X], pred)
         pred_list = theano.function([X], softmax)
+        pred_weights = theano.function([X], weight)
 
         tfuncs = {'test_function':test_error_fn}
         tvars = {'X':X, 'y':y, 'X_shared':X_shared, 'y_shared':y_shared}
 
 
-        return tfuncs, tvars, model, pred_fn, pred_list
+        return tfuncs, tvars, model, pred_fn, pred_list, pred_weights, colorMap_fn
 
     def DrawVoxelArray(self, arrayBuffer):
         #reshape
-
-        sample = arrayBuffer.reshape(1, 1, 32, 32, 32)
+        resolution = self.VolumeMgr.resolution
+        sample = arrayBuffer.reshape(1, 1, resolution, resolution, resolution)
         dataMatrix = self.MakeDataMatrix( np.asarray(sample, dtype=np.uint8), 255)
 
         data_string = dataMatrix.tostring()

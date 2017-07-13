@@ -34,12 +34,12 @@ cfg = {'batch_size' : 24,
        'momentum' : 0.9,
        'dims' : (32, 32, 32),
        'n_channels' : 1,
-       'n_classes' : 40,
+       'n_classes' : 2,
        'batches_per_chunk': 1,
        'max_epochs' : 250,
        'max_jitter_ij' : 2,
        'max_jitter_k' : 2,
-       'n_rotations' : 12,
+       'n_rotations' : 1,
        'checkpoint_every_nth' : 2,
        }
 
@@ -475,4 +475,4 @@ def get_model():
         nonlinearity = None,
         name = 'fc2'
         )
-    return {'l_in':l_in, 'l_out':l_fc2}
+    return {'l_in':l_in, 'l_out':l_fc2, 'l_weight':l_fc1, 'l_color':l_conv17}

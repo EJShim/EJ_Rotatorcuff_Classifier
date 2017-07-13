@@ -49,6 +49,7 @@ def make_training_functions(cfg,model):
 
     # Output layer
     l_out = model['l_out']
+    #checkpoints.save_weights("test_nottrained", model['l_out'])
 
     # Batch Parameters
     batch_index = T.iscalar('batch_index')
@@ -149,11 +150,13 @@ def main(args):
     lasagne.random.set_rng(np.random.RandomState(1234))
 
     # Load config file
-    config_module = __import__('VRN', args.config_path[:-3])
+    config_path = os.path.abspath(os.path.join(cwd, "./VRN.py"))
+    config_module = __import__('VRN_64', config_path)
     cfg = config_module.cfg
 
     # Get weights and metrics filename
-    weights_fname =str(args.config_path)[:-3]+'.npz'
+    # weights_fname =str(args.config_path)[:-3]+'.npz'
+    weights_fname = 'VRN_test.npz'
 
     metrics_fname = weights_fname[:-4]+'METRICS.jsonl'
 
@@ -183,7 +186,8 @@ def main(args):
     # Note that this loads the entire dataset into RAM! If you don't
     # have a lot of RAM, consider only loading chunks of this at a time.
 
-    x = np.load(args.data_path)['features']
+    DATA_PATH = os.path.join(cwd, "../NetworkData/volume/rotatorcuff_train_5Sample_64.npz")
+    x = np.load(DATA_PATH)['features']
 
     # Seed the shuffle
     np.random.seed(42)
@@ -195,7 +199,7 @@ def main(args):
     x = x[index]
 
     # Shuffle targets to match inputs
-    y = np.load(args.data_path)['targets'][index]
+    y = np.load(DATA_PATH)['targets'][index]
 
     # Define size of chunk to be loaded into GPU memory
     chunk_size = cfg['batch_size']*cfg['batches_per_chunk']
@@ -248,7 +252,8 @@ def main(args):
             num_batches = 2*len(x_shared)//cfg['batch_size']
 
             # Combine data with jittered data, then shuffle and change binary range from {0,1} to {-1,3}, then load into GPU memory.
-            tvars['X_shared'].set_value(4.0 * np.append(x_shared,jitter_chunk(x_shared, cfg,chunk_index),axis=0)[indices]-1.0, borrow=True)
+            # tvars['X_shared'].set_value(4.0 * np.append(x_shared,jitter_chunk(x_shared, cfg,chunk_index),axis=0)[indices]-1.0, borrow=True)
+            tvars['X_shared'].set_value(np.append(x_shared,jitter_chunk(x_shared, cfg,chunk_index),axis=0)[indices], borrow=True)
             tvars['y_shared'].set_value(np.append(y_shared,y_shared,axis=0)[indices], borrow=True)
 
             # Prepare loss values
@@ -277,8 +282,8 @@ def main(args):
 
         # Every Nth epoch, save weights[:-3]
         if not (epoch%cfg['checkpoint_every_nth']):
-            fname = str(weights_fname[:-3]) + "_epoch_" + str(epoch) + ".npz"
-            checkpoints.save_weights(fname, model['l_out'], epoch, {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
+            fname = str(weights_fname[:-4]) + "_epoch_" + str(epoch) + str(time.time()) + ".npz"
+            checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
 
 
 
@@ -290,8 +295,8 @@ def main(args):
 ### TODO: Clean this up and add the necessary arguments to enable all of the options we want.
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('config_path', help='config .py file')
-    parser.add_argument('data_path', default = 'Discriminative/modelnet40_rot_train.npz')
+    # parser.add_argument('config_path', help='config .py file')
+    # parser.add_argument('data_path', default = 'Discriminative/modelnet40_rot_train.npz')
     parser.add_argument('--resume',type=bool,default=False)
     args = parser.parse_args()
     main(args)

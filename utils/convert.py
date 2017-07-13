@@ -60,7 +60,7 @@ def MakeVolumeDataWithResampled(volume, xPos, yPos, rot):
 
 
     #Resample Volume ARray , update spacing info
-    rDim = 32
+    rDim = 64
     volume = scipy.ndimage.zoom(volume, ( rDim / volume.shape[0], rDim /volume.shape[1] , rDim / volume.shape[2]), order=5)
 
     #rotate around y-axis
@@ -149,11 +149,11 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
 
 ##Main Functionls
 
-RAW_DATA_PATH = "/home/ej/data/RCT/Test"
+RAW_DATA_PATH = "/home/ej/data/RCT/5sampled"
 saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
 ROI_MIN = 4
 ROI_MAX = 7
-TEST_DATA_RATE = 1.0
+TEST_DATA_RATE = 0.2
 
 
 #Import path
@@ -170,6 +170,7 @@ ztData = []
 
 print("convert RCT and non-RCT data from", RAW_DATA_PATH, ",with ", classes)
 paths = []
+isTrainData = []
 
 for className in classes: #Class Directory : RCT and non-RCT
 
@@ -180,6 +181,10 @@ for className in classes: #Class Directory : RCT and non-RCT
     for patient in subdirs:#Patient Directory
 
         patientDataPath = os.path.join( classPath, patient )
+
+        trainData = False
+        if random.random() > TEST_DATA_RATE:
+            trainData = True
 
         if not os.path.isdir(patientDataPath):
             continue
@@ -197,6 +202,7 @@ for className in classes: #Class Directory : RCT and non-RCT
                         continue
 
                     paths.append(volumeDataPath)
+                    isTrainData.append(trainData)
 
 
 
@@ -208,7 +214,7 @@ total = len(paths) * 4 * augfac * augfac -1
 current = 0
 print("Total expected Training + Test Data :", total)
 
-for path in paths:
+for idx, path in enumerate(paths):
     out = os.path.normpath(path)
     out = path.split(os.sep)
 
@@ -216,28 +222,37 @@ for path in paths:
     for rot in range(4): #Rotation
         for xPos in range(ROI_MIN, ROI_MAX): #ROI Position X
             for yPos in range(ROI_MIN, ROI_MAX): #ROI Position Y
+
                 print("(", current, "/", total , ")[", out[6] , "][", out[7] , "][", out[8], "][rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
-
-
                 Anot = "[" + out[6] + "][" + out[7] + "] ser" + out[8] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
 
                 current += 1;
+
+                clname = int(out[6] == 'RCT')
+                if not clname == 0 and not clname == 1:
+                    print("WTF???")
+
+
                 #Import Volume
                 try:
                     data = ImportVolume(path, xPos/(10), yPos/(10), rot)
 
+
                     if data == None:
                         continue
 
-                    if random.random() > TEST_DATA_RATE: #80% rate Training Set
+
+                    if isTrainData[idx]:
                         XData.append(data)
-                        yData.append(className)
+                        yData.append(clname)
                     else: #20% rate Test Set
+                        #print("append Test Data")
                         xtData.append(data)
-                        ytData.append(className)
+                        ytData.append(clname)
                         ztData.append(Anot)
 
-                except Exception:
+                except Exception as e:
+                    print(e)
                     continue
 
 
@@ -250,26 +265,28 @@ if not(os.path.exists(saveDir) ):
 
 
 X = np.asarray(XData)
-if not len(X) == 0:
+if not X.shape[0] == 0:
+    print("Saving Training Data :", X.shape[0])
     X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
     y = np.asarray(yData)
 
 
-    trainPath = os.path.join(saveDir, "rotatorcuff_train.npz")
+    trainPath = os.path.join(saveDir, "rotatorcuff_train_5Sample_64.npz")
     np.savez_compressed( trainPath, features=X, targets=y)
 
 
 XT = np.asarray(xtData)
-if not len(XT) == 0:
+if not XT.shape[0] == 0:
+    print("Saving Test Data :", XT.shape[0])
     XT = XT.reshape(XT.shape[0], 1, XT.shape[1], XT.shape[2], XT.shape[3])
     YT = np.asarray(ytData)
     ZT = np.asarray(ztData)
 
-    testPath = os.path.join(saveDir, "rotatorcuff_test.npz")
+    testPath = os.path.join(saveDir, "rotatorcuff_test_5Sample_64.npz")
     np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
 
 
-print("Training Data :" , X.shape[0])
-print("Test Data :", XT.shape[0])
+# print("Training Data :" , X.shape[0])
+# print("Test Data :", XT.shape[0])
 
 print("Processing Done!")

@@ -13,15 +13,14 @@ import os
 
 
 import numpy as np
-from path import Path
 import theano
 import theano.tensor as T
-import theano.sandbox.cuda.basic_ops as sbcuda
+# import theano.sandbox.cuda.basic_ops as sbcuda
 import lasagne
 
 import sys, os
 sys.path.insert(0, os.getcwd())
-from utils import checkpoints, metrics_logging, layers
+from utils import checkpoints, metrics_logging
 from collections import OrderedDict
 import matplotlib
 
@@ -87,7 +86,8 @@ def make_testing_functions(cfg,model):
 def main(args):
 
     # Load config module
-    config_module = __import__('VRN', args.config_path[:-3])
+    print(args.config_path)
+    config_module = __import__('VRN_64', args.config_path[:-3])
     cfg = config_module.cfg
 
     # Find weights file
@@ -137,7 +137,7 @@ def main(args):
     #     print(i, "-> anot : ", anot, "// pred : ", pred, "//neq : ", neq)
     #
     #
-    # # Get total accuracy
+    # # Get total accuracyn_rotations
     # t_class_error = 1-float(np.mean(test_class_error))
     # print('Test accuracy is: ' , t_class_error)
     #
@@ -148,20 +148,22 @@ def main(args):
     # indices of the test_batch_slice variable above, as well as which data file
     # you're reading from.
     n_rotations = cfg['n_rotations']
+    print("n_rotations", n_rotations)
 
 
     # Determine chunk size
     test_chunk_size = n_rotations*cfg['batches_per_chunk']
-
+    print("test chunk size", test_chunk_size)
     # Determine number of chunks
     num_test_chunks=int(math.ceil(float(len(xt))/test_chunk_size))
-
+    print("num_test_chunks", num_test_chunks)
     # Total number of test batches. Note that we're treating all the rotations
     # of a single instance as a single batch. There's definitely a more efficient
     # way to do this, and you'll want to be more efficient if you implement this in
     # a validation loop, but testing should be infrequent enough that the extra few minutes
     # this costs is irrelevant.
     num_test_batches = int(math.ceil(float(len(xt))/float(n_rotations)))
+    print(num_test_batches)
 
     # Prepare test error
     test_class_error = []
@@ -183,7 +185,8 @@ def main(args):
         num_batches = len(x_shared)//n_rotations
 
         # Prepare data
-        tvars['X_shared'].set_value(4.0 * x_shared-1.0, borrow=True)
+        # tvars['X_shared'].set_value(4.0 * x_shared-1.0, borrow=True)
+        tvars['X_shared'].set_value(x_shared, borrow=True)
         tvars['y_shared'].set_value(y_shared, borrow=True)
 
         # Loop across batches!
@@ -222,11 +225,14 @@ def main(args):
 
 ### TODO: Clean this up and add the necessary arguments to enable all of the options we want.
 if __name__=='__main__':
+
+    root = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER'
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('config_path', type=Path, nargs='?', default='Discriminative/VRN.py', help='config .py file')
+    parser.add_argument('config_path', nargs='?', default='./trainingTest/VRN_64.py', help='config .py file')
 
-    parser.add_argument('weight_path',type =Path, nargs='?', default = 'Discriminative/VRN_EJTrain.npz')
+    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_test_epoch_361499892630.1351395.npz')
 
-    parser.add_argument('data_path',type =Path, nargs='?', default = 'datasets/modelnet40_rot_test.npz')
+    parser.add_argument('data_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/rotatorcuff_test_5Sample_64.npz')
     args = parser.parse_args()
     main(args)
