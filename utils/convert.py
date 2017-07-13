@@ -4,6 +4,8 @@ import numpy as np
 import scipy.ndimage
 import random
 
+resolution = 64
+
 def ResampleVolumeData(volume, spacing):
     #spacing to [1, 1, 1]
     new_spacing = np.array([1, 1, 1])
@@ -59,9 +61,11 @@ def MakeVolumeDataWithResampled(volume, xPos, yPos, rot):
         volume = volume[:rDim,:rDim, :]
 
 
+
+
+
     #Resample Volume ARray , update spacing info
-    rDim = 64
-    volume = scipy.ndimage.zoom(volume, ( rDim / volume.shape[0], rDim /volume.shape[1] , rDim / volume.shape[2]), order=5)
+    volume = scipy.ndimage.zoom(volume, ( resolution / volume.shape[0], resolution /volume.shape[1] , resolution / volume.shape[2]), order=5)
 
     #rotate around y-axis
     volume = np.rot90(volume, rot)
@@ -226,20 +230,20 @@ for idx, path in enumerate(paths):
     for rot in range(4): #Rotation
         for xPos in range(ROI_MIN, ROI_MAX): #ROI Position X
             for yPos in range(ROI_MIN, ROI_MAX): #ROI Position Y
-                idx = len(out)
-                print("(", current, "/", total , ")[", out[idx-3] , "][", out[idx-2] , "][", out[idx-1], "][rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
-                Anot = "[" + out[idx-3] + "][" + out[idx-2] + "] ser" + out[idx-1] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
+                pathidx = len(out)
+                print("(", current, "/", total , ")[", out[pathidx-3] , "][", out[pathidx-2] , "][", out[pathidx-1], "][rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
+                Anot = "[" + out[pathidx-3] + "][" + out[pathidx-2] + "] ser" + out[pathidx-1] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
 
                 current += 1;
 
-                clname = int(out[idx-3] == 'RCT')
+                clname = int(out[pathidx-3] == 'RCT')
                 if not clname == 0 and not clname == 1:
                     print("WTF???")
-
 
                 #Import Volume
                 try:
                     data = ImportVolume(path, xPos/(10), yPos/(10), rot)
+
 
 
                     if data == None:
@@ -250,7 +254,7 @@ for idx, path in enumerate(paths):
                         XData.append(data)
                         yData.append(clname)
                     else: #20% rate Test Set
-                        #print("append Test Data")
+                        print("append Test Data")
                         xtData.append(data)
                         ytData.append(clname)
                         ztData.append(Anot)
@@ -267,28 +271,37 @@ print("Save Data in ", saveDir)
 if not(os.path.exists(saveDir) ):
     os.mkdir(saveDir, 0o777)
 
-
 X = np.asarray(XData)
-if not X.shape[0] == 0:
-    print("Saving Training Data :", X.shape[0])
-    X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
-    y = np.asarray(yData)
+try:
+    if not X.shape[0] == 0:
+        print("Saving Training Data :", X.shape[0])
+        X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
+        y = np.asarray(yData)
 
-    saveName = str(num_patients) + "patients/rotatorcuff_train_" + str(X.shape[0]) + "_" + str(rDim) + "d.npz"
-    trainPath = os.path.join(saveDir, saveName)
-    np.savez_compressed( trainPath, features=X, targets=y)
+        saveName = str(num_patients) + "patients/rotatorcuff_train_" + str(X.shape[0]) + "_" + str(resolution) + "d.npz"
+        trainPath = os.path.join(saveDir, saveName)
+        np.savez_compressed( trainPath, features=X, targets=y)
+except Exception as e:
+    print(e)
+    print(X.shape)
+
 
 
 XT = np.asarray(xtData)
-if not XT.shape[0] == 0:
-    print("Saving Test Data :", XT.shape[0])
-    XT = XT.reshape(XT.shape[0], 1, XT.shape[1], XT.shape[2], XT.shape[3])
-    YT = np.asarray(ytData)
-    ZT = np.asarray(ztData)
+try:
+    if not XT.shape[0] == 0:
+        print("Saving Test Data :", XT.shape[0])
+        XT = XT.reshape(XT.shape[0], 1, XT.shape[1], XT.shape[2], XT.shape[3])
+        YT = np.asarray(ytData)
+        ZT = np.asarray(ztData)
 
-    saveName = str(num_patients) + "patients/rotatorcuff_test_" + str(XT.shape[0]) + "_" + str(rDim) + "d.npz"
-    testPath = os.path.join(saveDir, "rotatorcuff_test_5Sample_64.npz")
-    np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
+        saveName = str(num_patients) + "patients/rotatorcuff_test_" + str(XT.shape[0]) + "_" + str(resolution) + "d.npz"
+        testPath = os.path.join(saveDir, "rotatorcuff_test_5Sample_64.npz")
+        np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
+
+except Exception as e:
+    print(e)
+    print(XT.shape)
 
 
 # print("Training Data :" , X.shape[0])
