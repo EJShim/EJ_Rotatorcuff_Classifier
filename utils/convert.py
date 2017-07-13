@@ -81,14 +81,14 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
     fileList = os.listdir(dataPath)
     fileList.sort()
 
+
     for i in range( len(fileList) ):
         filePath = os.path.join(dataPath,fileList[i])
         extension = os.path.splitext(filePath)[1]
 
-
         if not extension == ".dcm":
-            print("file Extension error : ", extension)
-            return None
+            raise Exception('File Extension Error  : ', extension)
+
 
         mu = mudicom.load(  filePath  )
 
@@ -153,7 +153,7 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
 
 ##Main Functionls
 
-RAW_DATA_PATH = "/home/ej/data/RCT/5sampled"
+RAW_DATA_PATH = "/Users/sim-eungjun/documents/data"
 saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
 ROI_MIN = 4
 ROI_MAX = 7
@@ -231,7 +231,7 @@ for idx, path in enumerate(paths):
         for xPos in range(ROI_MIN, ROI_MAX): #ROI Position X
             for yPos in range(ROI_MIN, ROI_MAX): #ROI Position Y
                 pathidx = len(out)
-                print("(", current, "/", total , ")[", out[pathidx-3] , "][", out[pathidx-2] , "][", out[pathidx-1], "][rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
+                print("(", current, "/", total , ")");
                 Anot = "[" + out[pathidx-3] + "][" + out[pathidx-2] + "] ser" + out[pathidx-1] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
 
                 current += 1;
@@ -240,21 +240,20 @@ for idx, path in enumerate(paths):
                 if not clname == 0 and not clname == 1:
                     print("WTF???")
 
+
                 #Import Volume
                 try:
+
                     data = ImportVolume(path, xPos/(10), yPos/(10), rot)
+                    # if data == None:
+                    #     continue
 
-
-
-                    if data == None:
-                        continue
 
 
                     if isTrainData[idx]:
                         XData.append(data)
                         yData.append(clname)
                     else: #20% rate Test Set
-                        print("append Test Data")
                         xtData.append(data)
                         ytData.append(clname)
                         ztData.append(Anot)
@@ -278,7 +277,7 @@ try:
         X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
         y = np.asarray(yData)
 
-        saveName = str(num_patients) + "patients/rotatorcuff_train_" + str(X.shape[0]) + "_" + str(resolution) + "d.npz"
+        saveName = str(num_patients) + "patients_rotatorcuff_train_" + str(X.shape[0]) + "_" + str(resolution) + "d.npz"
         trainPath = os.path.join(saveDir, saveName)
         np.savez_compressed( trainPath, features=X, targets=y)
 except Exception as e:
@@ -295,7 +294,7 @@ try:
         YT = np.asarray(ytData)
         ZT = np.asarray(ztData)
 
-        saveName = str(num_patients) + "patients/rotatorcuff_test_" + str(XT.shape[0]) + "_" + str(resolution) + "d.npz"
+        saveName = str(num_patients) + "patients_rotatorcuff_test_" + str(XT.shape[0]) + "_" + str(resolution) + "d.npz"
         testPath = os.path.join(saveDir, "rotatorcuff_test_5Sample_64.npz")
         np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
 
