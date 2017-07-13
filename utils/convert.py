@@ -171,12 +171,16 @@ ztData = []
 print("convert RCT and non-RCT data from", RAW_DATA_PATH, ",with ", classes)
 paths = []
 isTrainData = []
+num_patients = 0
 
 for className in classes: #Class Directory : RCT and non-RCT
 
+    if className.startswith('.'):
+        continue
 
     classPath =  os.path.join(RAW_DATA_PATH, className)
     subdirs = os.listdir( classPath )
+    num_patients += len(subdirs)
 
     for patient in subdirs:#Patient Directory
 
@@ -222,13 +226,13 @@ for idx, path in enumerate(paths):
     for rot in range(4): #Rotation
         for xPos in range(ROI_MIN, ROI_MAX): #ROI Position X
             for yPos in range(ROI_MIN, ROI_MAX): #ROI Position Y
-
-                print("(", current, "/", total , ")[", out[6] , "][", out[7] , "][", out[8], "][rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
-                Anot = "[" + out[6] + "][" + out[7] + "] ser" + out[8] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
+                idx = len(out)
+                print("(", current, "/", total , ")[", out[idx-3] , "][", out[idx-2] , "][", out[idx-1], "][rotate ", rot*90, "ROI Position [", xPos, ",",  yPos, "]");
+                Anot = "[" + out[idx-3] + "][" + out[idx-2] + "] ser" + out[idx-1] + "rot" + str(rot*90) + "[" + str(xPos) + str(yPos) + "]"
 
                 current += 1;
 
-                clname = int(out[6] == 'RCT')
+                clname = int(out[idx-3] == 'RCT')
                 if not clname == 0 and not clname == 1:
                     print("WTF???")
 
@@ -270,8 +274,8 @@ if not X.shape[0] == 0:
     X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
     y = np.asarray(yData)
 
-
-    trainPath = os.path.join(saveDir, "rotatorcuff_train_5Sample_64.npz")
+    saveName = str(num_patients) + "patients/rotatorcuff_train_" + str(X.shape[0]) + "_" + str(rDim) + "d.npz"
+    trainPath = os.path.join(saveDir, saveName)
     np.savez_compressed( trainPath, features=X, targets=y)
 
 
@@ -282,6 +286,7 @@ if not XT.shape[0] == 0:
     YT = np.asarray(ytData)
     ZT = np.asarray(ztData)
 
+    saveName = str(num_patients) + "patients/rotatorcuff_test_" + str(XT.shape[0]) + "_" + str(rDim) + "d.npz"
     testPath = os.path.join(saveDir, "rotatorcuff_test_5Sample_64.npz")
     np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
 
