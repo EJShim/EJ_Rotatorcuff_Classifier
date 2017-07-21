@@ -12,7 +12,7 @@ class E_VolumeManager:
     def __init__(self, Mgr):
         self.Mgr = Mgr
 
-        self.m_volumeArray = None
+        self.m_volumeArray = 0.0
         self.m_bAxial = False;
 
         #Selected Volume CFGS
@@ -497,7 +497,7 @@ class E_VolumeManager:
         return volume, spacing
 
     def UpdateVolumeDataCrop(self, xP, yP):
-        if self.m_volumeArray == None: return
+        #if self.m_volumeArray == 0.0: return
 
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
         volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
