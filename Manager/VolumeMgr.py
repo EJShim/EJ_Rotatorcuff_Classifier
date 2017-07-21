@@ -198,8 +198,12 @@ class E_VolumeManager:
         yp = self.Mgr.mainFrm.m_rangeSlider[1].value() / 1000
 
         volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
+        volumeData = (volumeData * 255.0) / np.amax(volumeArray)
 
-        volumeData = (volumeData * 255.0) / np.amax(volumeData)
+        self.m_volumeData = volumeData
+
+
+
         self.AddVolume(volumeData, renderSpacing)
         self.Mgr.PredictObject(volumeData)
 
@@ -281,7 +285,7 @@ class E_VolumeManager:
             #Add SLice
             self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_colorMapResliceActor[i])
             self.Mgr.m_sliceRenderer[i].ResetCamera()
-            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(2.0)
+            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(1.5)
 
 
         #Add Actor
@@ -354,7 +358,7 @@ class E_VolumeManager:
             #Add SLice
             self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_resliceActor[i])
             self.Mgr.m_sliceRenderer[i].ResetCamera()
-            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(2.0)
+            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(1.5)
 
 
             #Update Slider
@@ -496,7 +500,9 @@ class E_VolumeManager:
         if self.m_volumeArray == None: return
 
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
-        volumeData = (volumeData * 255.0) / np.amax(volumeData)
+        volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
+
+        self.m_volumeData = volumeData
 
         self.AddVolume(volumeData, [1, 1, 1])
         self.Mgr.PredictObject(volumeData)

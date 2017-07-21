@@ -141,11 +141,10 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
 
     #Calculate Crop Region Start Position and Dimension(Length)
     volumeData = MakeVolumeDataWithResampled(volumeArray,  xPos, yPos, rot)
-
-
     #Normalize VolumeData
-    volumeData = (volumeData * 255.0) / np.amax(volumeData)
+    volumeData = (volumeData * 255.0) / np.amax(volumeArray)
 
+    self.m_volumeData = volumeData
 
     return volumeData
 

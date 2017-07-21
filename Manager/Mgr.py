@@ -29,7 +29,7 @@ rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 #Network, Weight, Model Path
 import trainingTest.VRN_64 as config_module
 weightPath = rootPath + "/NetworkData/weights/64_90525Vols_cam/VRN_64_TEST_ALL_epoch_01500531804.69375.npz"
-modelPath = rootPath + "/CorrectFeatures.npz"
+modelPath = rootPath + "/ManualData/White.npz"
 
 class E_Manager:
     def __init__(self, mainFrm):
@@ -51,8 +51,13 @@ class E_Manager:
 
 
         #Get Features and Target Data
-        self.xt = np.asarray(np.load(modelPath)['features'], dtype=np.float32)
-        self.yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
+        try:
+            self.xt = np.asarray(np.load(modelPath)['features'], dtype=np.float32)
+            self.yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
+        except Exception as e:
+            self.SetLog(str(e))
+            self.xt = []
+            self.yt = []
 
         for i in range(2):
             interactor = E_InteractorStyle(self, i)
@@ -277,14 +282,17 @@ class E_Manager:
         self.bInitNetowrk = True;
 
     def InitData(self):
-        zt = np.asarray(np.load(modelPath)['targets'])
+
+        try:
+            zt = np.asarray(np.load(modelPath)['targets'])
 
 
-        for i in range(len(zt)):
+            for i in range(len(zt)):
 
-            self.mainFrm.m_listWidget.insertItem(i, str(zt[i]))
-
-
+                self.mainFrm.m_listWidget.insertItem(i, str(zt[i]))
+        except Exception as e:
+            self.SetLog("Model Path not defined or wrong")
+            self.SetLog(str(e))
 
     def RandomPrediction(self):
 

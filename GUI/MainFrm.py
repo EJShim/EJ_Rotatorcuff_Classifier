@@ -9,6 +9,7 @@ from Manager.Mgr import E_Manager
 from GUI.VolumeRenderingWidget import E_VolumeRenderingWidget
 from GUI.VolumeListWidget import E_VolumeListWidget
 
+import numpy as np
 
 
 curPath = os.path.dirname(os.path.realpath(__file__))
@@ -35,7 +36,7 @@ class E_MainWindow(QMainWindow):
             self.m_vtkWidget[i] = QVTKRenderWindowInteractor();
 
         #Bone Color, RCT
-        self.m_bBoneColorBlack = True
+        self.m_bBoneColorBlack = "Black"
         self.m_bRCT = True
 
 
@@ -105,12 +106,12 @@ class E_MainWindow(QMainWindow):
 
         #Show/hide Volume List
         listViewCheck = QCheckBox("List View")
-        listViewCheck.setCheckState(0)
+        listViewCheck.setCheckState(2)
         listViewCheck.stateChanged.connect(self.onListViewState)
         checkLayout.addWidget(listViewCheck)
 
         meshViewCheck = QCheckBox("Mesh View")
-        meshViewCheck.setCheckState(2)
+        meshViewCheck.setCheckState(0)
         meshViewCheck.stateChanged.connect(self.onMeshViewState)
         checkLayout.addWidget(meshViewCheck)
 
@@ -121,7 +122,7 @@ class E_MainWindow(QMainWindow):
 
 
         sliceViewCheck = QCheckBox("Slice View")
-        sliceViewCheck.setCheckState(0)
+        sliceViewCheck.setCheckState(2)
         sliceViewCheck.stateChanged.connect(self.onSliceViewState)
         checkLayout.addWidget(sliceViewCheck)
 
@@ -171,16 +172,17 @@ class E_MainWindow(QMainWindow):
 
         self.RCTGroupBox = QGroupBox("RCT")
 
-        RCT = QRadioButton("RCT")
-        NRCT = QRadioButton("Non-RCT")
-        RCT.setChecked(True);
+        self.radio_RCT = QRadioButton("RCT")
+        self.radio_NRCT = QRadioButton("Non-RCT")
+        self.radio_RCT.setChecked(True);
+        self.radio_RCT.toggled.connect(self.onChangeRCT)
 
         grouopBoxLayout2 = QVBoxLayout()
-        grouopBoxLayout2.addWidget(RCT)
-        grouopBoxLayout2.addWidget(NRCT)
+        grouopBoxLayout2.addWidget(self.radio_RCT)
+        grouopBoxLayout2.addWidget(self.radio_NRCT)
 
         self.RCTGroupBox.setLayout(grouopBoxLayout2)
-        RCT.toggled.connect(self.onChangeRCT)
+
         objectToolbar.addWidget(self.RCTGroupBox)
 
         objectToolbar.addSeparator()
@@ -221,7 +223,7 @@ class E_MainWindow(QMainWindow):
 
         #hide initialize
         self.m_sliceViewWidget.setLayout(layout)
-        self.m_sliceViewWidget.hide()
+        self.m_sliceViewWidget
 
 
     def InitCentralWidget(self):
@@ -229,7 +231,7 @@ class E_MainWindow(QMainWindow):
         self.m_centralWidget.setLayout(MainLayout)
 
         self.m_listWidget = E_VolumeListWidget(self)
-        self.m_listWidget.hide()
+        self.m_listWidget
         MainLayout.addWidget(self.m_listWidget)
 
 
@@ -237,6 +239,7 @@ class E_MainWindow(QMainWindow):
             self.m_vtkWidget[i]
             MainLayout.addWidget(self.m_vtkWidget[i])
 
+        self.m_vtkWidget[0].hide()
         MainLayout.addWidget(self.m_sliceViewWidget)
 
         #dock widget
@@ -276,32 +279,70 @@ class E_MainWindow(QMainWindow):
         path = QFileDialog.getOpenFileNames(self, "Import 3D Objects", "~/", "Dicom File(*.dcm)")
         fileSeries = path[0]
 
+
+        dirName = os.path.dirname(str(path[0][0]))
+        dirName = os.path.dirname(dirName)
+        dirName = os.path.dirname(dirName)
+        dirName = os.path.split(dirName)[1]
+
+        if dirName == "RCT":
+            self.radio_RCT.setChecked(True)
+        elif dirName == "None-RCT":
+            self.radio_NRCT.setChecked(True)
+        else:
+            log = "DriName Error : " + str(dirName) + "Please Set RCT,None-RCT radio Button Manually."
+            self.Mgr.SetLog(log)
+
         if len(fileSeries) == 0: return
 
 
         #Import Volume
         self.Mgr.VolumeMgr.ImportVolume(fileSeries)
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
 
     def onSaveData(self):
-        log = "Save Processed Data : " +str(curPath)
-        self.Mgr.SetLog(log)
+        try:
+            features = []
+            targets = []
+            colors = []
 
-        bonecolor ="Bone Color : "
 
-        if self.m_bBoneColorBlack:
-            bonecolor += "Black"
-        else:
-            bonecolor += "White"
+            savePath = os.path.join(rootPath, "ManualData")
+            savePath = os.path.join(savePath, self.m_bBoneColorBlack)
 
-        self.Mgr.SetLog(bonecolor)
+            fileName = str(self.m_bBoneColorBlack) + "_" + str(len(os.listdir(savePath)))
+            savePath = os.path.join(savePath, fileName)
 
-        rctlog = "RCT : "
-        if self.m_bRCT:
-            rctlog+= "RCT"
-        else:
-            rctlog+= "None_RCT"
+            log = "Save Processed Data : " +str(savePath)
+            self.Mgr.SetLog(log)
 
-        self.Mgr.SetLog(rctlog)
+            log = "RCT : " + str(int(self.m_bRCT))
+            self.Mgr.SetLog(log)
+
+
+
+            volume = self.Mgr.VolumeMgr.m_volumeData
+
+            for rot in range(4):
+                volume = np.rot90(volume, rot)
+                features.append(volume)
+                targets.append(int(self.m_bRCT))
+                colors.append(self.m_bBoneColorBlack)
+
+            #Save To the Path
+            X = np.asarray(features)
+            X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
+            targets = np.asarray(targets)
+            colors = np.asarray(colors)
+
+            np.savez_compressed( savePath, features=X, targets=targets, colors=colors)
+            self.Mgr.SetLog("Save Done!")
+
+
+        except Exception as e:
+            e = "***Error Raised : " + str(e)
+            self.Mgr.SetLog(e)
 
     def onInitNetwork(self):
         self.Mgr.InitNetwork()
@@ -328,10 +369,14 @@ class E_MainWindow(QMainWindow):
             self.m_vtkWidget[1].hide()
 
     def onChangeRCT(self, isTrue):
-        self.self.m_bRCT = isTrue
+        self.m_bRCT = isTrue
 
     def onChangeTF(self, isTrue):
-        self.m_bBoneColorBlack = isTrue
+
+        if isTrue:
+            self.m_bBoneColorBlack = "Black"
+        else:
+            self.m_bBoneColorBlack = "White"
 
 
     def onSliceViewState(self, state):
