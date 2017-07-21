@@ -23,15 +23,20 @@ class E_VolumeManager:
         self.m_imageProperty = vtk.vtkImageProperty()
         self.m_imageProperty.SetInterpolationTypeToLinear()
 
+
+
+        #Volume
         self.m_volumeMapper = vtk.vtkSmartVolumeMapper()
         self.m_volume = vtk.vtkActor()
-
-
-        self.m_colorMapMapper = vtk.vtkSmartVolumeMapper()
-        self.m_colorMapVolume = vtk.vtkActor()
-
         self.m_resliceMapper = [0, 0, 0]
         self.m_resliceActor = [0, 0, 0]
+
+        #Color MAp Volume
+        self.m_colorMapMapper = vtk.vtkSmartVolumeMapper()
+        self.m_colorMapVolume = vtk.vtkActor()
+        self.m_colorMapResliceMapper = [0, 0, 0]
+        self.m_colorMapResliceActor = [0, 0, 0]
+
 
         self.resolution = 64
 
@@ -39,6 +44,9 @@ class E_VolumeManager:
         for i in range(3):
             self.m_resliceMapper[i] = vtk.vtkImageSliceMapper()
             self.m_resliceActor[i] = vtk.vtkImageSlice()
+
+            self.m_colorMapResliceMapper[i] = vtk.vtkImageSliceMapper()
+            self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()
 
 
 
@@ -140,15 +148,13 @@ class E_VolumeManager:
                 reptime = list(mu.find(0x0018, 0x0080))[0].value
                 whattime = list(mu.find(0x0018, 0x0081))[0].value
 
-
-                print("rep", reptime)
-                print("what", whattime)
+                self.Mgr.SetLog(str(reptime))
+                self.Mgr.SetLog(str(whattime))
 
                 #Spacing
                 spacing = 1.0;
                 if len(list(mu.find(0x0018, 0x0088))) > 0:
                     spacing = float(list(mu.find(0x0018, 0x0088))[0].value)
-
                 #Position
                 position = list(mu.find(0x0020, 0x0032))[0].value
 
@@ -207,13 +213,13 @@ class E_VolumeManager:
         ata_string = camArray.tostring()
         dim = camArray.shape
 
-        print("class min : ", np.amin(camArray), ", max : ", np.amax(camArray))
-
         imgData = vtk.vtkImageData()
         imgData.SetOrigin([0, 0, 0])
         imgData.SetDimensions(dim[1], dim[2], dim[0])
         imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
         imgData.SetSpacing([1.0, 1.0, 1.0])
+
+
 
         for i in range(dim[0]):
             for j in range(dim[2]):
@@ -225,11 +231,11 @@ class E_VolumeManager:
         colorFunction = vtk.vtkColorTransferFunction()
         opacityFunction = vtk.vtkPiecewiseFunction()
         scalarRange = imgData.GetScalarRange()
-        print("Scalar Range:",scalarRange)
+        # print("Scalar Range:",scalarRange)
         volumeProperty = vtk.vtkVolumeProperty()
 
-        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.9998, 0.0, 0.0, 1.0)
-        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.9999, 0.0, 1.0, 0.0)
+        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.0, 0.0, 0.0, 1.0)
+        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.5, 0.0, 1.0, 0.0)
         colorFunction.AddRGBPoint(scalarRange[1], 1.0, 0.0, 0.0)
 
         opacityFunction.AddPoint((scalarRange[0] + scalarRange[1])*0.0, 0.0)
@@ -249,23 +255,34 @@ class E_VolumeManager:
         self.m_colorMapVolume.SetProperty(volumeProperty)
         self.m_colorMapVolume.SetPosition([0, 0, 0])
 
-        #slice Actor
-        # for i in range(3):
-        #     self.m_resliceMapper[i].SetOrientation(i)
-        #     self.m_resliceActor[i].SetMapper(self.m_resliceMapper[i])
-        #     self.m_resliceActor[i].SetProperty(self.m_imageProperty)
-        #
-        #     #Add SLice
-        #     self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_resliceActor[i])
-        #     self.Mgr.m_sliceRenderer[i].ResetCamera()
-        #
-        #
-        #     #Update Slider
-        #     minVal = self.m_resliceMapper[i].GetSliceNumberMinValue()
-        #     maxVal = self.m_resliceMapper[i].GetSliceNumberMaxValue()
-        #     self.Mgr.mainFrm.m_sliceSlider[i].setRange(minVal, maxVal)
-        #
-        #self.Mgr.Redraw2D()
+
+        lookupTable = vtk.vtkLookupTable()
+        lookupTable.SetTableRange(scalarRange)
+        lookupTable.SetHueRange(scalarRange)
+        lookupTable.SetSaturationRange(scalarRange[0], scalarRange[1])
+        lookupTable.SetValueRange(scalarRange)
+        lookupTable.Build()
+
+
+        imageProperty = vtk.vtkImageProperty()
+        imageProperty.SetInterpolationTypeToLinear()
+        imageProperty.SetLookupTable(lookupTable)
+        imageProperty.SetColorLevel((scalarRange[1] + scalarRange[0])/2)
+        imageProperty.SetColorWindow(scalarRange[1] - scalarRange[0]-1)
+        imageProperty.SetOpacity(0.2)
+
+        #Slice
+        for i in range(3):
+            self.m_colorMapResliceMapper[i].SetInputData(imgData)
+            self.m_colorMapResliceMapper[i].SetOrientation(i)
+            self.m_colorMapResliceActor[i].SetMapper(self.m_colorMapResliceMapper[i])
+            self.m_colorMapResliceActor[i].SetProperty(imageProperty)
+
+            #Add SLice
+            self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_colorMapResliceActor[i])
+            self.Mgr.m_sliceRenderer[i].ResetCamera()
+            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(2.0)
+
 
         #Add Actor
         self.Mgr.renderer[1].AddVolume(self.m_colorMapVolume)
@@ -279,7 +296,7 @@ class E_VolumeManager:
 
         data_string = volumeArray.tostring()
         dim = volumeArray.shape
-        print("min: ", np.amin(volumeArray), ", max : ", np.amax(volumeArray))
+        # print("min: ", np.amin(volumeArray), ", max : ", np.amax(volumeArray))
 
 
         imgData = vtk.vtkImageData()
@@ -288,19 +305,13 @@ class E_VolumeManager:
         imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
         imgData.SetSpacing(spacing[1], spacing[2], spacing[0])
 
-        # for i in range(volumeArray.size):
-        #
-        #     y = i % dim[2]
-        #     x = int(i / dim[2]) % dim[1]
-        #     z = int(i / (dim[1] * dim[2]))
-        #
-        #     # print(z, ", ", x , ",", y)
-        #     imgData.SetScalarComponentFromDouble(x, y, z, 0, volumeArray[z][x][y])
-
         for i in range(dim[0]):
             for j in range(dim[2]):
                 for k in range(dim[1]):
                     imgData.SetScalarComponentFromDouble(k, j, i, 0, volumeArray[i][k][j])
+
+        # floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
+        # imgData.GetPointData().SetScalars(floatArray)
 
         self.m_scalarRange = imgData.GetScalarRange()
 
@@ -343,6 +354,7 @@ class E_VolumeManager:
             #Add SLice
             self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_resliceActor[i])
             self.Mgr.m_sliceRenderer[i].ResetCamera()
+            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(2.0)
 
 
             #Update Slider
@@ -350,9 +362,6 @@ class E_VolumeManager:
             maxVal = self.m_resliceMapper[i].GetSliceNumberMaxValue()
             self.Mgr.mainFrm.m_sliceSlider[i].setRange(minVal, maxVal)
 
-
-
-        self.Mgr.Redraw2D()
 
         #Add Actor
         self.Mgr.renderer[1].AddVolume(self.m_volume)
@@ -385,6 +394,7 @@ class E_VolumeManager:
 
     def ChangeSliceIdx(self, idx, sliceNum):
         self.m_resliceMapper[idx].SetSliceNumber(sliceNum)
+        self.m_colorMapResliceMapper[idx].SetSliceNumber(sliceNum)
         self.Mgr.Redraw2D()
 
     def ResampleVolumeData(self, volume, spacing):
@@ -488,7 +498,5 @@ class E_VolumeManager:
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
         volumeData = (volumeData * 255.0) / np.amax(volumeData)
 
-
-        opacityFunction.AddPoint((scalarRange[0] + scalarRange[1])*0.9, 0.0)
         self.AddVolume(volumeData, [1, 1, 1])
         self.Mgr.PredictObject(volumeData)

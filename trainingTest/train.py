@@ -156,7 +156,7 @@ def main(args):
 
     # Get weights and metrics filename
     # weights_fname =str(args.config_path)[:-3]+'.npz'
-    weights_fname = 'VRN_test.npz'
+    weights_fname = 'VRN_64_TEST_ALL.npz'
 
     metrics_fname = weights_fname[:-4]+'METRICS.jsonl'
 
@@ -187,103 +187,133 @@ def main(args):
     # have a lot of RAM, consider only loading chunks of this at a time.
 
     DATA_PATH = os.path.join(cwd, "../NetworkData/volume/rotatorcuff_train_5Sample_64.npz")
-    x = np.load(DATA_PATH)['features']
 
-    # Seed the shuffle
-    np.random.seed(42)
+    DATA_PATHS = ["/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/1_40patients_rotatorcuff_train_4320_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/3_33patients_rotatorcuff_train_4680_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/5_40patients_rotatorcuff_train_4356_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/7_40patients_rotatorcuff_train_5760_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/8_40patients_rotatorcuff_train_5796_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/9_40patients_rotatorcuff_train_5904_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/10_40patients_rotatorcuff_train_5652_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/11_40patients_rotatorcuff_train_5940_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/12_40patients_rotatorcuff_train_5796_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/13_40patients_rotatorcuff_train_5904_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/14_40patients_rotatorcuff_train_6012_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/15_40patients_rotatorcuff_train_6120_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/16_40patients_rotatorcuff_train_6156_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/17_40patients_rotatorcuff_train_6300_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/18_40patients_rotatorcuff_train_6228_64d.npz",
+    "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/19_34patients_rotatorcuff_train_5328_64d.npz"
+    ]
 
-    # Define shuffle indices
-    index = np.random.permutation(len(x))
-
-    # Shuffle inputs
-    x = x[index]
-
-    # Shuffle targets to match inputs
-    y = np.load(DATA_PATH)['targets'][index]
-
-    # Define size of chunk to be loaded into GPU memory
-    chunk_size = cfg['batch_size']*cfg['batches_per_chunk']
-
-    # Determine number of chunks
-    num_chunks = int(math.ceil(len(y)/float(chunk_size)))
-
-    # Get current learning rate
-    new_lr = np.float32(tvars['learning_rate'].get_value())
 
     # Loop across training epochs!
     for epoch in range(cfg['max_epochs']):
 
-        # Tic
-        epoch_start_time = time.time()
+        for path in DATA_PATHS:
 
-       # Update Learning Rate
-        if isinstance(cfg['learning_rate'], dict) and epoch > 0:
-            if any(x==epoch for x in cfg['learning_rate'].keys()):
+            try:
+                x = np.load(path)['features']
+            except Exception as e:
+                print("Path :", path, "Error : ", e)
+                continue
+
+            # Seed the shuffle
+            np.random.seed(42)
+
+            # Define shuffle indices
+            index = np.random.permutation(len(x))
+
+            # Shuffle inputs
+            x = x[index]
+
+            # Shuffle targets to match inputs
+            y = np.load(path)['targets'][index]
+
+            # Define size of chunk to be loaded into GPU memory
+            chunk_size = cfg['batch_size']*cfg['batches_per_chunk']
+
+            # Determine number of chunks
+            num_chunks = int(math.ceil(len(y)/float(chunk_size)))
+
+            # Get current learning rate
+            new_lr = np.float32(tvars['learning_rate'].get_value())
+
+            # Tic
+            epoch_start_time = time.time()
+
+           # Update Learning Rate
+            if isinstance(cfg['learning_rate'], dict) and epoch > 0:
+                if any(x==epoch for x in cfg['learning_rate'].keys()):
+                    lr = np.float32(tvars['learning_rate'].get_value())
+                    new_lr = cfg['learning_rate'][epoch]
+                    logging.info('Changing learning rate from {} to {}'.format(lr, new_lr))
+                    tvars['learning_rate'].set_value(np.float32(new_lr))
+            if cfg['decay_rate'] and epoch > 0:
                 lr = np.float32(tvars['learning_rate'].get_value())
-                new_lr = cfg['learning_rate'][epoch]
+                new_lr = lr*(1-cfg['decay_rate'])
                 logging.info('Changing learning rate from {} to {}'.format(lr, new_lr))
                 tvars['learning_rate'].set_value(np.float32(new_lr))
-        if cfg['decay_rate'] and epoch > 0:
-            lr = np.float32(tvars['learning_rate'].get_value())
-            new_lr = lr*(1-cfg['decay_rate'])
-            logging.info('Changing learning rate from {} to {}'.format(lr, new_lr))
-            tvars['learning_rate'].set_value(np.float32(new_lr))
 
-        # Loop across chunks!
-        for chunk_index in range(num_chunks):
+            # Loop across chunks!
+            for chunk_index in range(num_chunks):
 
-            # Define upper index of chunk to load
-            # If you start doing complicated things with data loading, consider
-            # wrapping all of this into its own little function.
-            upper_range = min(len(y),(chunk_index+1)*chunk_size)
+                # Define upper index of chunk to load
+                # If you start doing complicated things with data loading, consider
+                # wrapping all of this into its own little function.
+                upper_range = min(len(y),(chunk_index+1)*chunk_size)
 
-            # Get current chunk
-            x_shared = np.asarray(x[chunk_index*chunk_size:upper_range,:,:,:,:],dtype=np.float32)
-            y_shared = np.asarray(y[chunk_index*chunk_size:upper_range],dtype=np.float32)
+                # Get current chunk
+                x_shared = np.asarray(x[chunk_index*chunk_size:upper_range,:,:,:,:],dtype=np.float32)
+                y_shared = np.asarray(y[chunk_index*chunk_size:upper_range],dtype=np.float32)
 
-            # Get repeatable seed to shuffle jittered and unjittered instances within chunk.
-            # Note that this seed varies between chunks, but will be constant across epochs.
-            np.random.seed(chunk_index)
+                # Get repeatable seed to shuffle jittered and unjittered instances within chunk.
+                # Note that this seed varies between chunks, but will be constant across epochs.
+                np.random.seed(chunk_index)
 
-            # Get shuffled chunk indices for a second round of shuffling
-            indices = np.random.permutation(2*len(x_shared))
+                # Get shuffled chunk indices for a second round of shuffling
+                indices = np.random.permutation(2*len(x_shared))
 
-            # Get number of batches in this chunk
-            num_batches = 2*len(x_shared)//cfg['batch_size']
+                # Get number of batches in this chunk
+                num_batches = 2*len(x_shared)//cfg['batch_size']
 
-            # Combine data with jittered data, then shuffle and change binary range from {0,1} to {-1,3}, then load into GPU memory.
-            # tvars['X_shared'].set_value(4.0 * np.append(x_shared,jitter_chunk(x_shared, cfg,chunk_index),axis=0)[indices]-1.0, borrow=True)
-            tvars['X_shared'].set_value(np.append(x_shared,jitter_chunk(x_shared, cfg,chunk_index),axis=0)[indices], borrow=True)
-            tvars['y_shared'].set_value(np.append(y_shared,y_shared,axis=0)[indices], borrow=True)
+                # Combine data with jittered data, then shuffle and change binary range from {0,1} to {-1,3}, then load into GPU memory.
+                # tvars['X_shared'].set_value(4.0 * np.append(x_shared,jitter_chunk(x_shared, cfg,chunk_index),axis=0)[indices]-1.0, borrow=True)
+                tvars['X_shared'].set_value(np.append(x_shared,jitter_chunk(x_shared, cfg,chunk_index),axis=0)[indices], borrow=True)
+                tvars['y_shared'].set_value(np.append(y_shared,y_shared,axis=0)[indices], borrow=True)
 
-            # Prepare loss values
-            lvs, accs = [],[]
+                # Prepare loss values
+                lvs, accs = [],[]
 
-            # Loop across batches!
-            for bi in range(num_batches):
+                # Loop across batches!
+                for bi in range(num_batches):
 
-                # Train!
-                [classifier_loss,class_acc] = tfuncs['update_iter'](bi)
+                    # Train!
+                    [classifier_loss,class_acc] = tfuncs['update_iter'](bi)
 
-                # Record batch loss and accuracy
-                lvs.append(classifier_loss)
-                accs.append(class_acc)
+                    # Record batch loss and accuracy
+                    lvs.append(classifier_loss)
+                    accs.append(class_acc)
 
-                # Update iteration counter
-                itr += 1
+                    # Update iteration counter
+                    itr += 1
 
-            # Average losses and accuracies across chunk
-            [closs,c_acc] = [float(np.mean(lvs)),1.0-float(np.mean(accs))]
+                # Average losses and accuracies across chunk
+                [closs,c_acc] = [float(np.mean(lvs)),1.0-float(np.mean(accs))]
 
-            # Report and log losses and accuracies
-            logging.info('epoch: {0:^3d}, itr: {1:d}, c_loss: {2:.6f}, class_acc: {3:.5f}'.format(epoch, cfg['max_epochs'], itr, closs, c_acc))
+                # Report and log losses and accuracies
+                logging.info('epoch: {0:^3d}, itr: {1:d}, c_loss: {2:.6f}, class_acc: {3:.5f}'.format(epoch, cfg['max_epochs'], itr, closs, c_acc))
 
-            # mlog.log(epoch=str(epoch).encode(), itr=str(itr).encode(), closs=str(closs).encode(),c_acc=str(c_acc).encode())
+                # mlog.log(epoch=str(epoch).encode(), itr=str(itr).encode(), closs=str(closs).encode(),c_acc=str(c_acc).encode())
 
-        # Every Nth epoch, save weights[:-3]
-        if not (epoch%cfg['checkpoint_every_nth']):
-            fname = str(weights_fname[:-4]) + "_epoch_" + str(epoch) + str(time.time()) + ".npz"
-            checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
+            # Every Nth epoch, save weights[:-3]
+            if not (epoch%cfg['checkpoint_every_nth']):
+                fname = str(weights_fname[:-4]) + "_epoch_" + str(epoch) + str(time.time()) + ".npz"
+                checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
+
+        fname = str(weights_fname[:-4]) + "_epoch_" + str(epoch) + str(time.time()) + ".npz"
+        checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
+
 
 
 

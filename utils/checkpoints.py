@@ -42,6 +42,9 @@ def load_weights(fname, l_out):
         if param.name in param_dict:
             stored_shape = np.asarray(param_dict[param.name].shape)
             param_shape = np.asarray(param.get_value().shape)
+
+            # print(param.name, param_shape)
+
             if not np.all(stored_shape == param_shape):
                 warn_msg = 'shape mismatch:'
                 warn_msg += '{} stored:{} new:{}'.format(param.name, stored_shape, param_shape)
@@ -55,4 +58,6 @@ def load_weights(fname, l_out):
         metadata = pickle.loads(param_dict['metadata'])
     else:
         metadata = {}
-    return metadata
+
+
+    return metadata, param_dict

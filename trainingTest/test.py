@@ -171,6 +171,8 @@ def main(args):
     # Initialize test iteration counter
     test_itr=0
 
+    correct_features = []
+    correct_targets = []
     # Loop across chunks!
     for chunk_index in range(num_test_chunks):
 
@@ -204,6 +206,12 @@ def main(args):
             # if batch_test_class_error == 1.0:
             print(test_itr, "-> Input : ", anot , " // pred : " , pred , " // neq : " , batch_test_class_error)
 
+            if int(batch_test_class_error) == 0:
+                correct_features.append(x_shared[bi])
+                correct_targets.append(y_shared[bi])
+
+
+
             # Optionally, update the confusion matrix
             # confusion_matrix[pred,int(yt[cfg['n_rotations']*test_itr])]+=1
 
@@ -213,6 +221,10 @@ def main(args):
     # Get total accuracy
     t_class_error = 1-float(np.mean(test_class_error))
     print('Test accuracy is: ' + str(t_class_error))
+
+
+    #Save Correct Features
+    np.savez_compressed( "CorrectFeatures", features=correct_features, targets=correct_targets)
 
     # Optionally save best accuracy
     # if t_class_error>best_acc:
@@ -231,8 +243,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('config_path', nargs='?', default='./trainingTest/VRN_64.py', help='config .py file')
 
-    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_test_epoch_361499892630.1351395.npz')
+    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_64_TEST_ALL_epoch_01500531804.69375.npz')
 
-    parser.add_argument('data_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/rotatorcuff_test_5Sample_64.npz')
+    parser.add_argument('data_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/TestData/4_40patients_rotatorcuff_train_5904_64d.npz')
     args = parser.parse_args()
     main(args)

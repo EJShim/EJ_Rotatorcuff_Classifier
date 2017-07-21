@@ -153,11 +153,11 @@ def ImportVolume(dataPath, xPos = 0.5, yPos = 0.5, rot = 0):
 
 ##Main Functionls
 
-RAW_DATA_PATH = "/Users/sim-eungjun/documents/data"
+RAW_DATA_PATH = "/home/ej/data/RCT/18"
 saveDir = os.path.join( os.path.dirname(os.path.realpath(__file__)), "../NetworkData/volume" )
 ROI_MIN = 4
 ROI_MAX = 7
-TEST_DATA_RATE = 0.2
+TEST_DATA_RATE = 0.0
 
 
 #Import path
@@ -295,7 +295,7 @@ try:
         ZT = np.asarray(ztData)
 
         saveName = str(num_patients) + "patients_rotatorcuff_test_" + str(XT.shape[0]) + "_" + str(resolution) + "d.npz"
-        testPath = os.path.join(saveDir, SaveName)
+        testPath = os.path.join(saveDir, saveName)
         np.savez_compressed( testPath, features=XT, targets=YT, names=ZT)
 
 except Exception as e:

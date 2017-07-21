@@ -34,6 +34,10 @@ class E_MainWindow(QMainWindow):
         for i in range(2):
             self.m_vtkWidget[i] = QVTKRenderWindowInteractor();
 
+        #Bone Color, RCT
+        self.m_bBoneColorBlack = True
+        self.m_bRCT = True
+
 
         self.m_vtkSliceWidget = [0,0,0]
         self.m_sliceSlider = [0, 0, 0]
@@ -110,7 +114,21 @@ class E_MainWindow(QMainWindow):
         meshViewCheck.stateChanged.connect(self.onMeshViewState)
         checkLayout.addWidget(meshViewCheck)
 
+        volumeViewCheck = QCheckBox("Volume View")
+        volumeViewCheck.setCheckState(2)
+        volumeViewCheck.stateChanged.connect(self.onVolumeViewState)
+        checkLayout.addWidget(volumeViewCheck)
+
+
+        sliceViewCheck = QCheckBox("Slice View")
+        sliceViewCheck.setCheckState(0)
+        sliceViewCheck.stateChanged.connect(self.onSliceViewState)
+        checkLayout.addWidget(sliceViewCheck)
+
+
         objectToolbar.addSeparator()
+
+
         cropWidget = QWidget()
         objectToolbar.addWidget(cropWidget)
         cropLayout = QVBoxLayout()
@@ -132,19 +150,47 @@ class E_MainWindow(QMainWindow):
         cropLayout.addWidget(self.m_rangeSlider[1])
         self.m_rangeSlider[1].valueChanged.connect(self.onRangeSliderValueChanged)
 
+        objectToolbar.addSeparator()
+
+        self.radioGroubBox = QGroupBox("Bone Color")
+        bone_black = QRadioButton("Black")
+        bone_white = QRadioButton("White")
+        bone_black.setChecked(True);
+
+        grouopBoxLayout = QVBoxLayout()
+        grouopBoxLayout.addWidget(bone_black)
+        grouopBoxLayout.addWidget(bone_white)
+
+        self.radioGroubBox.setLayout(grouopBoxLayout)
+
+        bone_black.toggled.connect(self.onChangeTF)
+        objectToolbar.addWidget(self.radioGroubBox)
+
+        objectToolbar.addSeparator()
 
 
+        self.RCTGroupBox = QGroupBox("RCT")
 
-        volumeViewCheck = QCheckBox("Volume View")
-        volumeViewCheck.setCheckState(2)
-        volumeViewCheck.stateChanged.connect(self.onVolumeViewState)
-        checkLayout.addWidget(volumeViewCheck)
+        RCT = QRadioButton("RCT")
+        NRCT = QRadioButton("Non-RCT")
+        RCT.setChecked(True);
+
+        grouopBoxLayout2 = QVBoxLayout()
+        grouopBoxLayout2.addWidget(RCT)
+        grouopBoxLayout2.addWidget(NRCT)
+
+        self.RCTGroupBox.setLayout(grouopBoxLayout2)
+        RCT.toggled.connect(self.onChangeRCT)
+        objectToolbar.addWidget(self.RCTGroupBox)
+
+        objectToolbar.addSeparator()
 
 
-        sliceViewCheck = QCheckBox("Slice View")
-        sliceViewCheck.setCheckState(0)
-        sliceViewCheck.stateChanged.connect(self.onSliceViewState)
-        checkLayout.addWidget(sliceViewCheck)
+        #Save Object Action
+        SaveAction = QAction(QIcon(iconPath + "/051-cmyk.png"), "Save Processed Data", self)
+        SaveAction.triggered.connect(self.onSaveData)
+        objectToolbar.addAction(SaveAction)
+
 
 
         networkToolbar = QToolBar();
@@ -159,6 +205,11 @@ class E_MainWindow(QMainWindow):
         predAction = QAction(QIcon(iconPath + "/051-programming.png"), "Predict Random", self)
         predAction.triggered.connect(self.onRandomPred)
         networkToolbar.addAction(predAction)
+
+
+
+
+
 
     def InitSliceViewWidget(self):
         layout = QVBoxLayout()
@@ -231,9 +282,29 @@ class E_MainWindow(QMainWindow):
         #Import Volume
         self.Mgr.VolumeMgr.ImportVolume(fileSeries)
 
+    def onSaveData(self):
+        log = "Save Processed Data : " +str(curPath)
+        self.Mgr.SetLog(log)
+
+        bonecolor ="Bone Color : "
+
+        if self.m_bBoneColorBlack:
+            bonecolor += "Black"
+        else:
+            bonecolor += "White"
+
+        self.Mgr.SetLog(bonecolor)
+
+        rctlog = "RCT : "
+        if self.m_bRCT:
+            rctlog+= "RCT"
+        else:
+            rctlog+= "None_RCT"
+
+        self.Mgr.SetLog(rctlog)
+
     def onInitNetwork(self):
         self.Mgr.InitNetwork()
-        print()
 
     def onRandomPred(self):
         self.Mgr.RandomPrediction()
@@ -256,6 +327,12 @@ class E_MainWindow(QMainWindow):
         else:
             self.m_vtkWidget[1].hide()
 
+    def onChangeRCT(self, isTrue):
+        self.self.m_bRCT = isTrue
+
+    def onChangeTF(self, isTrue):
+        self.m_bBoneColorBlack = isTrue
+
 
     def onSliceViewState(self, state):
         if state==2:
@@ -274,8 +351,11 @@ class E_MainWindow(QMainWindow):
 
         self.Mgr.VolumeMgr.ChangeSliceIdx(idx, obj.value())
 
+
     def onRangeSliderValueChanged(self, value):
         xPos = self.m_rangeSlider[0].value() / 1000
         yPos = self.m_rangeSlider[1].value() / 1000
 
         self.Mgr.VolumeMgr.UpdateVolumeDataCrop(xPos, yPos)
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
