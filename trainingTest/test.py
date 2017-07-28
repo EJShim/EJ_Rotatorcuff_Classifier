@@ -243,8 +243,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('config_path', nargs='?', default='./trainingTest/VRN_64.py', help='config .py file')
 
-    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_64_TEST_ALL_epoch_21500611182.0089917.npz')
+    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_64_TEST_ALL_epoch_01501211197.724599.npz')
 
-    parser.add_argument('data_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/TestData/4_40patients_rotatorcuff_train_5904_64d.npz')
+    parser.add_argument('data_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/TestData/Merged_Black.npz')
     args = parser.parse_args()
     main(args)

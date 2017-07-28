@@ -11,7 +11,6 @@ from GUI.VolumeListWidget import E_VolumeListWidget
 
 import numpy as np
 
-
 curPath = os.path.dirname(os.path.realpath(__file__))
 rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 iconPath = rootPath + "/icons"
@@ -21,6 +20,8 @@ class E_MainWindow(QMainWindow):
         super(E_MainWindow, self).__init__(parent)
 
         self.setWindowTitle("EJ ModelNet Project")
+        self.keyPlaying = {}
+
 
         #Central Widget
         self.m_centralWidget = QWidget()
@@ -209,10 +210,6 @@ class E_MainWindow(QMainWindow):
         networkToolbar.addAction(predAction)
 
 
-
-
-
-
     def InitSliceViewWidget(self):
         layout = QVBoxLayout()
 
@@ -297,9 +294,12 @@ class E_MainWindow(QMainWindow):
 
 
         #Import Volume
-        self.Mgr.VolumeMgr.ImportVolume(fileSeries)
-        self.Mgr.Redraw()
-        self.Mgr.Redraw2D()
+        try :
+            self.Mgr.VolumeMgr.ImportVolume(fileSeries)
+            self.Mgr.Redraw()
+            self.Mgr.Redraw2D()
+        except Exception as e:
+            self.Mgr.SetLog(str(e))
 
     def onSaveData(self):
         try:
@@ -404,3 +404,16 @@ class E_MainWindow(QMainWindow):
         self.Mgr.VolumeMgr.UpdateVolumeDataCrop(xPos, yPos)
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
+
+    def keyPressEvent(self, e):
+
+        if e.key() == 65:
+            self.m_rangeSlider[0].setValue(self.m_rangeSlider[0].value()-1)
+        elif e.key() == 83:
+            self.m_rangeSlider[0].setValue(self.m_rangeSlider[0].value()+1)
+        elif e.key() == 90:
+            self.m_rangeSlider[1].setValue(self.m_rangeSlider[0].value()-1)
+        elif e.key() == 88:
+            self.m_rangeSlider[1].setValue(self.m_rangeSlider[0].value()+1)
+        else:
+            return
