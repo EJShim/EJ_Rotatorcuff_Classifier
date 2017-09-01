@@ -295,7 +295,7 @@ class E_MainWindow(QMainWindow):
 
         #Import Volume
         try :
-            self.Mgr.VolumeMgr.ImportVolume(fileSeries)
+            self.Mgr.VolumeMgr.ImportVolume2(fileSeries)
             self.Mgr.Redraw()
             self.Mgr.Redraw2D()
         except Exception as e:

@@ -129,9 +129,32 @@ class E_VolumeManager:
             self.m_volumeMapper.SetBlendModeToComposite()
 
 
+    def ImportVolume2(self, fileSeries):
+        patient = dict(name="patient unknown", series =[])
+        serIdx = 0
+
+        for f in fileSeries:
+            mu = mudicom.load(f)
+            
+            ser = list(mu.find(0x0020, 0x0011))[0].value
+            if not ser == serIdx:
+                serIdx = ser
+                patient['series'].append([])
+
+            ins = list(mu.find(0x0020, 0x0013))[0].value
+            patient['series'][-1].append(ins)
+
+        print(patient)
 
     def ImportVolume(self, fileSeries):
         volumeBuffer = []
+
+        #0008,1030: Study Description
+        #0008, 103E : Series Description
+        #0018,0020 : Scanning Sequence
+
+        #0020,0011 : Series Number
+        #0020, 0013 : Instance Number
 
         for i in range( len(fileSeries) ):
             mu = mudicom.load(fileSeries[i])

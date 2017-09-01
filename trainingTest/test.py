@@ -243,7 +243,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('config_path', nargs='?', default='./trainingTest/VRN_64.py', help='config .py file')
 
-    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_64_TEST_ALL_epoch_01501211197.724599.npz')
+    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_64_TEST_ALL_epoch_41501229117.5271132.npz')
 
     parser.add_argument('data_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/TestData/Merged_Black.npz')
     args = parser.parse_args()

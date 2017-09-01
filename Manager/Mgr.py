@@ -31,7 +31,7 @@ try:
     import trainingTest.VRN_64 as config_module
 except Exception as e:
     print("No GPU Support")
-weightPath = rootPath + "/VRN_64_TEST_ALL_epoch_01501211197.724599.npz"
+weightPath = rootPath + "/VRN_64_TEST_ALL_epoch_41501229117.5271132.npz"
 modelPath = rootPath + "/CorrectFeatures.npz"
 
 class E_Manager:
