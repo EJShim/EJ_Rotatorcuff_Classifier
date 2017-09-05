@@ -4,7 +4,7 @@ from vtk.util import numpy_support
 
 import numpy as np
 import scipy.ndimage
-
+from collections import Counter
 
 import matplotlib.pyplot as plt
 
@@ -14,6 +14,7 @@ class E_VolumeManager:
 
         self.m_volumeArray = 0.0
         self.m_bAxial = False;
+        self.m_volumeInfo = None
 
         #Selected Volume CFGS
         self.m_colorFunction = vtk.vtkColorTransferFunction()
@@ -129,32 +130,83 @@ class E_VolumeManager:
             self.m_volumeMapper.SetBlendModeToComposite()
 
 
-    def ImportVolume2(self, fileSeries):
-        patient = dict(name="patient unknown", series =[])
-        serIdx = 0
-
-        for f in fileSeries:
-            mu = mudicom.load(f)
-            
-            ser = list(mu.find(0x0020, 0x0011))[0].value
-            if not ser == serIdx:
-                serIdx = ser
-                patient['series'].append([])
-
-            ins = list(mu.find(0x0020, 0x0013))[0].value
-            patient['series'][-1].append(ins)
-
-        print(patient)
-
-    def ImportVolume(self, fileSeries):
-        volumeBuffer = []
+    def get_volume_info(self, path):
+        mu = mudicom.load(path)        
 
         #0008,1030: Study Description
         #0008, 103E : Series Description
         #0018,0020 : Scanning Sequence
+        #0018, 0022 : Scanning Options
+        
 
-        #0020,0011 : Series Number
-        #0020, 0013 : Instance Number
+
+        data = dict(series='', instance='', spacing='', pixelSpacing='', studyDescription = '', seriesDescription = '', scanningSequence = '', scanningOptions = '')
+        data['series'] = int(list(mu.find(0x0020, 0x0011))[0].value)
+        data['instance'] = int(list(mu.find(0x0020, 0x0013))[0].value)
+
+        try:
+            data['studyDescription'] = list(mu.find(0x0008, 0x1030))[0].value
+        except Exception as e:
+            print("Failed to load : ", e)
+        
+        try:
+            data['seriesDescription'] = list(mu.find(0x0008, 0x103E))[0].value
+        except Exception as e:
+            print("Failed to load : ", e)
+        try:
+            data['scanningSequence'] = list(mu.find(0x0018, 0x0020))[0].value
+        except Exception as e:
+            print("Failed to load : ", e)        
+        try:
+            data['scanningOptions'] = list(mu.find(0x0018, 0x0022))[0].value
+        except Exception as e:
+            print("Failed to load : ", e)
+
+        try:
+            data['spacing'] = float(list(mu.find(0x0018, 0x0088))[0].value)
+        except Exception as e:
+            print("Failed to load : ", e)
+        try:
+            pixelSpacing = list(mu.find(0x0028, 0x0030))[0].value
+            data['pixelSpacing'] = list(map(float, [x.strip() for x in pixelSpacing.split('\\')]))
+        except Exception as e:
+            print("Failed to load : ", e)
+
+
+        img = mu.image.numpy
+        shape = img.shape
+        img = img.reshape(shape[1], shape[0])
+
+        data['imageData'] = img
+
+
+        return data
+
+    def ImportVolume2(self, fileSeries):
+        #Series = 0x0020, 0x0011
+        #Instance = 0x0020, 0x0013
+
+        seriesArr = list(map(self.get_volume_info, fileSeries))
+        metaInfo = Counter(tok['series'] for tok in seriesArr)
+        
+
+        serieses = dict()
+        for i in metaInfo:        
+            serieses[str(i)] = dict(description = '', spacing='', pixelSpacing='', data = [])
+
+        for series in seriesArr:
+            serieses[ str(series['series']) ]['description'] = series['seriesDescription']
+            serieses[ str(series['series']) ]['spacing'] = series['spacing']
+            serieses[ str(series['series']) ]['pixelSpacing'] = series['pixelSpacing']
+            serieses[ str(series['series']) ]['data'].append(series)
+
+
+        patient = dict(name='patient', serieses = serieses)
+        self.m_volumeInfo = patient
+        self.UpdateVolumeTree()
+
+    def ImportVolume(self, fileSeries):
+        volumeBuffer = []
 
         for i in range( len(fileSeries) ):
             mu = mudicom.load(fileSeries[i])
@@ -166,14 +218,6 @@ class E_VolumeManager:
 
             #Initialize Volume Info
             if i == 0:
-
-                #t1? t2?
-                reptime = list(mu.find(0x0018, 0x0080))[0].value
-                whattime = list(mu.find(0x0018, 0x0081))[0].value
-
-                self.Mgr.SetLog(str(reptime))
-                self.Mgr.SetLog(str(whattime))
-
                 #Spacing
                 spacing = 1.0;
                 if len(list(mu.find(0x0018, 0x0088))) > 0:
@@ -222,10 +266,6 @@ class E_VolumeManager:
 
         volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
         volumeData = (volumeData * 255.0) / np.amax(volumeArray)
-
-        self.m_volumeData = volumeData
-
-
 
         self.AddVolume(volumeData, renderSpacing)
         self.Mgr.PredictObject(volumeData)
@@ -525,7 +565,54 @@ class E_VolumeManager:
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
         volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
 
-        self.m_volumeData = volumeData
-
         self.AddVolume(volumeData, [1, 1, 1])
         self.Mgr.PredictObject(volumeData)
+
+    def UpdateVolumeTree(self):
+
+        if self.m_volumeInfo == None: return
+        self.Mgr.mainFrm.m_treeWidget.updateTree(self.m_volumeInfo)
+
+    def AddSelectedVolume(self, idx):
+
+        #Get Volume Info        
+        SeriesData = self.m_volumeInfo['serieses'][idx] 
+        data = SeriesData['data']
+        description = SeriesData['description'].lower()
+        spacing = SeriesData['spacing']
+        pixelSpacing = SeriesData['pixelSpacing']
+
+        #Display Information
+        self.Mgr.SetLog(description)
+        # log = 'spacing : ' + str(spacing)
+        # self.Mgr.SetLog(log)
+        # log = 'pixel spacing : ' + str(pixelSpacing[0]) + ', ' + str(pixelSpacing[1])
+        # self.Mgr.SetLog(log)
+
+
+        #Make Volume Data
+        volumeBuffer = []
+        for dic in data:
+            volumeBuffer.append(dic['imageData'])
+
+
+             #Make Volume ARray
+        volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
+
+        #Rotate Volume According to patient coordiante
+        renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])
+
+        # #Resample to [1,1,1]
+        # volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
+
+        # xp = self.Mgr.mainFrm.m_rangeSlider[0].value() / 1000
+        # yp = self.Mgr.mainFrm.m_rangeSlider[1].value() / 1000
+ 
+        # volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
+        # volumeData = (volumeData * 255.0) / np.amax(volumeArray)
+
+        self.m_volumeArray = volumeArray
+        self.AddVolume(volumeArray, renderSpacing)
+        #self.Mgr.PredictObject(volumeData)
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()

@@ -8,6 +8,7 @@ import sys, os
 from Manager.Mgr import E_Manager
 from GUI.VolumeRenderingWidget import E_VolumeRenderingWidget
 from GUI.VolumeListWidget import E_VolumeListWidget
+from GUI.VolumeTreeWidget import E_VolumeTreeWidget
 
 import numpy as np
 
@@ -106,8 +107,14 @@ class E_MainWindow(QMainWindow):
         checkWidget.setLayout(checkLayout)
 
         #Show/hide Volume List
+        treeViewCheck = QCheckBox("Volume Tree")
+        treeViewCheck.setCheckState(2)
+        treeViewCheck.stateChanged.connect(self.onVolumeTreeState)
+        checkLayout.addWidget(treeViewCheck)
+
+
         listViewCheck = QCheckBox("List View")
-        listViewCheck.setCheckState(2)
+        listViewCheck.setCheckState(0)
         listViewCheck.stateChanged.connect(self.onListViewState)
         checkLayout.addWidget(listViewCheck)
 
@@ -227,9 +234,12 @@ class E_MainWindow(QMainWindow):
         MainLayout = QHBoxLayout()
         self.m_centralWidget.setLayout(MainLayout)
 
-        self.m_listWidget = E_VolumeListWidget(self)
-        self.m_listWidget
+        self.m_listWidget = E_VolumeListWidget(self)        
+        self.m_listWidget.hide()
         MainLayout.addWidget(self.m_listWidget)
+
+        self.m_treeWidget = E_VolumeTreeWidget(self)
+        MainLayout.addWidget(self.m_treeWidget)
 
 
         for i in range(2):
@@ -251,9 +261,10 @@ class E_MainWindow(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, dockwidget)
 
         MainLayout.setStretch(0, 1)
-        MainLayout.setStretch(1, 2)
+        MainLayout.setStretch(1, 1)
         MainLayout.setStretch(2, 2)
-        MainLayout.setStretch(3, 0.5)
+        MainLayout.setStretch(3, 2)
+        MainLayout.setStretch(4, 0.5)
 
 
     def InitManager(self):
@@ -296,10 +307,11 @@ class E_MainWindow(QMainWindow):
         #Import Volume
         try :
             self.Mgr.VolumeMgr.ImportVolume2(fileSeries)
-            self.Mgr.Redraw()
-            self.Mgr.Redraw2D()
         except Exception as e:
             self.Mgr.SetLog(str(e))
+
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
 
     def onSaveData(self):
         try:
@@ -367,6 +379,13 @@ class E_MainWindow(QMainWindow):
             self.m_vtkWidget[1].show()
         else:
             self.m_vtkWidget[1].hide()
+
+    def onVolumeTreeState(self, state):
+        if state == 2: #show
+            self.m_treeWidget.show()
+        else:
+            self.m_treeWidget.hide()
+        
 
     def onChangeRCT(self, isTrue):
         self.m_bRCT = isTrue
