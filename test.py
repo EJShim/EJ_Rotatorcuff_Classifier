@@ -3,6 +3,8 @@ import mudicom
 
 path = "/Users/EJ/Desktop/ser004img00008.dcm"
 
+print(type(path))
+
 reader = gdcm.Reader()
 reader.SetFileName(path)
 if not reader.Read():

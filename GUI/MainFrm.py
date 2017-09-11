@@ -285,8 +285,7 @@ class E_MainWindow(QMainWindow):
         self.Mgr.SetLog('import Volume')
 
         path = QFileDialog.getOpenFileNames(self, "Import 3D Objects", "~/", "Dicom File(*.dcm)")
-        fileSeries = path[0]
-
+        fileSeries = path[0]    
 
         dirName = os.path.dirname(str(path[0][0]))
         dirName = os.path.dirname(dirName)
@@ -304,7 +303,7 @@ class E_MainWindow(QMainWindow):
         if len(fileSeries) == 0: return
 
 
-        #Import Volume
+        #Import Volume        
         try :
             self.Mgr.VolumeMgr.ImportVolume2(fileSeries)
         except Exception as e:

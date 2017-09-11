@@ -24,8 +24,6 @@ class E_VolumeManager:
         self.m_imageProperty = vtk.vtkImageProperty()
         self.m_imageProperty.SetInterpolationTypeToLinear()
 
-
-
         #Volume
         self.m_volumeMapper = vtk.vtkSmartVolumeMapper()
         self.m_volume = vtk.vtkActor()
@@ -130,7 +128,7 @@ class E_VolumeManager:
             self.m_volumeMapper.SetBlendModeToComposite()
 
 
-    def get_volume_info(self, path):
+    def get_volume_info(self, path):        
         mu = mudicom.load(path)        
 
         #0008,1030: Study Description
