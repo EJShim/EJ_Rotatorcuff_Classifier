@@ -286,10 +286,13 @@ class E_VolumeManager:
 
 
 
-        for i in range(dim[0]):
-            for j in range(dim[2]):
-                for k in range(dim[1]):
-                    imgData.SetScalarComponentFromDouble(k, j, i, 0, camArray[i][k][j])
+        # for i in range(dim[0]):
+        #     for j in range(dim[2]):
+        #         for k in range(dim[1]):
+        #             imgData.SetScalarComponentFromDouble(k, j, i, 0, camArray[i][k][j])
+
+        floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
+        imgData.GetPointData().SetScalars(floatArray)
 
 
         #set Class Activation Map
@@ -361,7 +364,6 @@ class E_VolumeManager:
 
         data_string = volumeArray.tostring()
         dim = volumeArray.shape
-        # print("min: ", np.amin(volumeArray), ", max : ", np.amax(volumeArray))
 
 
         imgData = vtk.vtkImageData()
@@ -370,13 +372,13 @@ class E_VolumeManager:
         imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
         imgData.SetSpacing(spacing[1], spacing[2], spacing[0])
 
-        for i in range(dim[0]):
-            for j in range(dim[2]):
-                for k in range(dim[1]):
-                    imgData.SetScalarComponentFromDouble(k, j, i, 0, volumeArray[i][k][j])
+        # for i in range(dim[0]):
+        #     for j in range(dim[2]):
+        #         for k in range(dim[1]):
+        #             imgData.SetScalarComponentFromDouble(k, j, i, 0, volumeArray[i][k][j])
 
-        # floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
-        # imgData.GetPointData().SetScalars(floatArray)
+        floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
+        imgData.GetPointData().SetScalars(floatArray)
 
         self.m_scalarRange = imgData.GetScalarRange()
 
@@ -560,10 +562,14 @@ class E_VolumeManager:
     def UpdateVolumeDataCrop(self, xP, yP):
         #if self.m_volumeArray == 0.0: return
 
+
+
+
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
         volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
 
         self.AddVolume(volumeData, [1, 1, 1])
+        
         self.Mgr.PredictObject(volumeData)
 
     def UpdateVolumeTree(self):
@@ -596,20 +602,23 @@ class E_VolumeManager:
 
              #Make Volume ARray
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
-
+    
         #Rotate Volume According to patient coordiante
         renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])
-
-        # #Resample to [1,1,1]
-        # volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
-
-        # xp = self.Mgr.mainFrm.m_rangeSlider[0].value() / 1000
-        # yp = self.Mgr.mainFrm.m_rangeSlider[1].value() / 1000
- 
-        # volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
-        # volumeData = (volumeData * 255.0) / np.amax(volumeArray)
+        volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
 
         self.m_volumeArray = volumeArray
+        
+        if False:
+            #Resample to [1,1,1]                    
+            xp = self.Mgr.mainFrm.m_rangeSlider[0].value() / 1000
+            yp = self.Mgr.mainFrm.m_rangeSlider[1].value() / 1000
+    
+            volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
+            volumeArray = (volumeData * 255.0) / np.amax(volumeArray)
+
+
+        
         self.AddVolume(volumeArray, renderSpacing)
         #self.Mgr.PredictObject(volumeData)
         self.Mgr.Redraw()
