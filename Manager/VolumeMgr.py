@@ -173,6 +173,7 @@ class E_VolumeManager:
 
         img = mu.image.numpy
         shape = img.shape
+        print(img.shape)
         img = img.reshape(shape[1], shape[0])
 
         data['imageData'] = img
