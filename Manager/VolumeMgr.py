@@ -145,30 +145,30 @@ class E_VolumeManager:
         try:
             data['studyDescription'] = list(mu.find(0x0008, 0x1030))[0].value
         except Exception as e:
-            print("Failed to load : ", e)
+            print("Failed to load Study Description")
         
         try:
             data['seriesDescription'] = list(mu.find(0x0008, 0x103E))[0].value
         except Exception as e:
-            print("Failed to load : ", e)
+            print("Failed to load Series Description")
         try:
             data['scanningSequence'] = list(mu.find(0x0018, 0x0020))[0].value
         except Exception as e:
-            print("Failed to load : ", e)        
+            print("Failed to load Scanning Sequence")        
         try:
             data['scanningOptions'] = list(mu.find(0x0018, 0x0022))[0].value
         except Exception as e:
-            print("Failed to load : ", e)
+            print("Failed to load Scanning Options")
 
         try:
             data['spacing'] = float(list(mu.find(0x0018, 0x0088))[0].value)
         except Exception as e:
-            print("Failed to load : ", e)
+            print("Failed to load Spacing")
         try:
             pixelSpacing = list(mu.find(0x0028, 0x0030))[0].value
             data['pixelSpacing'] = list(map(float, [x.strip() for x in pixelSpacing.split('\\')]))
         except Exception as e:
-            print("Failed to load : ", e)
+            print("Failed to load Pixel Size")
 
 
         img = mu.image.numpy
