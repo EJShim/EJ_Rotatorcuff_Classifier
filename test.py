@@ -1,46 +1,36 @@
-import gdcm
-import mudicom
+import os
 
-path = "/Users/EJ/Desktop/ser004img00008.dcm"
-
-print(type(path))
-
-reader = gdcm.Reader()
-reader.SetFileName(path)
-if not reader.Read():
-    raise InvalidDicom("Not a valid DICOM file")
+none_RCT = os.listdir('/Volumes/새 볼륨/RCT_DATA/none RCT')
+print("# of None-RCT patients : ", len(none_RCT))
 
 
-_file = reader.GetFile()
-_header = _file.GetHeader()
-_dataset = _file.GetDataSet()
-_str_filter = gdcm.StringFilter()
+konkuk_RCT_small = os.listdir('/Volumes/새 볼륨/RCT_DATA/RCT/small sized RCT')
+RCT_small = os.listdir('/Volumes/새 볼륨/RCT_DATA/RCT/Small 14개')
+
+print("# of konkuk RCT Small : ", len(konkuk_RCT_small))
+print("# of RCT small : ", len(RCT_small))
+print("total RCT small : ", len(konkuk_RCT_small) + len(RCT_small))
+
+konkuk_RCT_medium = os.listdir('/Volumes/새 볼륨/RCT_DATA/RCT/medium sized RCT')
+RCT_medium = os.listdir('/Volumes/새 볼륨/RCT_DATA/RCT/Medium 30개')
+
+print("# of konkuk RCT Small : ", len(konkuk_RCT_medium))
+print("# of RCT medium : ", len(RCT_medium))
+print("total RCT medium : ", len(konkuk_RCT_medium) + len(RCT_medium))
+
+konkuk_RCT_large = os.listdir('/Volumes/새 볼륨/RCT_DATA/RCT/large sized RCT')
+RCT_large = os.listdir('/Volumes/새 볼륨/RCT_DATA/RCT/Large 15개')
+
+print("# of konkuk RCT Large : ", len(konkuk_RCT_large))
+print("# of RCT large : ", len(RCT_large))
+print("total RCT large : ", len(konkuk_RCT_large) + len(RCT_large))
+
+konkuk_RCT_massive = os.listdir('/Volumes/새 볼륨/RCT_DATA/RCT/massive RCT')
+
+print("total Massive RCT : ", len(konkuk_RCT_massive))
 
 
-print(_header)
-print(_dataset)
+print("total : ", len(konkuk_RCT_small) + len(RCT_small) + len(konkuk_RCT_medium) + len(RCT_medium) + len(konkuk_RCT_large) + len(RCT_large) + len(konkuk_RCT_massive))
 
 
-# mu = mudicom.load(path)
 
-# # returns array of data elements as dicts
-# mu.read()
-
-
-# # returns dict of errors and warnings for DICOM
-# mu.validate()
-
-# # basic anonymization
-# mu.anonymize()
-# # save anonymization
-# mu.save_as("dicom.dcm")
-
-# # creates image object
-# img = mu.image # before v0.1.0 this was mu.image()
-# # returns numpy array
-# img.numpy # before v0.1.0 this was mu.numpy()
-
-# # using Pillow, saves DICOM image
-# img.save_as_pil("ex1.jpg")
-# # using matplotlib, saves DICOM image
-# img.save_as_plt("ex1_2.jpg")

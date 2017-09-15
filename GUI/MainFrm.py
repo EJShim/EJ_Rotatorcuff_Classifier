@@ -288,6 +288,8 @@ class E_MainWindow(QMainWindow):
         fileSeries = path[0]    
 
         dirName = os.path.dirname(str(path[0][0]))
+        self.Mgr.SetLog(dirName)
+
         dirName = os.path.dirname(dirName)
         dirName = os.path.dirname(dirName)
         dirName = os.path.split(dirName)[1]
@@ -305,7 +307,7 @@ class E_MainWindow(QMainWindow):
 
         #Import Volume        
         try :
-            self.Mgr.VolumeMgr.ImportVolume2(fileSeries)
+            self.Mgr.VolumeMgr.ImportVolume(fileSeries)
         except Exception as e:
             self.Mgr.SetLog(str(e))
 

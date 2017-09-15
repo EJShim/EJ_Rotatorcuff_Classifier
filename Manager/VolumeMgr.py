@@ -12,8 +12,7 @@ class E_VolumeManager:
     def __init__(self, Mgr):
         self.Mgr = Mgr
 
-        self.m_volumeArray = 0.0
-        self.m_bAxial = False;
+        self.m_volumeArray = 0.0        
         self.m_volumeInfo = None
 
         #Selected Volume CFGS
@@ -143,7 +142,7 @@ class E_VolumeManager:
         data['instance'] = int(list(mu.find(0x0020, 0x0013))[0].value)
 
         try:
-            data['studyDescription'] = list(mu.find(0x0008, 0x1030))[0].value
+            data['studyDescription'] = list(mu.find(0x0008, 0x1030))[0].value                    
         except Exception as e:
             print("Failed to load Study Description")
         
@@ -173,14 +172,14 @@ class E_VolumeManager:
 
         img = mu.image.numpy
         shape = img.shape        
-        img = img.reshape(shape[1], shape[0])
+        # img = img.reshape(shape[1], shape[0])
 
         data['imageData'] = img
 
 
         return data
 
-    def ImportVolume2(self, fileSeries):
+    def ImportVolume(self, fileSeries):
         #Series = 0x0020, 0x0011
         #Instance = 0x0020, 0x0013
 
@@ -190,12 +189,27 @@ class E_VolumeManager:
 
         serieses = dict()
         for i in metaInfo:        
-            serieses[str(i)] = dict(description = '', spacing='', pixelSpacing='', data = [])
+            serieses[str(i)] = dict(description = '', orientation = '', spacing='', pixelSpacing='', data = [])
 
         for series in seriesArr:
-            serieses[ str(series['series']) ]['description'] = series['seriesDescription']
-            serieses[ str(series['series']) ]['spacing'] = series['spacing']
-            serieses[ str(series['series']) ]['pixelSpacing'] = series['pixelSpacing']
+            if serieses[ str(series['series']) ]['description'] == '':
+                serieses[ str(series['series']) ]['description'] = series['seriesDescription']
+                description = series['seriesDescription'].lower()                
+                orientation = 'unknown'                
+                print(description)
+                if not description.find('ax') == -1 or not description.find('tra') == -1:
+                    orientation = 'AXL'
+                if not description.find('cor') == -1:
+                    orientation = 'COR'
+                if not description.find('sag') == -1:
+                    orientation = 'SAG'                
+                serieses[ str(series['series']) ]['orientation'] = orientation               
+
+            if serieses[ str(series['series']) ]['spacing'] == '':
+                serieses[ str(series['series']) ]['spacing'] = series['spacing']
+            if serieses[ str(series['series']) ]['pixelSpacing'] == '':
+                serieses[ str(series['series']) ]['pixelSpacing'] = series['pixelSpacing']
+
             serieses[ str(series['series']) ]['data'].append(series)
 
 
@@ -203,70 +217,6 @@ class E_VolumeManager:
         self.m_volumeInfo = patient
         self.UpdateVolumeTree()
 
-    def ImportVolume(self, fileSeries):
-        volumeBuffer = []
-
-        for i in range( len(fileSeries) ):
-            mu = mudicom.load(fileSeries[i])
-
-            #Load Image
-            img = mu.image.numpy
-            shape = img.shape
-            img = img.reshape(shape[1], shape[0])
-
-            #Initialize Volume Info
-            if i == 0:
-                #Spacing
-                spacing = 1.0;
-                if len(list(mu.find(0x0018, 0x0088))) > 0:
-                    spacing = float(list(mu.find(0x0018, 0x0088))[0].value)
-                #Position
-                position = list(mu.find(0x0020, 0x0032))[0].value
-
-                #Orientation
-                orientation = list(mu.find(0x0020, 0x0037))[0].value
-                orientation = list(map(float, [x.strip() for x in orientation.split('\\')]))
-                #Check if Axial
-                self.m_bAxial = self.IsAxial(orientation)
-
-                #Pixel Spacing
-                pixelSpacing = list(mu.find(0x0028, 0x0030))[0].value
-                pixelSpacing = list(map(float, [x.strip() for x in pixelSpacing.split('\\')]))
-
-            volumeBuffer.append(img)
-
-
-        #Make Volume ARray
-        volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
-
-        #Rotate Volume According to patient coordiante
-        renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])
-
-
-        #Resample to [1,1,1]
-        volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
-
-        if self.m_bAxial:
-            #Axis(0,2 changes the z-dimension)
-            volumeArray = np.rot90(volumeArray, 3, axes=(0,2))
-            renderSpacing = [renderSpacing[1], renderSpacing[2], renderSpacing[0]]
-        else:
-            volumeArray = np.rot90(volumeArray, 3, axes=(1,2))
-
-        self.m_volumeArray = volumeArray
-
-
-        #Calculate Crop Region Start Position and Dimension(Length)
-        # volumeData = volumeArray
-        # volumeData, renderSpacing = self.MakeVolumeData(volumeArray, renderSpacing)
-        xp = self.Mgr.mainFrm.m_rangeSlider[0].value() / 1000
-        yp = self.Mgr.mainFrm.m_rangeSlider[1].value() / 1000
-
-        volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
-        volumeData = (volumeData * 255.0) / np.amax(volumeArray)
-
-        self.AddVolume(volumeData, renderSpacing)
-        self.Mgr.PredictObject(volumeData)
 
     def IsAxial(self, orientation):
         ori = np.round(np.abs(orientation))
@@ -363,14 +313,14 @@ class E_VolumeManager:
     def AddVolume(self, volumeArray, spacing = [1.0, 1.0, 1.0], origin = [0, 0, 0]):
 
         data_string = volumeArray.tostring()
-        dim = volumeArray.shape
 
+        dim = volumeArray.shape
 
         imgData = vtk.vtkImageData()
         imgData.SetOrigin(origin)
-        imgData.SetDimensions(dim[1], dim[2], dim[0])
+        imgData.SetDimensions(dim[2], dim[1], dim[0])
         imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
-        imgData.SetSpacing(spacing[1], spacing[2], spacing[0])
+        imgData.SetSpacing(spacing[2], spacing[1], spacing[0])
 
         # for i in range(dim[0]):
         #     for j in range(dim[2]):
@@ -486,7 +436,7 @@ class E_VolumeManager:
     def MakeVolumeDataWithResampled(self, volume, xPos = 0.5, yPos = 0.5, rot = 0):
             # return volume, spacing
 
-            if np.argmin(volume.shape) == 0:
+            if np.argmin(volume.shape) == 0: ##SAG0
                 rDim = volume.shape[0]
 
                 #Possible X Range
@@ -498,6 +448,19 @@ class E_VolumeManager:
 
                 volume = volume[:, xMin:,yMin:]
                 volume = volume[:, :rDim,:rDim]
+            elif np.argmin(volume.shape) == 1:
+                print("Resampling AXL")
+                rDim = volume.shape[1]
+
+                #Possible X Range
+                xMax = volume.shape[2] - rDim
+                yMax = volume.shape[0] - rDim
+
+                xMin = int(xMax * xPos)
+                yMin = int(yMax * yPos)
+
+                volume = volume[xMin:, :, yMin:]
+                volume = volume[:rDim, :, :rDim]
             else:
                 rDim = volume.shape[2]
 
@@ -562,9 +525,6 @@ class E_VolumeManager:
     def UpdateVolumeDataCrop(self, xP, yP):
         #if self.m_volumeArray == 0.0: return
 
-
-
-
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
         volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
 
@@ -585,14 +545,14 @@ class E_VolumeManager:
         description = SeriesData['description'].lower()
         spacing = SeriesData['spacing']
         pixelSpacing = SeriesData['pixelSpacing']
+        orientation = SeriesData['orientation']
+
+        #Rotate Volume According to patient coordiante
+        renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])
 
         #Display Information
-        self.Mgr.SetLog(description)
-        # log = 'spacing : ' + str(spacing)
-        # self.Mgr.SetLog(log)
-        # log = 'pixel spacing : ' + str(pixelSpacing[0]) + ', ' + str(pixelSpacing[1])
-        # self.Mgr.SetLog(log)
-
+        log = "Selected Series : " + description + ", Volume Orientation : " + orientation
+        self.Mgr.SetLog(log)
 
         #Make Volume Data
         volumeBuffer = []
@@ -602,9 +562,28 @@ class E_VolumeManager:
 
              #Make Volume ARray
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
-    
-        #Rotate Volume According to patient coordiante
-        renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])
+
+        #Rotate Volume Array According to Orientation
+        # volumeArray = np.rot90(volumeArray, 2)
+        
+        # if orientation == 'COR':
+        #     volumeArray = np.rot90(volumeArray, axes=(0,2))
+        #     renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
+        if orientation == 'AXL':
+            volumeArray = np.rot90(volumeArray, 3,  axes=(0, 1))
+            renderSpacing = [ renderSpacing[2], renderSpacing[0], renderSpacing[1] ]
+        else:
+            volumeArray = np.rot90(volumeArray,2, axes=(1,2))
+            if orientation == 'COR':
+                volumeArray = np.rot90(volumeArray, axes=(0,2))
+                renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
+                
+            
+
+        #1,2 = z axes
+        #0,2 = y axes
+        #0,1 = x axes
+        
         volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
 
         self.m_volumeArray = volumeArray

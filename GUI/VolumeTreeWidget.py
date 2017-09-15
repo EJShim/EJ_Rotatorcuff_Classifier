@@ -24,7 +24,7 @@ class E_VolumeTreeWidget(QTreeWidget):
 
         serieses = info['serieses']
         for series in serieses:
-            itemName = 'series ' + series + ' : ' + serieses[series]['description']
+            itemName = 'series ' + series + ' : ' + serieses[series]['description'] + '(' + serieses[series]['orientation'] + ')'
             
             child = QTreeWidgetItem(parent)
             child.setText(0, itemName)
@@ -32,10 +32,12 @@ class E_VolumeTreeWidget(QTreeWidget):
             description = serieses[series]['description'].lower()
 
             #Fat Supression
-            if not description.find('fs') == -1 or not description.find('fat') == -1:                
-                child.setForeground(0, QBrush(QColor('blue')))
+            if not description.find('fs/') == -1 or not description.find('fs ') == -1 or not description.find('fat') == -1 or not description.find('f/s') == -1 or description.endswith('fs') or not description.find('fs_') == -1:                
+                child.setBackground(0, QBrush(QColor('green')))
+                
                 if not description.find('cor') == -1:
-                    child.setBackground(0, QBrush(QColor('green')))                        
+                    child.setForeground(0, QBrush(QColor('red')))
+                                        
 
             elif description.find('t1') == -1 and description.find('t2')== -1:
                 child.setBackground(0, QBrush(QColor('red')))
