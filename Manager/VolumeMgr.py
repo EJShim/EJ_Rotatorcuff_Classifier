@@ -137,7 +137,7 @@ class E_VolumeManager:
         
 
 
-        data = dict(series='', instance='', spacing='', pixelSpacing='', studyDescription = '', seriesDescription = '', scanningSequence = '', scanningOptions = '')
+        data = dict(series='', instance='', orientation = '', position='', spacing='', pixelSpacing='', studyDescription = '', seriesDescription = '', scanningSequence = '')
         data['series'] = int(list(mu.find(0x0020, 0x0011))[0].value)
         data['instance'] = int(list(mu.find(0x0020, 0x0013))[0].value)
 
@@ -153,12 +153,7 @@ class E_VolumeManager:
         try:
             data['scanningSequence'] = list(mu.find(0x0018, 0x0020))[0].value
         except Exception as e:
-            print("Failed to load Scanning Sequence")        
-        try:
-            data['scanningOptions'] = list(mu.find(0x0018, 0x0022))[0].value
-        except Exception as e:
-            print("Failed to load Scanning Options")
-
+            print("Failed to load Scanning Sequence")                
         try:
             data['spacing'] = float(list(mu.find(0x0018, 0x0088))[0].value)
         except Exception as e:
@@ -169,9 +164,23 @@ class E_VolumeManager:
         except Exception as e:
             print("Failed to load Pixel Size")
 
+        try:
+            orientation = list(mu.find(0x0020, 0x0037))[0].value
+            # print(orientation)
+            data['orientation'] = list(map(float, [x.strip() for x in orientation.split('\\')]))
+        except Exception as e:
+            print("Failed to load Orientation")
+
+        try:
+            position = list(mu.find(0x0020, 0x0032))[0].value
+            # print(orientation)
+            data['position'] = list(map(float, [x.strip() for x in position.split('\\')]))
+        except Exception as e:
+            print("Failed to load position")
+
 
         img = mu.image.numpy
-        shape = img.shape        
+        # shape = img.shape 
         # img = img.reshape(shape[1], shape[0])
 
         data['imageData'] = img
@@ -189,28 +198,47 @@ class E_VolumeManager:
 
         serieses = dict()
         for i in metaInfo:        
-            serieses[str(i)] = dict(description = '', orientation = '', spacing='', pixelSpacing='', data = [])
+            serieses[str(i)] = dict(description = '', direction='', orientation = '', spacing='', pixelSpacing='', data = [])
 
         for series in seriesArr:
-            if serieses[ str(series['series']) ]['description'] == '':
-                serieses[ str(series['series']) ]['description'] = series['seriesDescription']
-                description = series['seriesDescription'].lower()                
-                orientation = 'unknown'                
-                print(description)
+            datadict =  serieses[ str(series['series']) ]
+            if datadict['description'] == '':
+                datadict['description'] = series['seriesDescription']
+                description = series['seriesDescription'].lower()
+                
+                if datadict['direction'] == '':                    
+                    orientationx = np.asarray(series['orientation'])[:3]
+                    orientationy = np.asarray(series['orientation'])[3:]
+                    datadict['direction'] = np.cross(orientationx, orientationy)
+                                                                
+                orientation = 'unknown'                                
                 if not description.find('ax') == -1 or not description.find('tra') == -1:
                     orientation = 'AXL'
                 if not description.find('cor') == -1:
                     orientation = 'COR'
                 if not description.find('sag') == -1:
-                    orientation = 'SAG'                
-                serieses[ str(series['series']) ]['orientation'] = orientation               
+                    orientation = 'SAG'
 
-            if serieses[ str(series['series']) ]['spacing'] == '':
-                serieses[ str(series['series']) ]['spacing'] = series['spacing']
-            if serieses[ str(series['series']) ]['pixelSpacing'] == '':
-                serieses[ str(series['series']) ]['pixelSpacing'] = series['pixelSpacing']
+                log = str(orientation) + ", direction : " + str(datadict['direction'])
+                self.Mgr.SetLog(log)
+                datadict['orientation'] = orientation               
 
-            serieses[ str(series['series']) ]['data'].append(series)
+            if datadict['spacing'] == '':
+                datadict['spacing'] = series['spacing']
+            if datadict['pixelSpacing'] == '':
+                datadict['pixelSpacing'] = series['pixelSpacing']
+            
+            datadict['data'].append(series)
+
+
+        #Reverse Data List if real direction and annotated direction is reversed
+        for series in seriesArr:
+            datadict =  serieses[ str(series['series']) ]
+            realDir = np.asarray(datadict['data'][1]['position']) - np.asarray(datadict['data'][0]['position'])
+            if np.dot(realDir, datadict['direction']) <  0:
+                datadict['data'].reverse()
+
+            # print("Series ", str(series['series'])  ,"length : " ,len(serieses[ str(series['series']) ]['data']))
 
 
         patient = dict(name='patient', serieses = serieses)
@@ -321,11 +349,6 @@ class E_VolumeManager:
         imgData.SetDimensions(dim[2], dim[1], dim[0])
         imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
         imgData.SetSpacing(spacing[2], spacing[1], spacing[0])
-
-        # for i in range(dim[0]):
-        #     for j in range(dim[2]):
-        #         for k in range(dim[1]):
-        #             imgData.SetScalarComponentFromDouble(k, j, i, 0, volumeArray[i][k][j])
 
         floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
         imgData.GetPointData().SetScalars(floatArray)
@@ -448,8 +471,7 @@ class E_VolumeManager:
 
                 volume = volume[:, xMin:,yMin:]
                 volume = volume[:, :rDim,:rDim]
-            elif np.argmin(volume.shape) == 1:
-                print("Resampling AXL")
+            elif np.argmin(volume.shape) == 1:                
                 rDim = volume.shape[1]
 
                 #Possible X Range
@@ -546,13 +568,11 @@ class E_VolumeManager:
         spacing = SeriesData['spacing']
         pixelSpacing = SeriesData['pixelSpacing']
         orientation = SeriesData['orientation']
+        direction = SeriesData['direction']
+        
 
         #Rotate Volume According to patient coordiante
-        renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])
-
-        #Display Information
-        log = "Selected Series : " + description + ", Volume Orientation : " + orientation
-        self.Mgr.SetLog(log)
+        renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])        
 
         #Make Volume Data
         volumeBuffer = []
@@ -563,20 +583,60 @@ class E_VolumeManager:
              #Make Volume ARray
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
 
-        #Rotate Volume Array According to Orientation
-        # volumeArray = np.rot90(volumeArray, 2)
+
+        # if np.argmax(abs(direction))== 2: #AXL
+        #     volumeArray = np.rot90(volumeArray, 3,  axes=(0, 1))
+        #     # volumeArray = np.rot90(volumeArray, 3, axes=(0,2))
+        #     renderSpacing = [ renderSpacing[2], renderSpacing[0], renderSpacing[1] ]
+        # else:
+        #     #SAGITTAL?
+        #     volumeArray = np.rot90(volumeArray,2, axes=(1,2))
+        #     if direction[0] * direction[1] > 0:
+        #         volumeArray = np.rot90(volumeArray, axes=(0,2))
+        #         renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
+
+        if orientation == 'AXL':            
+            volumeArray = np.rot90(volumeArray, axes=(0,1))
+            renderSpacing = [ renderSpacing[2] ,renderSpacing[0] , renderSpacing[1] ]
+        if orientation == 'COR':
+            volumeArray = np.rot90(volumeArray, axes=(0,1))            
+            volumeArray = np.rot90(volumeArray, axes=(0,1))            
+        if orientation == 'SAG':
+            volumeArray = np.rot90(volumeArray, axes=(0,1))
+
+            if direction[0] * direction[1] * direction[2] < 0:
+                volumeArray = np.rot90(volumeArray, axes = (1, 2))
+            else:                
+                volumeArray = np.rot90(volumeArray, 3, axes = (1, 2))
+            volumeArray = np.rot90(volumeArray, axes=(0,1))
+            renderSpacing = [ renderSpacing[1] ,renderSpacing[2] , renderSpacing[0] ]
+                
+            
+
         
-        # if orientation == 'COR':
-        #     volumeArray = np.rot90(volumeArray, axes=(0,2))
-        #     renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
-        if orientation == 'AXL':
-            volumeArray = np.rot90(volumeArray, 3,  axes=(0, 1))
-            renderSpacing = [ renderSpacing[2], renderSpacing[0], renderSpacing[1] ]
-        else:
-            volumeArray = np.rot90(volumeArray,2, axes=(1,2))
-            if orientation == 'COR':
-                volumeArray = np.rot90(volumeArray, axes=(0,2))
-                renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
+        
+        
+
+            # volumeArray = np.rot90(volumeArray, axes=(0,2))
+            # renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
+
+        # if orientation == 'SAG':
+        #     volumeArray = np.rot90(volumeArray, axes=())
+
+        # if orientation == 'SAG':
+        #     volumeArray = np.rot90(volumeArray, 3, axes=(0, 2))
+        #     renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0]]
+        # #Rotate Volume Array According to Orientation       
+        # if orientation == 'AXL':
+        #     volumeArray = np.rot90(volumeArray, 3,  axes=(0, 1))
+        #     volumeArray = np.rot90(volumeArray, 3, axes=(0,2))
+        #     renderSpacing = [ renderSpacing[2], renderSpacing[0], renderSpacing[1] ]
+        #     # renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
+        # else:
+        #     volumeArray = np.rot90(volumeArray,2, axes=(1,2))
+        #     if orientation == 'COR':
+        #         volumeArray = np.rot90(volumeArray, axes=(0,2))
+        #         renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
                 
             
 
@@ -585,17 +645,7 @@ class E_VolumeManager:
         #0,1 = x axes
         
         volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
-
-        self.m_volumeArray = volumeArray
-        
-        if False:
-            #Resample to [1,1,1]                    
-            xp = self.Mgr.mainFrm.m_rangeSlider[0].value() / 1000
-            yp = self.Mgr.mainFrm.m_rangeSlider[1].value() / 1000
-    
-            volumeData = self.MakeVolumeDataWithResampled(volumeArray, xPos = xp, yPos = yp)
-            volumeArray = (volumeData * 255.0) / np.amax(volumeArray)
-
+        self.m_volumeArray = volumeArray    
 
         
         self.AddVolume(volumeArray, renderSpacing)
