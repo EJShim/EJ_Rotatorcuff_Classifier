@@ -292,7 +292,7 @@ class E_MainWindow(QMainWindow):
         dirName = os.path.dirname(str(path[0][0]))
         dirName = str(dirName).lower()
 
-        if not dirName.find('none RCT') == -1:
+        if not dirName.find('none') == -1 and not dirName.find('rct') == -1:
             self.Mgr.SetLog("None-RCT Data")
             self.radio_NRCT.setChecked(True)
         else:
