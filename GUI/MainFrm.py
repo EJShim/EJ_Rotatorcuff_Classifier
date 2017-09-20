@@ -20,6 +20,8 @@ class E_MainWindow(QMainWindow):
     def __init__(self, parent = None):
         super(E_MainWindow, self).__init__(parent)
 
+        self.m_saveDir = None;
+
         self.setWindowTitle("EJ ModelNet Project")
         self.keyPlaying = {}
 
@@ -288,19 +290,14 @@ class E_MainWindow(QMainWindow):
         fileSeries = path[0]    
 
         dirName = os.path.dirname(str(path[0][0]))
-        self.Mgr.SetLog(dirName)
+        dirName = str(dirName).lower()
 
-        dirName = os.path.dirname(dirName)
-        dirName = os.path.dirname(dirName)
-        dirName = os.path.split(dirName)[1]
-
-        if dirName == "RCT":
-            self.radio_RCT.setChecked(True)
-        elif dirName == "None-RCT":
+        if not dirName.find('none RCT') == -1:
+            self.Mgr.SetLog("None-RCT Data")
             self.radio_NRCT.setChecked(True)
         else:
-            log = "DriName Error : " + str(dirName) + "Please Set RCT,None-RCT radio Button Manually."
-            self.Mgr.SetLog(log)
+            self.Mgr.SetLog("RCT Data")
+            self.radio_RCT.setChecked(True)        
 
         if len(fileSeries) == 0: return
 
@@ -315,42 +312,57 @@ class E_MainWindow(QMainWindow):
         self.Mgr.Redraw2D()
 
     def onSaveData(self):
-        try:
-            features = []
-            targets = []
-            colors = []
+        
+        if self.m_saveDir == None:
+            self.Mgr.SetLog("No save data available")
+        try:            
+            self.Mgr.SetLog(self.m_saveDir)
 
+            Series = self.Mgr.VolumeMgr.GetSelectedSeries()
 
-            savePath = os.path.join(rootPath, "ManualData")
-            savePath = os.path.join(savePath, self.m_bBoneColorBlack)
+            if Series == None:                
+                return
 
-            fileName = str(self.m_bBoneColorBlack) + "_" + str(len(os.listdir(savePath)))
-            savePath = os.path.join(savePath, fileName)
+            orientation = Series['orientation']
+            protocol = Series['protocol']
+            
 
-            log = "Save Processed Data : " +str(savePath)
+            log = "Save Processed Data in" + self.m_saveDir + '/Save_' + orientation + "_" + protocol + ".npz"            
             self.Mgr.SetLog(log)
 
-            log = "RCT : " + str(int(self.m_bRCT))
-            self.Mgr.SetLog(log)
 
 
 
-            volume = self.Mgr.VolumeMgr.m_volumeData
+            # savePath = os.path.join(rootPath, "ManualData")
+            # savePath = os.path.join(savePath, self.m_bBoneColorBlack)
 
-            for rot in range(4):
-                volume = np.rot90(volume, rot)
-                features.append(volume)
-                targets.append(int(self.m_bRCT))
-                colors.append(self.m_bBoneColorBlack)
+            # fileName = str(self.m_bBoneColorBlack) + "_" + str(len(os.listdir(savePath)))
+            # savePath = os.path.join(savePath, fileName)
 
-            #Save To the Path
-            X = np.asarray(features)
-            X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
-            targets = np.asarray(targets)
-            colors = np.asarray(colors)
+            # log = "Save Processed Data : " +str(savePath)
+            # self.Mgr.SetLog(log)
 
-            np.savez_compressed( savePath, features=X, targets=targets, colors=colors)
-            self.Mgr.SetLog("Save Done!")
+            # log = "RCT : " + str(int(self.m_bRCT))
+            # self.Mgr.SetLog(log)
+
+
+
+            # volume = self.Mgr.VolumeMgr.m_volumeData
+
+            # for rot in range(4):
+            #     volume = np.rot90(volume, rot)
+            #     features.append(volume)
+            #     targets.append(int(self.m_bRCT))
+            #     colors.append(self.m_bBoneColorBlack)
+
+            # #Save To the Path
+            # X = np.asarray(features)
+            # X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
+            # targets = np.asarray(targets)
+            # colors = np.asarray(colors)
+
+            # np.savez_compressed( savePath, features=X, targets=targets, colors=colors)
+            # self.Mgr.SetLog("Save Done!")
 
 
         except Exception as e:

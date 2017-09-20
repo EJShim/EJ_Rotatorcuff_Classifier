@@ -14,6 +14,7 @@ class E_VolumeManager:
 
         self.m_volumeArray = 0.0        
         self.m_volumeInfo = None
+        self.m_selectedIdx = None
 
         #Selected Volume CFGS
         self.m_colorFunction = vtk.vtkColorTransferFunction()
@@ -198,7 +199,7 @@ class E_VolumeManager:
 
         serieses = dict()
         for i in metaInfo:        
-            serieses[str(i)] = dict(description = '', direction='', orientation = '', spacing='', pixelSpacing='', data = [])
+            serieses[str(i)] = dict(description = '', protocol = '', direction='', orientation = '', spacing='', pixelSpacing='', data = [])
 
         for series in seriesArr:
             datadict =  serieses[ str(series['series']) ]
@@ -206,11 +207,14 @@ class E_VolumeManager:
                 datadict['description'] = series['seriesDescription']
                 description = series['seriesDescription'].lower()
                 
+
+                #Direction
                 if datadict['direction'] == '':                    
                     orientationx = np.asarray(series['orientation'])[:3]
                     orientationy = np.asarray(series['orientation'])[3:]
                     datadict['direction'] = np.cross(orientationx, orientationy)
-                                                                
+                
+                #Orientation
                 orientation = 'unknown'                                
                 if not description.find('ax') == -1 or not description.find('tra') == -1:
                     orientation = 'AXL'
@@ -218,10 +222,19 @@ class E_VolumeManager:
                     orientation = 'COR'
                 if not description.find('sag') == -1:
                     orientation = 'SAG'
+                # log = str(orientation) + ", direction : " + str(datadict['direction'])
+                # self.Mgr.SetLog(log)
+                datadict['orientation'] = orientation
 
-                log = str(orientation) + ", direction : " + str(datadict['direction'])
-                self.Mgr.SetLog(log)
-                datadict['orientation'] = orientation               
+
+                #Protocol
+
+                if not description.find('t1') == -1:
+                    datadict['protocol'] = 'T1'
+                if not description.find('t2') == -1:
+                    datadict['protocol'] = 'T2'
+                    
+                                
 
             if datadict['spacing'] == '':
                 datadict['spacing'] = series['spacing']
@@ -560,6 +573,8 @@ class E_VolumeManager:
         self.Mgr.mainFrm.m_treeWidget.updateTree(self.m_volumeInfo)
 
     def AddSelectedVolume(self, idx):
+        
+        self.m_selectedIdx = idx
 
         #Get Volume Info        
         SeriesData = self.m_volumeInfo['serieses'][idx] 
@@ -582,18 +597,6 @@ class E_VolumeManager:
 
              #Make Volume ARray
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
-
-
-        # if np.argmax(abs(direction))== 2: #AXL
-        #     volumeArray = np.rot90(volumeArray, 3,  axes=(0, 1))
-        #     # volumeArray = np.rot90(volumeArray, 3, axes=(0,2))
-        #     renderSpacing = [ renderSpacing[2], renderSpacing[0], renderSpacing[1] ]
-        # else:
-        #     #SAGITTAL?
-        #     volumeArray = np.rot90(volumeArray,2, axes=(1,2))
-        #     if direction[0] * direction[1] > 0:
-        #         volumeArray = np.rot90(volumeArray, axes=(0,2))
-        #         renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
 
         if orientation == 'AXL':            
             volumeArray = np.rot90(volumeArray, axes=(0,1))
@@ -652,3 +655,12 @@ class E_VolumeManager:
         #self.Mgr.PredictObject(volumeData)
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
+    
+    def GetSelectedSeries(self):
+        if self.m_selectedIdx == None:
+            self.Mgr.SetLog("No Series selected!")
+            return;
+
+
+        return self.m_volumeInfo['serieses'][self.m_selectedIdx]
+         
