@@ -1,15 +1,12 @@
 import numpy as np
 
-
-a = np.asarray([1, 2, 3])
-
-print(a)
-a = [a[1], a[2], a[0]]
+a = np.arange(8).reshape((2,2,2))
 print(a)
 
-a = [a[1], a[2], a[0]]
-print(a)
 
+b = np.flip(a,2)
+b = np.flip(b,1)
+print(np.flip(a, 2))
 
 
 

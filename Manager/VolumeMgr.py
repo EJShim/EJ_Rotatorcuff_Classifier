@@ -15,6 +15,8 @@ class E_VolumeManager:
         self.m_volumeArray = 0.0        
         self.m_volumeInfo = None
         self.m_selectedIdx = None
+        self.m_reverseSagittal = False
+        self.m_shoulderSide = 'L'
 
         #Selected Volume CFGS
         self.m_colorFunction = vtk.vtkColorTransferFunction()
@@ -138,14 +140,10 @@ class E_VolumeManager:
         
 
 
-        data = dict(series='', instance='', orientation = '', position='', spacing='', pixelSpacing='', studyDescription = '', seriesDescription = '', scanningSequence = '')
+        data = dict(series='', instance='', orientation = '', position='', spacing='', pixelSpacing='', seriesDescription = '', scanningSequence = '')
         data['series'] = int(list(mu.find(0x0020, 0x0011))[0].value)
         data['instance'] = int(list(mu.find(0x0020, 0x0013))[0].value)
-
-        try:
-            data['studyDescription'] = list(mu.find(0x0008, 0x1030))[0].value                    
-        except Exception as e:
-            print("Failed to load Study Description")
+        
         
         try:
             data['seriesDescription'] = list(mu.find(0x0008, 0x103E))[0].value
@@ -199,8 +197,16 @@ class E_VolumeManager:
 
         serieses = dict()
         for i in metaInfo:        
-            serieses[str(i)] = dict(description = '', protocol = '', direction='', orientation = '', spacing='', pixelSpacing='', data = [])
+            serieses[str(i)] = dict(description = '', 
+                                    protocol = '',                                     
+                                    direction='', 
+                                    orientation = '', 
+                                    spacing='', 
+                                    pixelSpacing='',                                     
+                                    data = [])
 
+        sagDir = np.asarray([None])
+        corDir = np.asarray([None])
         for series in seriesArr:
             datadict =  serieses[ str(series['series']) ]
             if datadict['description'] == '':
@@ -213,6 +219,8 @@ class E_VolumeManager:
                     orientationx = np.asarray(series['orientation'])[:3]
                     orientationy = np.asarray(series['orientation'])[3:]
                     datadict['direction'] = np.cross(orientationx, orientationy)
+
+                    self.volumeDirections = [None, None, None]
                 
                 #Orientation
                 orientation = 'unknown'                                
@@ -220,33 +228,52 @@ class E_VolumeManager:
                     orientation = 'AXL'
                 if not description.find('cor') == -1:
                     orientation = 'COR'
+                    if corDir.any() == None:
+                        corDir = datadict['direction']
                 if not description.find('sag') == -1:
-                    orientation = 'SAG'
-                # log = str(orientation) + ", direction : " + str(datadict['direction'])
-                # self.Mgr.SetLog(log)
+                    orientation = 'SAG'           
+                    if sagDir.any() == None:
+                        sagDir = datadict['direction']     
                 datadict['orientation'] = orientation
 
-
                 #Protocol
-
                 if not description.find('t1') == -1:
                     datadict['protocol'] = 'T1'
                 if not description.find('t2') == -1:
                     datadict['protocol'] = 'T2'
                     
                                 
-
+            #Spacing
             if datadict['spacing'] == '':
                 datadict['spacing'] = series['spacing']
             if datadict['pixelSpacing'] == '':
                 datadict['pixelSpacing'] = series['pixelSpacing']
             
             datadict['data'].append(series)
+        
+
+        
+        
+        crossproZ = np.cross(corDir, sagDir)[2]
+        if crossproZ < 0 or crossproZ < 0 and corDir[2] * sagDir[2] < 0:
+            self.m_reverseSagittal = True
+        
+        #Check Shoulder Side
+        if corDir[0] > 0 and  corDir[1] > 0:            
+            self.m_shoulderSide = 'R'
+        else:
+            self.m_shoulderSide = 'L'
+        log = str(crossproZ) + ", " + str(self.m_shoulderSide) + " side -- " + str(corDir) + "//" + str(sagDir)
+        self.Mgr.SetLog(log)
+    
 
 
         #Reverse Data List if real direction and annotated direction is reversed
         for series in seriesArr:
             datadict =  serieses[ str(series['series']) ]
+
+            if len(datadict['data']) < 2: continue
+
             realDir = np.asarray(datadict['data'][1]['position']) - np.asarray(datadict['data'][0]['position'])
             if np.dot(realDir, datadict['direction']) <  0:
                 datadict['data'].reverse()
@@ -598,49 +625,28 @@ class E_VolumeManager:
              #Make Volume ARray
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
 
-        if orientation == 'AXL':            
-            volumeArray = np.rot90(volumeArray, axes=(0,1))
-            renderSpacing = [ renderSpacing[2] ,renderSpacing[0] , renderSpacing[1] ]
-        if orientation == 'COR':
-            volumeArray = np.rot90(volumeArray, axes=(0,1))            
-            volumeArray = np.rot90(volumeArray, axes=(0,1))            
-        if orientation == 'SAG':
-            volumeArray = np.rot90(volumeArray, axes=(0,1))
 
-            if direction[0] * direction[1] * direction[2] < 0:
-                volumeArray = np.rot90(volumeArray, axes = (1, 2))
-            else:                
-                volumeArray = np.rot90(volumeArray, 3, axes = (1, 2))
+        if orientation == 'AXL':
             volumeArray = np.rot90(volumeArray, axes=(0,1))
-            renderSpacing = [ renderSpacing[1] ,renderSpacing[2] , renderSpacing[0] ]
+            renderSpacing = [renderSpacing[1], renderSpacing[0], renderSpacing[2]]
+            volumeArray = np.rot90(volumeArray,2, axes=(0,2))
+        else:
+            volumeArray = np.rot90(volumeArray, 2, axes=(1,2))
+
+            if orientation == 'SAG':                            
+                if self.m_reverseSagittal:                    
+                    volumeArray = np.rot90(volumeArray,3, axes=(0,2))
+                else:
+                    volumeArray = np.rot90(volumeArray, axes=(0,2))
+                renderSpacing = [renderSpacing[2], renderSpacing[1], renderSpacing[0]]
+
+
+        if self.m_shoulderSide == 'L':
+            volumeArray = np.flip(volumeArray, 2)
+
+
                 
-            
-
         
-        
-        
-
-            # volumeArray = np.rot90(volumeArray, axes=(0,2))
-            # renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
-
-        # if orientation == 'SAG':
-        #     volumeArray = np.rot90(volumeArray, axes=())
-
-        # if orientation == 'SAG':
-        #     volumeArray = np.rot90(volumeArray, 3, axes=(0, 2))
-        #     renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0]]
-        # #Rotate Volume Array According to Orientation       
-        # if orientation == 'AXL':
-        #     volumeArray = np.rot90(volumeArray, 3,  axes=(0, 1))
-        #     volumeArray = np.rot90(volumeArray, 3, axes=(0,2))
-        #     renderSpacing = [ renderSpacing[2], renderSpacing[0], renderSpacing[1] ]
-        #     # renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
-        # else:
-        #     volumeArray = np.rot90(volumeArray,2, axes=(1,2))
-        #     if orientation == 'COR':
-        #         volumeArray = np.rot90(volumeArray, axes=(0,2))
-        #         renderSpacing = [ renderSpacing[1], renderSpacing[2], renderSpacing[0] ]
-                
             
 
         #1,2 = z axes
