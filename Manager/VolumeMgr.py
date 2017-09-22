@@ -266,7 +266,7 @@ class E_VolumeManager:
             self.m_shoulderSide = 'R'
         else:
             self.m_shoulderSide = 'L'
-        log = str(crossproZ) + ", " + str(self.m_shoulderSide) + " side -- " + str(axDir) + // + str(corDir) + "//" + str(sagDir)
+        log = str(crossproZ) + ", " + str(self.m_shoulderSide) + " side -- " + str(axDir) + "//" + str(corDir) + "//" + str(sagDir)
         self.Mgr.SetLog(log)
     
 
