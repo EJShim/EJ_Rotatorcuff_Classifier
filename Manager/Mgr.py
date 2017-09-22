@@ -503,6 +503,9 @@ class E_Manager:
         for i in range(3):
             self.m_sliceRenderer[i].RemoveAllViewProps()
 
-    def SetLog(self, text):
+    def SetLog(self, text, error=False):
         QApplication.processEvents()
+
+        if error:
+            self.mainFrm.m_logWidget.setStyleSheet("color: rgb(255, 0, 255);")
         self.mainFrm.m_logWidget.appendPlainText(text)

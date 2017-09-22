@@ -306,7 +306,14 @@ class E_MainWindow(QMainWindow):
         try :
             self.Mgr.VolumeMgr.ImportVolume(fileSeries)
         except Exception as e:
-            self.Mgr.SetLog(str(e))
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+
+            
+            self.Mgr.SetLog(exc_type, error=True)
+            self.Mgr.SetLog(fname, error=True)
+            self.Mgr.SetLog(exc_tb.tb_lineno, error=True)
+            self.Mgr.SetLog(str(e), error=True)
 
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
