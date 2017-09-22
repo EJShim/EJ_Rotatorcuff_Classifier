@@ -12,10 +12,12 @@ class E_VolumeManager:
     def __init__(self, Mgr):
         self.Mgr = Mgr
 
-        self.m_volumeArray = 0.0        
+        self.m_volumeArray = 0.0
+        self.m_resampledVolumeData = np.array([None])
         self.m_volumeInfo = None
         self.m_selectedIdx = None
         self.m_reverseSagittal = False
+        self.m_reverseAxial = False
         self.m_shoulderSide = 'L'
 
         #Selected Volume CFGS
@@ -207,6 +209,9 @@ class E_VolumeManager:
         axDir = np.asarray([None])
         corDir = np.asarray([None])
         sagDir = np.asarray([None])
+
+        self.m_reverseSagittal = False
+        self.m_reverseAxial = False
         
         for series in seriesArr:
             datadict =  serieses[ str(series['series']) ]
@@ -262,6 +267,8 @@ class E_VolumeManager:
             self.m_reverseSagittal = True
         
         #Check Shoulder Side
+        if corDir[0] < 0 and corDir[1] < 0:
+            self.m_reverseAxial = True
         if corDir[0] > 0 and  corDir[1] > 0:            
             self.m_shoulderSide = 'R'
         else:
@@ -592,10 +599,10 @@ class E_VolumeManager:
 
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
         volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
-
-        self.AddVolume(volumeData, [1, 1, 1])
-        
+        self.AddVolume(volumeData, [1, 1, 1])        
         self.Mgr.PredictObject(volumeData)
+
+        self.m_resampledVolumeData = volumeData
 
     def UpdateVolumeTree(self):
 
@@ -603,7 +610,7 @@ class E_VolumeManager:
         self.Mgr.mainFrm.m_treeWidget.updateTree(self.m_volumeInfo)
 
     def AddSelectedVolume(self, idx):
-        
+        self.m_resampledVolumeData = np.array([None])
         self.m_selectedIdx = idx
 
         #Get Volume Info        
@@ -638,10 +645,13 @@ class E_VolumeManager:
 
 
         if orientation == 'AXL':
+            
             volumeArray = np.rot90(volumeArray, axes=(0,1))
             renderSpacing = [renderSpacing[1], renderSpacing[0], renderSpacing[2]]
-            volumeArray = np.rot90(volumeArray,2, axes=(0,2))
-
+            
+            
+            if not self.m_reverseAxial:
+                volumeArray = np.rot90(volumeArray,2, axes=(0,2))
 
             self.Mgr.mainFrm.orientationGroup.itemAt(0).widget().setChecked(True)
         else:
@@ -660,11 +670,6 @@ class E_VolumeManager:
 
         if self.m_shoulderSide == 'L':
             volumeArray = np.flip(volumeArray, 2)
-
-
-                
-        
-            
 
         #1,2 = z axes
         #0,2 = y axes

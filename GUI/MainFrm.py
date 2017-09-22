@@ -336,9 +336,12 @@ class E_MainWindow(QMainWindow):
     def onSaveData(self):
         
         if self.m_saveDir == None:
-            self.Mgr.SetLog("No save data available")
-        try:                        
-
+            self.Mgr.SetLog("No save data available", error=True)
+            return
+        if self.Mgr.VolumeMgr.m_resampledVolumeData.any() == None:
+            self.Mgr.SetLog("Volume Data Need to be Resampled", error=True)
+            return            
+        try:
             orientation = 'unknown'
             for idx in range(0, self.orientationGroup.count()):
                 item = self.orientationGroup.itemAt(idx).widget()
