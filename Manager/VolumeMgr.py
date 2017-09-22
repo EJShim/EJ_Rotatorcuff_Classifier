@@ -204,9 +204,10 @@ class E_VolumeManager:
                                     spacing='', 
                                     pixelSpacing='',                                     
                                     data = [])
-
-        sagDir = np.asarray([None])
+        axDir = np.asarray([None])
         corDir = np.asarray([None])
+        sagDir = np.asarray([None])
+        
         for series in seriesArr:
             datadict =  serieses[ str(series['series']) ]
             if datadict['description'] == '':
@@ -226,6 +227,8 @@ class E_VolumeManager:
                 orientation = 'unknown'                                
                 if not description.find('ax') == -1 or not description.find('tra') == -1:
                     orientation = 'AXL'
+                    if axDir.any() == None:
+                        axDir = datadict['direction']
                 if not description.find('cor') == -1:
                     orientation = 'COR'
                     if corDir.any() == None:
@@ -263,7 +266,7 @@ class E_VolumeManager:
             self.m_shoulderSide = 'R'
         else:
             self.m_shoulderSide = 'L'
-        log = str(crossproZ) + ", " + str(self.m_shoulderSide) + " side -- " + str(corDir) + "//" + str(sagDir)
+        log = str(crossproZ) + ", " + str(self.m_shoulderSide) + " side -- " + str(axDir) + // + str(corDir) + "//" + str(sagDir)
         self.Mgr.SetLog(log)
     
 
