@@ -508,4 +508,7 @@ class E_Manager:
 
         if error:
             self.mainFrm.m_logWidget.setStyleSheet("color: rgb(255, 0, 255);")
+        else:
+            self.mainFrm.m_logWidget.setStyleSheet("color: rgb(0, 0, 0);")
+            
         self.mainFrm.m_logWidget.appendPlainText(text)

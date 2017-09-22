@@ -160,40 +160,40 @@ class E_MainWindow(QMainWindow):
         self.m_rangeSlider[1].setSliderPosition( 500 )
         cropLayout.addWidget(self.m_rangeSlider[1])
         self.m_rangeSlider[1].valueChanged.connect(self.onRangeSliderValueChanged)
+        
+        objectToolbar.addSeparator()
+
+        self.protocolGroup = QVBoxLayout()
+        groupBoxPro = QGroupBox("Protocol")
+        groupBoxPro.setLayout(self.protocolGroup)
+        objectToolbar.addWidget(groupBoxPro)
+        self.protocolGroup.addWidget(QRadioButton("T1"))
+        self.protocolGroup.addWidget(QRadioButton("T2"))        
+        self.protocolGroup.itemAt(0).widget().setChecked(True)
+        
+        objectToolbar.addSeparator()
+
+        self.orientationGroup = QVBoxLayout()
+        groupBoxOri = QGroupBox("Orientation")
+        groupBoxOri.setLayout(self.orientationGroup)
+        self.orientationGroup.addWidget(QRadioButton("AXL"))
+        self.orientationGroup.addWidget(QRadioButton("COR"))
+        self.orientationGroup.addWidget(QRadioButton("SAG"))                
+        self.orientationGroup.itemAt(0).widget().setChecked(True)
+        objectToolbar.addWidget(groupBoxOri)
 
         objectToolbar.addSeparator()
 
-        self.radioGroubBox = QGroupBox("Bone Color")
-        bone_black = QRadioButton("Black")
-        bone_white = QRadioButton("White")
-        bone_black.setChecked(True);
-
-        grouopBoxLayout = QVBoxLayout()
-        grouopBoxLayout.addWidget(bone_black)
-        grouopBoxLayout.addWidget(bone_white)
-
-        self.radioGroubBox.setLayout(grouopBoxLayout)
-
-        bone_black.toggled.connect(self.onChangeTF)
-        objectToolbar.addWidget(self.radioGroubBox)
-
-        objectToolbar.addSeparator()
-
-
-        self.RCTGroupBox = QGroupBox("RCT")
-
-        self.radio_RCT = QRadioButton("RCT")
-        self.radio_NRCT = QRadioButton("Non-RCT")
-        self.radio_RCT.setChecked(True);
-        self.radio_RCT.toggled.connect(self.onChangeRCT)
-
-        grouopBoxLayout2 = QVBoxLayout()
-        grouopBoxLayout2.addWidget(self.radio_RCT)
-        grouopBoxLayout2.addWidget(self.radio_NRCT)
-
-        self.RCTGroupBox.setLayout(grouopBoxLayout2)
-
-        objectToolbar.addWidget(self.RCTGroupBox)
+        self.rctGroup = QVBoxLayout()
+        groupBoxRCT = QGroupBox("RCT")
+        groupBoxRCT.setLayout(self.rctGroup)                        
+        self.rctGroup.addWidget(QRadioButton("None"))
+        self.rctGroup.addWidget(QRadioButton("Small"))
+        self.rctGroup.addWidget(QRadioButton("Medium"))
+        self.rctGroup.addWidget(QRadioButton("Large"))
+        self.rctGroup.addWidget(QRadioButton("Massive"))
+        self.rctGroup.itemAt(0).widget().setChecked(True)
+        objectToolbar.addWidget(groupBoxRCT)
 
         objectToolbar.addSeparator()
 
@@ -325,56 +325,33 @@ class E_MainWindow(QMainWindow):
         try:            
             self.Mgr.SetLog(self.m_saveDir)
 
-            Series = self.Mgr.VolumeMgr.GetSelectedSeries()
+            orientation = 0
+            for idx in range(0, self.orientationGroup.count()):
+                item = self.orientationGroup.itemAt(idx).widget()
+                if item.isChecked():
+                    orientation = item.text()
+                    break;
 
-            if Series == None:                
-                return
+            rct = 0
+            for idx in range(0, self.rctGroup.count()):
+                item = self.rctGroup.itemAt(idx).widget()
+                if item.isChecked():
+                    rct = item.text()
+                    break;
 
-            orientation = Series['orientation']
-            protocol = Series['protocol']
-            
 
-            log = "Save Processed Data in" + self.m_saveDir + '/Save_' + orientation + "_" + protocol + ".npz"            
+            log = "Save Processed Data in" + self.m_saveDir + '/Save_' + orientation + "_" + rct + ".npz"            
             self.Mgr.SetLog(log)
 
-
-
-
-            # savePath = os.path.join(rootPath, "ManualData")
-            # savePath = os.path.join(savePath, self.m_bBoneColorBlack)
-
-            # fileName = str(self.m_bBoneColorBlack) + "_" + str(len(os.listdir(savePath)))
-            # savePath = os.path.join(savePath, fileName)
-
-            # log = "Save Processed Data : " +str(savePath)
-            # self.Mgr.SetLog(log)
-
-            # log = "RCT : " + str(int(self.m_bRCT))
-            # self.Mgr.SetLog(log)
-
-
-
-            # volume = self.Mgr.VolumeMgr.m_volumeData
-
-            # for rot in range(4):
-            #     volume = np.rot90(volume, rot)
-            #     features.append(volume)
-            #     targets.append(int(self.m_bRCT))
-            #     colors.append(self.m_bBoneColorBlack)
-
-            # #Save To the Path
-            # X = np.asarray(features)
-            # X = X.reshape(X.shape[0], 1, X.shape[1], X.shape[2], X.shape[3])
-            # targets = np.asarray(targets)
-            # colors = np.asarray(colors)
-
-            # np.savez_compressed( savePath, features=X, targets=targets, colors=colors)
-            # self.Mgr.SetLog("Save Done!")
-
-
         except Exception as e:
-            e = "***Error Raised : " + str(e)
-            self.Mgr.SetLog(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+
+
+            self.Mgr.SetLog(exc_type, error=True)
+            self.Mgr.SetLog(fname, error=True)
+            self.Mgr.SetLog(exc_tb.tb_lineno, error=True)
+            self.Mgr.SetLog(str(e), error=True)
 
     def onInitNetwork(self):
         self.Mgr.InitNetwork()
@@ -404,18 +381,7 @@ class E_MainWindow(QMainWindow):
         if state == 2: #show
             self.m_treeWidget.show()
         else:
-            self.m_treeWidget.hide()
-        
-
-    def onChangeRCT(self, isTrue):
-        self.m_bRCT = isTrue
-
-    def onChangeTF(self, isTrue):
-
-        if isTrue:
-            self.m_bBoneColorBlack = "Black"
-        else:
-            self.m_bBoneColorBlack = "White"
+            self.m_treeWidget.hide()    
 
 
     def onSliceViewState(self, state):

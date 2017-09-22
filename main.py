@@ -9,6 +9,6 @@ app = QApplication([])
 
 window = E_MainWindow()
 
-window.resize(1800, 900)
+window.showMaximized()
 window.show()
 sys.exit(app.exec_())
