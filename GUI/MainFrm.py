@@ -163,27 +163,8 @@ class E_MainWindow(QMainWindow):
         
         objectToolbar.addSeparator()
 
-        self.protocolGroup = QVBoxLayout()
-        groupBoxPro = QGroupBox("Protocol")
-        groupBoxPro.setLayout(self.protocolGroup)
-        objectToolbar.addWidget(groupBoxPro)
-        self.protocolGroup.addWidget(QRadioButton("T1"))
-        self.protocolGroup.addWidget(QRadioButton("T2"))        
-        self.protocolGroup.itemAt(0).widget().setChecked(True)
-        
-        objectToolbar.addSeparator()
 
-        self.orientationGroup = QVBoxLayout()
-        groupBoxOri = QGroupBox("Orientation")
-        groupBoxOri.setLayout(self.orientationGroup)
-        self.orientationGroup.addWidget(QRadioButton("AXL"))
-        self.orientationGroup.addWidget(QRadioButton("COR"))
-        self.orientationGroup.addWidget(QRadioButton("SAG"))                
-        self.orientationGroup.itemAt(0).widget().setChecked(True)
-        objectToolbar.addWidget(groupBoxOri)
-
-        objectToolbar.addSeparator()
-
+        #RCT Group
         self.rctGroup = QVBoxLayout()
         groupBoxRCT = QGroupBox("RCT")
         groupBoxRCT.setLayout(self.rctGroup)                        
@@ -194,9 +175,31 @@ class E_MainWindow(QMainWindow):
         self.rctGroup.addWidget(QRadioButton("Massive"))
         self.rctGroup.itemAt(0).widget().setChecked(True)
         objectToolbar.addWidget(groupBoxRCT)
-
         objectToolbar.addSeparator()
 
+
+        self.orientationGroup = QVBoxLayout()
+        groupBoxOri = QGroupBox("Orientation")
+        groupBoxOri.setLayout(self.orientationGroup)
+        self.orientationGroup.addWidget(QRadioButton("AXL"))
+        self.orientationGroup.addWidget(QRadioButton("COR"))
+        self.orientationGroup.addWidget(QRadioButton("SAG"))                
+        self.orientationGroup.itemAt(0).widget().setChecked(True)
+        objectToolbar.addWidget(groupBoxOri)
+
+        objectToolbar.addSeparator()        
+
+
+        #Protocol Group
+        self.protocolGroup = QVBoxLayout()
+        groupBoxPro = QGroupBox("Protocol")
+        groupBoxPro.setLayout(self.protocolGroup)
+        objectToolbar.addWidget(groupBoxPro)
+        self.protocolGroup.addWidget(QRadioButton("T1"))
+        self.protocolGroup.addWidget(QRadioButton("T2"))        
+        self.protocolGroup.itemAt(0).widget().setChecked(True)
+        
+        objectToolbar.addSeparator()        
 
         #Save Object Action
         SaveAction = QAction(QIcon(iconPath + "/051-cmyk.png"), "Save Processed Data", self)
@@ -290,14 +293,26 @@ class E_MainWindow(QMainWindow):
         fileSeries = path[0]    
 
         dirName = os.path.dirname(str(path[0][0]))
+        self.m_saveDir = dirName
+        
         dirName = str(dirName).lower()
 
-        if not dirName.find('none') == -1 and not dirName.find('rct') == -1:
+    
+        if not dirName.find('none') == -1:
             self.Mgr.SetLog("None-RCT Data")
-            self.radio_NRCT.setChecked(True)
-        else:
-            self.Mgr.SetLog("RCT Data")
-            self.radio_RCT.setChecked(True)        
+            self.rctGroup.itemAt(0).widget().setChecked(True)
+        elif not dirName.find('small') == -1:
+            self.Mgr.SetLog("Small RCT Data")
+            self.rctGroup.itemAt(1).widget().setChecked(True)
+        elif not dirName.find('medium') == -1:
+            self.Mgr.SetLog("Medium RCT Data")
+            self.rctGroup.itemAt(2).widget().setChecked(True)
+        elif not dirName.find('large') == -1:
+            self.Mgr.SetLog("Large RCT Data")
+            self.rctGroup.itemAt(3).widget().setChecked(True)
+        elif not dirName.find('massive') == -1:
+            self.Mgr.SetLog("Massive RCT Data")
+            self.rctGroup.itemAt(4).widget().setChecked(True)
 
         if len(fileSeries) == 0: return
 
@@ -322,25 +337,33 @@ class E_MainWindow(QMainWindow):
         
         if self.m_saveDir == None:
             self.Mgr.SetLog("No save data available")
-        try:            
-            self.Mgr.SetLog(self.m_saveDir)
+        try:                        
 
-            orientation = 0
+            orientation = 'unknown'
             for idx in range(0, self.orientationGroup.count()):
                 item = self.orientationGroup.itemAt(idx).widget()
                 if item.isChecked():
                     orientation = item.text()
-                    break;
+                    break
 
-            rct = 0
+            protocol = 'unknown'
+            for idx in range(0, self.protocolGroup.count()):
+                item = self.protocolGroup.itemAt(idx).widget()
+                if item.isChecked():
+                    protocol = item.text()
+                    break
+
+            rct = 'unknown'
             for idx in range(0, self.rctGroup.count()):
                 item = self.rctGroup.itemAt(idx).widget()
                 if item.isChecked():
                     rct = item.text()
-                    break;
+                    break
 
 
-            log = "Save Processed Data in" + self.m_saveDir + '/Save_' + orientation + "_" + rct + ".npz"            
+
+            savePath = self.m_saveDir + '/' + rct + "_" + orientation + "_" + protocol  + ".npz"
+            log = "Save Processed Data in (" + savePath  + ")"            
             self.Mgr.SetLog(log)
 
         except Exception as e:

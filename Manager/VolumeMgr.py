@@ -628,13 +628,25 @@ class E_VolumeManager:
              #Make Volume ARray
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
 
+        self.Mgr.SetLog(str(description))
+
+        if not description.find('t1') == -1:
+            self.Mgr.mainFrm.protocolGroup.itemAt(0).widget().setChecked(True)
+        elif not description.find('t2') == -1:
+            self.Mgr.mainFrm.protocolGroup.itemAt(1).widget().setChecked(True)
+            
+
 
         if orientation == 'AXL':
             volumeArray = np.rot90(volumeArray, axes=(0,1))
             renderSpacing = [renderSpacing[1], renderSpacing[0], renderSpacing[2]]
             volumeArray = np.rot90(volumeArray,2, axes=(0,2))
+
+
+            self.Mgr.mainFrm.orientationGroup.itemAt(0).widget().setChecked(True)
         else:
             volumeArray = np.rot90(volumeArray, 2, axes=(1,2))
+            self.Mgr.mainFrm.orientationGroup.itemAt(1).widget().setChecked(True)
 
             if orientation == 'SAG':                            
                 if self.m_reverseSagittal:                    
@@ -642,6 +654,8 @@ class E_VolumeManager:
                 else:
                     volumeArray = np.rot90(volumeArray, axes=(0,2))
                 renderSpacing = [renderSpacing[2], renderSpacing[1], renderSpacing[0]]
+                self.Mgr.mainFrm.orientationGroup.itemAt(2).widget().setChecked(True)
+
 
 
         if self.m_shoulderSide == 'L':
