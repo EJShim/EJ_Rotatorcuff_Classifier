@@ -1,15 +1,10 @@
 import numpy as np
+import glob
 
-data = dict(np.load("/Volumes/EJ/RCT/RCT/massive RCT/40  00781132 윤연이 F68/Massive_COR_T2.npz"))
-print(data)
-
-print(data['series'])
-print(data['x'])
-print(data['y'])
-print(data['status'])
-print(data['orientation'])
-print(data['protocol'])
-print(data['data'].shape)
+for filename in glob.iglob('/Volumes/EJ/RCT/**/*.npz', recursive = True):
+    print(filename)
+    data = dict(np.load(filename))
+    print(data)
 
 
 
