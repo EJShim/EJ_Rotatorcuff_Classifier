@@ -621,6 +621,8 @@ class E_VolumeManager:
         pixelSpacing = SeriesData['pixelSpacing']
         orientation = SeriesData['orientation']
         direction = SeriesData['direction']
+
+        self.Mgr.mainFrm.m_SeriesNumber.setText(str(idx))
         
 
         #Rotate Volume According to patient coordiante

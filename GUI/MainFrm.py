@@ -191,13 +191,29 @@ class E_MainWindow(QMainWindow):
 
 
         #Protocol Group
+        protocolAndSeriesWidget = QWidget()
+        objectToolbar.addWidget(protocolAndSeriesWidget)
+        protocolAndSeriesWidget.setLayout(QVBoxLayout())
+
+
         self.protocolGroup = QVBoxLayout()
         groupBoxPro = QGroupBox("Protocol")
         groupBoxPro.setLayout(self.protocolGroup)
-        objectToolbar.addWidget(groupBoxPro)
+        protocolAndSeriesWidget.layout().addWidget(groupBoxPro)
         self.protocolGroup.addWidget(QRadioButton("T1"))
         self.protocolGroup.addWidget(QRadioButton("T2"))        
         self.protocolGroup.itemAt(0).widget().setChecked(True)
+
+
+        SeriesWidget = QWidget()
+        SeriesWidget.setLayout(QHBoxLayout())
+        protocolAndSeriesWidget.layout().addWidget(SeriesWidget)
+
+        SeriesWidget.layout().addWidget(QLabel("Series : "))        
+        self.m_SeriesNumber = QLabel("unknown") 
+        SeriesWidget.layout().addWidget(self.m_SeriesNumber)
+        
+        
         
         objectToolbar.addSeparator()        
 
@@ -269,8 +285,7 @@ class E_MainWindow(QMainWindow):
         MainLayout.setStretch(1, 1)
         MainLayout.setStretch(2, 2)
         MainLayout.setStretch(3, 2)
-        MainLayout.setStretch(4, 0.5)
-
+        MainLayout.setStretch(4, 0.1)
 
     def InitManager(self):
         self.Mgr = E_Manager(self)
@@ -363,11 +378,33 @@ class E_MainWindow(QMainWindow):
                     rct = item.text()
                     break
 
+            
+
+            #Save Series and Resampling Position For Futer Work
+            series = int(self.m_SeriesNumber.text())
+            xPos = self.m_rangeSlider[0].value() / 1000
+            yPos = self.m_rangeSlider[1].value() / 1000
 
 
-            savePath = self.m_saveDir + '/' + rct + "_" + orientation + "_" + protocol  + ".npz"
-            log = "Save Processed Data in (" + savePath  + ")"            
+
+            savePath = self.m_saveDir + '/' + rct + "_" + orientation + "_" + protocol
+            log = "Save Processed Data in (" + savePath   + ".npz" +  ")"            
             self.Mgr.SetLog(log)
+
+            saveData = dict(series = series, 
+                            x = xPos, y = yPos, 
+                            status = rct, 
+                            orientation = orientation, 
+                            protocol = protocol, 
+                            data=self.Mgr.VolumeMgr.m_resampledVolumeData)
+            
+            np.savez_compressed(savePath, series = series, 
+                                            x = xPos, y = yPos, 
+                                            status = rct, 
+                                            orientation = orientation, 
+                                            protocol = protocol, 
+                                            data=self.Mgr.VolumeMgr.m_resampledVolumeData)
+
 
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()

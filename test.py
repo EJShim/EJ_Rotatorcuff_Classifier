@@ -1,12 +1,15 @@
 import numpy as np
 
-a = np.arange(8).reshape((2,2,2))
-print(a)
+data = dict(np.load("/Volumes/EJ/RCT/RCT/massive RCT/40  00781132 윤연이 F68/Massive_COR_T2.npz"))
+print(data)
 
-
-b = np.flip(a,2)
-b = np.flip(b,1)
-print(np.flip(a, 2))
+print(data['series'])
+print(data['x'])
+print(data['y'])
+print(data['status'])
+print(data['orientation'])
+print(data['protocol'])
+print(data['data'].shape)
 
 
 
