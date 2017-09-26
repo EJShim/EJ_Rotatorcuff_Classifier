@@ -340,9 +340,9 @@ class E_MainWindow(QMainWindow):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 
             
-            self.Mgr.SetLog(exc_type, error=True)
-            self.Mgr.SetLog(fname, error=True)
-            self.Mgr.SetLog(exc_tb.tb_lineno, error=True)
+            self.Mgr.SetLog(str(exc_type), error=True)
+            self.Mgr.SetLog(str(fname), error=True)
+            self.Mgr.SetLog(str(exc_tb.tb_lineno), error=True)
             self.Mgr.SetLog(str(e), error=True)
 
         self.Mgr.Redraw()

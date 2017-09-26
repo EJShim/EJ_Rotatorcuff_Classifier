@@ -1,10 +1,10 @@
 import numpy as np
 import glob
 
-for filename in glob.iglob('/Volumes/EJ/RCT/**/*.npz', recursive = True):
+for filename in glob.iglob('/home/ej/data/Shoulder/RCT_JunKim/**/*.npz', recursive = True):
     print(filename)
-    data = dict(np.load(filename))
-    print(data)
+    # data = dict(np.load(filename))
+    # print(data)
 
 
 
