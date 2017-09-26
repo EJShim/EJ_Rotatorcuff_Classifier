@@ -46,8 +46,8 @@ class E_MainWindow(QMainWindow):
 
         self.m_vtkSliceWidget = [0,0,0]
         self.m_sliceSlider = [0, 0, 0]
-        for i in range(3):
-            #Slice View
+        for i in range(3):            
+            #Slice View            
             self.m_vtkSliceWidget[i] = QVTKRenderWindowInteractor();
 
             #Slice Image Slider
@@ -244,7 +244,8 @@ class E_MainWindow(QMainWindow):
 
         for i in range(3):
             layout.addWidget(self.m_vtkSliceWidget[i])
-            layout.addWidget(self.m_sliceSlider[i])
+            rendererIdx = (i+1)%3
+            layout.addWidget(self.m_sliceSlider[rendererIdx])
 
         #hide initialize
         self.m_sliceViewWidget.setLayout(layout)
@@ -391,12 +392,12 @@ class E_MainWindow(QMainWindow):
             log = "Save Processed Data in (" + savePath   + ".npz" +  ")"            
             self.Mgr.SetLog(log)
 
-            saveData = dict(series = series, 
-                            x = xPos, y = yPos, 
-                            status = rct, 
-                            orientation = orientation, 
-                            protocol = protocol, 
-                            data=self.Mgr.VolumeMgr.m_resampledVolumeData)
+            # saveData = dict(series = series, 
+            #                 x = xPos, y = yPos, 
+            #                 status = rct, 
+            #                 orientation = orientation, 
+            #                 protocol = protocol, 
+            #                 data=self.Mgr.VolumeMgr.m_resampledVolumeData)
             
             np.savez_compressed(savePath, series = series, 
                                             x = xPos, y = yPos, 

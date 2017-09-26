@@ -375,9 +375,10 @@ class E_VolumeManager:
             self.m_colorMapResliceActor[i].SetProperty(imageProperty)
 
             #Add SLice
-            self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_colorMapResliceActor[i])
-            self.Mgr.m_sliceRenderer[i].ResetCamera()
-            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(1.5)
+            rendererIdx = i
+            self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_colorMapResliceActor[i])
+            self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
+            self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)
 
 
         #Add Actor
@@ -442,9 +443,10 @@ class E_VolumeManager:
             self.m_resliceActor[i].SetProperty(self.m_imageProperty)
 
             #Add SLice
-            self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_resliceActor[i])
-            self.Mgr.m_sliceRenderer[i].ResetCamera()
-            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(1.5)
+            rendererIdx = i
+            self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_resliceActor[i])
+            self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
+            self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)
 
 
             #Update Slider
@@ -484,7 +486,7 @@ class E_VolumeManager:
 
     def ChangeSliceIdx(self, idx, sliceNum):
         self.m_resliceMapper[idx].SetSliceNumber(sliceNum)
-        self.m_colorMapResliceMapper[idx].SetSliceNumber(sliceNum)
+        self.m_colorMapResliceMapper[idx].SetSliceNumber(sliceNum)        
         self.Mgr.Redraw2D()
 
     def ResampleVolumeData(self, volume, spacing):

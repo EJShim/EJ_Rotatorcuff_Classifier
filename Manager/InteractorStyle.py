@@ -22,11 +22,42 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
 
         self.AddObserver("MouseWheelForwardEvent", self.OnMouseWheelForward)
         self.AddObserver("MouseWheelBackwardEvent", self.OnMouseWheelBackward)
+        self.AddObserver("LeftButtonPressEvent", self.OnLeftButtonPressed)
+        self.AddObserver("LeftButtonReleaseEvent", self.OnLeftButtonReleased)
+        self.AddObserver("RightButtonPressEvent", self.OnRightButtonPressed)
+        self.AddObserver("RightButtonReleaseEvent", self.OnRightButtonReleased)
+        
+        
+
+    def AddRenderer(self, renderer):
+        self.renderer = renderer
+        self.GetInteractor().GetRenderWindow().AddRenderer(renderer)
+        self.GetInteractor().Render()
+        
 
 
 
-    def OnMouseWheelForward(self, obj, event):
+    def OnMouseWheelForward(self, obj, event):        
         self.Mgr.VolumeMgr.ForwardSliceImage(self.idx)
 
     def OnMouseWheelBackward(self, obj, event):
         self.Mgr.VolumeMgr.BackwardSliceImage(self.idx)
+
+    def OnLeftButtonPressed(self, obj, event):
+                
+        position = self.GetInteractor().GetEventPosition()
+        picker = vtk.vtkPropPicker()
+        picker.Pick(position[0], position[1], 0, self.renderer)
+
+        self.Mgr.SetLog(str(picker.GetPickPosition()))
+        
+
+    def OnLeftButtonReleased(self, obj, event):
+        ha = 0
+        
+    def OnRightButtonPressed(self, obj, event):
+        ha = 0
+
+    def OnRightButtonReleased(self, obj, event):
+        ha = 0
+        

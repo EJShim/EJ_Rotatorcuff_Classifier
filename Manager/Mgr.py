@@ -17,6 +17,7 @@ from utils import checkpoints
 from Manager.InteractorStyle import E_InteractorStyle
 from Manager.InteractorStyle import E_InteractorStyle2D
 from Manager.VolumeMgr import E_VolumeManager
+from Manager.E_SliceRenderer import *
 from NetworkData import labels
 
 v_res = 1
@@ -71,22 +72,24 @@ class E_Manager:
             self.mainFrm.m_vtkWidget[i].GetRenderWindow().Render()
             self.mainFrm.m_vtkWidget[i].GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
 
-        for i in range(3):
-            interactor = E_InteractorStyle2D(self, i)
-
-            self.m_sliceRenderer[i] = vtk.vtkRenderer()
-            self.m_sliceRenderer[i].SetBackground(0.0, 0.0, 0.0)
-            self.m_sliceRenderer[i].GetActiveCamera().ParallelProjectionOn()
+        for i in range(3):            
+            self.m_sliceRenderer[i] = E_SliceRenderer(self,i)
+            # self.m_sliceRenderer[i].SetBackground(0.0, 0.0, 0.0)
+            # self.m_sliceRenderer[i].GetActiveCamera().ParallelProjectionOn()
 
             #Set Camera position
-            if i==0:
-                self.m_sliceRenderer[i].GetActiveCamera().Azimuth(90)
-            elif i==1:
-                self.m_sliceRenderer[i].GetActiveCamera().Elevation(-90)
+            # if i==0:
+            #     self.m_sliceRenderer[i].GetActiveCamera().Azimuth(90)
+            # elif i==1:
+            #     self.m_sliceRenderer[i].GetActiveCamera().Elevation(-90)
 
-            self.mainFrm.m_vtkSliceWidget[i].GetRenderWindow().AddRenderer(self.m_sliceRenderer[i])
-            self.mainFrm.m_vtkSliceWidget[i].GetRenderWindow().Render()
-            self.m_sliceRenderer[i].GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
+        for i in range(3):            
+            rendererIdx = (i+1)%3
+            interactor = E_InteractorStyle2D(self, rendererIdx)            
+            # self.mainFrm.m_vtkSliceWidget[i].GetRenderWindow().AddRenderer()            
+            self.mainFrm.m_vtkSliceWidget[i].GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
+            interactor.AddRenderer(self.m_sliceRenderer[rendererIdx])
+            
 
 
 
@@ -127,10 +130,8 @@ class E_Manager:
 
         self.renderer[1].AddActor2D(self.groundTruthLog)
         self.renderer[1].AddActor2D(self.predLog)
-
-
-
-
+ 
+                
     def VoxelizeObject(self, source):
         #Transform Polydata around Z-axis
         trans = vtk.vtkTransform()
@@ -509,6 +510,5 @@ class E_Manager:
         if error:
             self.mainFrm.m_logWidget.setStyleSheet("color: rgb(255, 0, 255);")
         else:
-            self.mainFrm.m_logWidget.setStyleSheet("color: rgb(0, 0, 0);")
-            
+            self.mainFrm.m_logWidget.setStyleSheet("color: rgb(0, 0, 0);")            
         self.mainFrm.m_logWidget.appendPlainText(text)

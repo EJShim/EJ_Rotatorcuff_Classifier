@@ -1,8 +1,13 @@
-import numpy as np
-import glob
+print(1%3)
+print(2%3)
+print(3%3)
 
-for filename in glob.iglob('/home/ej/data/Shoulder/RCT_JunKim/**/*.npz', recursive = True):
-    print(filename)
+
+# import numpy as np
+# import glob
+
+# for filename in glob.iglob('/home/ej/data/Shoulder/RCT_JunKim/**/*.npz', recursive = True):
+#     print(filename)
     # data = dict(np.load(filename))
     # print(data)
 
