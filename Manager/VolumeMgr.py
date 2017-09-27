@@ -511,7 +511,7 @@ class E_VolumeManager:
 
     def MakeVolumeDataWithResampled(self, volume, xPos = 0.5, yPos = 0.5, rot = 0):
             # return volume, spacing
-            if np.argmin(volume.shape) == 0: ##SAG0                
+            if np.argmin(volume.shape) == 0: ##COR0                
                 rDim = volume.shape[0]
 
                 #Possible X Range
@@ -524,6 +524,7 @@ class E_VolumeManager:
                 volume = volume[:, xMin:,yMin:]
                 volume = volume[:, :rDim,:rDim]
             elif np.argmin(volume.shape) == 1:                
+                                        
                 rDim = volume.shape[1]
 
                 #Possible X Range
@@ -536,7 +537,10 @@ class E_VolumeManager:
 
                 volume = volume[xMin:, :, yMin:]
                 volume = volume[:rDim, :, :rDim]
-            else:                
+            else:
+                self.Mgr.SetLog("SAG")
+                xPos = 1.0 - xPos
+                yPos = 1.0 - yPos
                 rDim = volume.shape[2]
 
                 #Possible X, Y Range
