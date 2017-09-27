@@ -1,4 +1,5 @@
 import vtk
+import numpy as np
 import math
 
 class E_SliceRenderer(vtk.vtk.vtkRenderer):
@@ -29,10 +30,10 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(4)        
         
-        point0 = [0.0, 0.0, bounds[2]]
-        point1 = [bounds[0], 0.0, bounds[2]]
-        point2 = [bounds[0], bounds[1], bounds[2]]
-        point3 = [0.0, bounds[1], bounds[2]]
+        point0 = np.array([0.0, 0.0, bounds[2]])
+        point1 = np.array([bounds[0], 0.0, bounds[2]])
+        point2 = np.array([bounds[0], bounds[1], bounds[2]])
+        point3 = np.array([0.0, bounds[1], bounds[2]])
 
         points.SetPoint(0, point0)
         points.SetPoint(1, point1)
@@ -60,6 +61,46 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         polygonActor.GetProperty().SetColor(self.lineColor)
 
         self.AddActor(polygonActor)
+
+        
+        #Add Center Position
+        point_bottom = (point0 + point1) / 2.0
+        point_top = (point2 + point3) / 2.0
+        point_left = (point0 + point3) / 2.0
+        point_right = (point1 + point2) / 2.0
+
+        centerLinePoints = vtk.vtkPoints()
+        centerLinePoints.SetNumberOfPoints(4)
+        centerLinePoints.SetPoint(0, point_bottom)
+        centerLinePoints.SetPoint(1, point_top)
+        centerLinePoints.SetPoint(2, point_left)
+        centerLinePoints.SetPoint(3, point_right)
+        
+        centerLines = vtk.vtkCellArray()
+        centerLines.InsertNextCell(2)
+        centerLines.InsertCellPoint(0)
+        centerLines.InsertCellPoint(1)
+        
+        centerLines.InsertNextCell(2)
+        centerLines.InsertCellPoint(2)
+        centerLines.InsertCellPoint(3)
+
+        centerLinePoly = vtk.vtkPolyData()
+        centerLinePoly.SetPoints(centerLinePoints)
+        centerLinePoly.SetLines(centerLines)
+
+        centerLineMapper = vtk.vtkPolyDataMapper()
+        centerLineMapper.SetInputData(centerLinePoly)
+        centerLineMapper.Update()
+
+        centerLineActor = vtk.vtkActor()
+        centerLineActor.SetMapper(centerLineMapper)
+        centerLineActor.GetProperty().SetColor([0.0, 1.0, 1.0])
+
+        self.AddActor(centerLineActor)
+
+
+        
     
 
     def AddViewProp(self, prop):
