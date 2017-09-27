@@ -167,9 +167,7 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         #Only When it is preprocessed, selected original orientation case..
         decreaseRange = self.Mgr.VolumeMgr.m_decreaseRange
 
-        diff = self.selectedPos - self.centerPos
-        if self.viewType == 'SAG':
-            diff = diff * -1.0
+        diff = self.selectedPos - self.centerPos        
         diff[0] = int((diff[0] / self.bounds[0]) * decreaseRange[1] * 1000.0)
         diff[1] = int((diff[1] / self.bounds[1]) * decreaseRange[0] * 1000.0)
         
