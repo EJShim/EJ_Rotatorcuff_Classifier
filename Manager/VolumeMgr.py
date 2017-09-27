@@ -19,6 +19,7 @@ class E_VolumeManager:
         self.m_reverseSagittal = False
         self.m_reverseAxial = False
         self.m_shoulderSide = 'L'
+        self.m_decreaseRange = [1.0, 1.0]
 
         #Selected Volume CFGS
         self.m_colorFunction = vtk.vtkColorTransferFunction()
@@ -510,8 +511,7 @@ class E_VolumeManager:
 
     def MakeVolumeDataWithResampled(self, volume, xPos = 0.5, yPos = 0.5, rot = 0):
             # return volume, spacing
-
-            if np.argmin(volume.shape) == 0: ##SAG0
+            if np.argmin(volume.shape) == 0: ##SAG0                
                 rDim = volume.shape[0]
 
                 #Possible X Range
@@ -529,18 +529,20 @@ class E_VolumeManager:
                 #Possible X Range
                 xMax = volume.shape[2] - rDim
                 yMax = volume.shape[0] - rDim
+                
 
                 xMin = int(xMax * xPos)
                 yMin = int(yMax * yPos)
 
                 volume = volume[xMin:, :, yMin:]
                 volume = volume[:rDim, :, :rDim]
-            else:
+            else:                
                 rDim = volume.shape[2]
 
                 #Possible X, Y Range
                 xMax = volume.shape[0] - rDim
                 yMax = volume.shape[1] - rDim
+                
 
                 xMin = int(xMax * xPos)
                 yMin = int(yMax * yPos)
@@ -549,10 +551,9 @@ class E_VolumeManager:
                 volume = volume[xMin:,yMin:, :]
                 volume = volume[:rDim,:rDim, :]
 
-
-            #Resample Volume ARray , update spacing info
-            rDim = 64
-            volume = scipy.ndimage.zoom(volume, ( self.resolution / volume.shape[0], self.resolution /volume.shape[1] , self.resolution / volume.shape[2]), order=5)
+            self.m_decreaseRange = [rDim / xMax, rDim / yMax]
+            volume = scipy.ndimage.zoom(volume, ( self.resolution / volume.shape[0], self.resolution /volume.shape[1] , self.resolution / volume.shape[2]), order=5)  
+            
 
             #rotate around y-axis
             volume = np.rot90(volume, rot)
@@ -613,6 +614,7 @@ class E_VolumeManager:
 
     def AddSelectedVolume(self, idx):
         self.m_resampledVolumeData = np.array([None])
+        self.m_decreaseRange = [1.0, 1.0]
         self.m_selectedIdx = idx
 
         #Get Volume Info        

@@ -10,6 +10,9 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         self.lineColor = [0.0, 0.0, 0.0]
         self.lineColor[(idx+2)%3] = 1.0
 
+        self.centerPos = np.array([0.0, 0.0])
+        self.selectedPos = np.array([0.0, 0.0])
+
         self.selectedPositionActor = None
         self.bounds = [0.0, 0.0, 0.0]
 
@@ -85,6 +88,8 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         point_left = (point0 + point3) / 2.0
         point_right = (point1 + point2) / 2.0
 
+        self.centerPos = np.array([point_top[0], point_left[1]])
+
         centerLinePoints = vtk.vtkPoints()
         centerLinePoints.SetNumberOfPoints(4)
         centerLinePoints.SetPoint(0, point_bottom)
@@ -114,12 +119,13 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
 
         self.AddActor(centerLineActor)
 
-    def UpdateSelectedPosition(self, position):
-        self.Mgr.SetLog(str(position))
+    def UpdateSelectedPosition(self, position):        
         point_bottom = [position[0], 0.0, self.bounds[2]]
         point_top = [position[0], self.bounds[1], self.bounds[2]]
         point_left = [0.0, position[1], self.bounds[2]]
         point_right = [self.bounds[0], position[1], self.bounds[2]]
+
+        self.selectedPos = np.array([position[0], position[1]])
 
         centerLinePoints = vtk.vtkPoints()
         centerLinePoints.SetNumberOfPoints(4)
@@ -155,9 +161,37 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
 
 
         self.GetRenderWindow().Render()
+
+    def CalculateDiff(self):
         
+        #Only When it is preprocessed, selected original orientation case..
+        decreaseRange = self.Mgr.VolumeMgr.m_decreaseRange
+
+        diff = self.selectedPos - self.centerPos
+        if self.viewType == 'SAG':
+            diff = diff * -1.0
+        diff[0] = int((diff[0] / self.bounds[0]) * decreaseRange[1] * 1000.0)
+        diff[1] = int((diff[1] / self.bounds[1]) * decreaseRange[0] * 1000.0)
         
 
+        log = "Move Range Slide X : " + str(diff[1]) + ", Range Slide Y : " + str(diff[0])
+        self.Mgr.SetLog(log)
+        
+        
+        curX = self.Mgr.mainFrm.m_rangeSlider[0].value()
+        curY = self.Mgr.mainFrm.m_rangeSlider[1].value()
+
+        self.Mgr.mainFrm.m_rangeSlider[0].setSliderPosition(curX + diff[1])
+        self.Mgr.mainFrm.m_rangeSlider[1].setSliderPosition(curY + diff[0])
+
+
+
+
+
+
+
+        
+        
 
         
     

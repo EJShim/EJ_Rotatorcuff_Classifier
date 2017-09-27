@@ -6,6 +6,8 @@ class E_InteractorStyle(vtk.vtkInteractorStyleSwitch):
         self.idx = idx
         self.renderer = None
 
+
+
         #Style to
         self.SetCurrentStyleToTrackballCamera()
         self.GetCurrentStyle().AddObserver("MouseMoveEvent", self.MouseMoveEvent)
@@ -60,7 +62,7 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
         ha = 0
         
     def OnRightButtonPressed(self, obj, event):
-        ha = 0
+        self.renderer.CalculateDiff()        
 
     def OnRightButtonReleased(self, obj, event):
         ha = 0
