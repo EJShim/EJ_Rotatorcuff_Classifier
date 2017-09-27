@@ -4,6 +4,7 @@ class E_InteractorStyle(vtk.vtkInteractorStyleSwitch):
     def __init__(self, Manager, idx):
         self.Mgr = Manager;
         self.idx = idx
+        self.renderer = None
 
         #Style to
         self.SetCurrentStyleToTrackballCamera()
@@ -44,12 +45,15 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
         self.Mgr.VolumeMgr.BackwardSliceImage(self.idx)
 
     def OnLeftButtonPressed(self, obj, event):
+        
+        if self.renderer ==None: return
                 
         position = self.GetInteractor().GetEventPosition()
         picker = vtk.vtkPropPicker()
         picker.Pick(position[0], position[1], 0, self.renderer)
 
-        self.Mgr.SetLog(str(picker.GetPickPosition()))
+        self.renderer.UpdateSelectedPosition(picker.GetPickPosition())        
+
         
 
     def OnLeftButtonReleased(self, obj, event):

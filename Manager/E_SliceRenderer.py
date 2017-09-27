@@ -10,13 +10,28 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         self.lineColor = [0.0, 0.0, 0.0]
         self.lineColor[(idx+2)%3] = 1.0
 
+        self.selectedPositionActor = None
+        self.bounds = [0.0, 0.0, 0.0]
+
+        
+
         self.Mgr = mgr
 
         self.SetBackground(0.0, 0.0, 0.0)
         self.GetActiveCamera().SetPosition(0.0, 0.0, 100.0)
         self.GetActiveCamera().ParallelProjectionOn()
 
+        self.InitSelectedPosition()
+        
+    def InitSelectedPosition(self):        
+
+        self.selectedPositionActor = vtk.vtkActor()        
+        self.selectedPositionActor.GetProperty().SetColor([1.0, 0.0, 1.0])
+        
+        self.AddActor(self.selectedPositionActor)
+
     def AddGuide(self, bounds = [0.0, 0.0, 0.0]):
+        self.bounds = bounds
         
         #ADD TEXT
         txt = vtk.vtkTextActor()
@@ -28,12 +43,13 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
 
         #ADD Outer Line   
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(4)        
+        points.SetNumberOfPoints(4)
         
         point0 = np.array([0.0, 0.0, bounds[2]])
         point1 = np.array([bounds[0], 0.0, bounds[2]])
         point2 = np.array([bounds[0], bounds[1], bounds[2]])
         point3 = np.array([0.0, bounds[1], bounds[2]])
+        
 
         points.SetPoint(0, point0)
         points.SetPoint(1, point1)
@@ -79,8 +95,7 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         centerLines = vtk.vtkCellArray()
         centerLines.InsertNextCell(2)
         centerLines.InsertCellPoint(0)
-        centerLines.InsertCellPoint(1)
-        
+        centerLines.InsertCellPoint(1)        
         centerLines.InsertNextCell(2)
         centerLines.InsertCellPoint(2)
         centerLines.InsertCellPoint(3)
@@ -95,9 +110,53 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
 
         centerLineActor = vtk.vtkActor()
         centerLineActor.SetMapper(centerLineMapper)
-        centerLineActor.GetProperty().SetColor([0.0, 1.0, 1.0])
+        centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.8])
 
         self.AddActor(centerLineActor)
+
+    def UpdateSelectedPosition(self, position):
+        self.Mgr.SetLog(str(position))
+        point_bottom = [position[0], 0.0, self.bounds[2]]
+        point_top = [position[0], self.bounds[1], self.bounds[2]]
+        point_left = [0.0, position[1], self.bounds[2]]
+        point_right = [self.bounds[0], position[1], self.bounds[2]]
+
+        centerLinePoints = vtk.vtkPoints()
+        centerLinePoints.SetNumberOfPoints(4)
+        centerLinePoints.SetPoint(0, point_bottom)
+        centerLinePoints.SetPoint(1, point_top)
+        centerLinePoints.SetPoint(2, point_left)
+        centerLinePoints.SetPoint(3, point_right)
+        
+        centerLines = vtk.vtkCellArray()
+        centerLines.InsertNextCell(2)
+        centerLines.InsertCellPoint(0)
+        centerLines.InsertCellPoint(1)        
+        centerLines.InsertNextCell(2)
+        centerLines.InsertCellPoint(2)
+        centerLines.InsertCellPoint(3)
+
+        centerLinePoly = vtk.vtkPolyData()
+        centerLinePoly.SetPoints(centerLinePoints)
+        centerLinePoly.SetLines(centerLines)
+        
+
+        centerLineMapper = vtk.vtkPolyDataMapper()
+        centerLineMapper.SetInputData(centerLinePoly)
+        centerLineMapper.Update()
+
+        
+        self.selectedPositionActor.SetMapper(centerLineMapper)        
+        self.selectedPositionActor.GetProperty().SetColor([0.7, 0.7, 0.0])
+
+
+
+        self.AddActor(self.selectedPositionActor)
+
+
+        self.GetRenderWindow().Render()
+        
+        
 
 
         
