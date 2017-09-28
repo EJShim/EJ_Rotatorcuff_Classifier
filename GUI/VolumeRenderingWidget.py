@@ -10,6 +10,7 @@ class E_VolumeRenderingWidget(QWidget):
         self.setMaximumWidth(300)
 
         self.mainLayout = QVBoxLayout()
+        self.mainLayout.setSpacing(0)
         self.setLayout(self.mainLayout)
 
         self.m_widget = QVTKRenderWindowInteractor();

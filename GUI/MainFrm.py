@@ -106,6 +106,8 @@ class E_MainWindow(QMainWindow):
         checkWidget = QWidget()
         objectToolbar.addWidget(checkWidget)
         checkLayout = QVBoxLayout()
+        checkLayout.setSpacing(0)
+        
         checkWidget.setLayout(checkLayout)
 
         #Show/hide Volume List
@@ -166,6 +168,8 @@ class E_MainWindow(QMainWindow):
 
         #RCT Group
         self.rctGroup = QVBoxLayout()
+        self.rctGroup.setSpacing(0)
+        self.rctGroup.setContentsMargins(0, 0, 0, 0)        
         groupBoxRCT = QGroupBox("RCT")
         groupBoxRCT.setLayout(self.rctGroup)                        
         self.rctGroup.addWidget(QRadioButton("None"))
@@ -194,6 +198,7 @@ class E_MainWindow(QMainWindow):
         protocolAndSeriesWidget = QWidget()
         objectToolbar.addWidget(protocolAndSeriesWidget)
         protocolAndSeriesWidget.setLayout(QVBoxLayout())
+        protocolAndSeriesWidget.layout().setSpacing(0)
 
 
         self.protocolGroup = QVBoxLayout()
