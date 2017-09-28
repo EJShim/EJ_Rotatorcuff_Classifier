@@ -20,6 +20,7 @@ class E_VolumeManager:
         self.m_reverseAxial = False
         self.m_shoulderSide = 'L'
         self.m_decreaseRange = [1.0, 1.0]
+        self.m_orientation = 'AXL'
 
         #Selected Volume CFGS
         self.m_colorFunction = vtk.vtkColorTransferFunction()
@@ -523,6 +524,8 @@ class E_VolumeManager:
 
                 volume = volume[:, xMin:,yMin:]
                 volume = volume[:, :rDim,:rDim]
+
+                self.m_decreaseRange = [rDim / xMax, rDim / yMax]
             elif np.argmin(volume.shape) == 1:                
                                         
                 rDim = volume.shape[1]
@@ -537,10 +540,9 @@ class E_VolumeManager:
 
                 volume = volume[xMin:, :, yMin:]
                 volume = volume[:rDim, :, :rDim]
-            else:
-                self.Mgr.SetLog("SAG")
-                xPos = 1.0 - xPos
-                yPos = 1.0 - yPos
+
+                self.m_decreaseRange = [rDim / xMax, rDim / yMax]
+            else:                
                 rDim = volume.shape[2]
 
                 #Possible X, Y Range
@@ -555,7 +557,9 @@ class E_VolumeManager:
                 volume = volume[xMin:,yMin:, :]
                 volume = volume[:rDim,:rDim, :]
 
-            self.m_decreaseRange = [rDim / xMax, rDim / yMax]
+                self.m_decreaseRange = [rDim / xMax, rDim / yMax]
+
+            
             volume = scipy.ndimage.zoom(volume, ( self.resolution / volume.shape[0], self.resolution /volume.shape[1] , self.resolution / volume.shape[2]), order=5)  
             
 
@@ -676,6 +680,7 @@ class E_VolumeManager:
                 renderSpacing = [renderSpacing[2], renderSpacing[1], renderSpacing[0]]
                 self.Mgr.mainFrm.orientationGroup.itemAt(2).widget().setChecked(True)
 
+        self.m_orientation = orientation
 
 
         if self.m_shoulderSide == 'L':

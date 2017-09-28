@@ -35,13 +35,19 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
 
     def AddGuide(self, bounds = [0.0, 0.0, 0.0]):
         self.bounds = bounds
+
+        selectedOrienation = self.Mgr.VolumeMgr.m_orientation
         
         #ADD TEXT
         txt = vtk.vtkTextActor()
         txt.SetInput(self.viewType)        
         txt.SetPosition(10, 10)
         txt.GetTextProperty().SetFontSize(24)
-        txt.GetTextProperty().SetColor(self.lineColor)
+
+        if selectedOrienation == self.viewType:
+            txt.GetTextProperty().SetColor([0.8, 0.2, 0.8])
+        else:
+            txt.GetTextProperty().SetColor(self.lineColor)
         self.AddActor2D(txt)
 
         #ADD Outer Line   
@@ -114,8 +120,12 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
         centerLineMapper.Update()
 
         centerLineActor = vtk.vtkActor()
-        centerLineActor.SetMapper(centerLineMapper)
-        centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.8])
+        centerLineActor.SetMapper(centerLineMapper)        
+
+        if selectedOrienation == self.viewType:
+            centerLineActor.GetProperty().SetColor([0.8, 0.2, 0.8])
+        else:
+            centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.8])
 
         self.AddActor(centerLineActor)
 
@@ -162,34 +172,49 @@ class E_SliceRenderer(vtk.vtk.vtkRenderer):
 
         self.GetRenderWindow().Render()
 
-    def CalculateDiff(self):
+    def CalculateDiff(self):                
         
-        #Only When it is preprocessed, selected original orientation case..
+        #Only When it is preprocessed, selected original orientation case..        
+        selectedOrientation = self.Mgr.VolumeMgr.m_orientation
+        if not selectedOrientation == self.viewType:
+            log = "Selected from " + selectedOrientation + "view"
+            self.Mgr.SetLog(log)
+            return
+
+        if self.Mgr.VolumeMgr.m_resampledVolumeData.any() == None:
+            self.Mgr.SetLog("Select From Original Image")
+
+
+
+            pos = [0, 0]
+            pos[0] = int((self.selectedPos[0] / self.bounds[0]) * 800.0)
+            pos[1] = int((self.selectedPos[1] / self.bounds[1]) * 800.0)
+            if selectedOrientation == 'SAG':
+                pos = [pos[1], pos[0]]
+
+            self.Mgr.SetLog(str(pos))
+
+
+            self.Mgr.mainFrm.m_rangeSlider[0].setSliderPosition(pos[1])
+            self.Mgr.mainFrm.m_rangeSlider[1].setSliderPosition(pos[0])
+
+
+            return
+
         decreaseRange = self.Mgr.VolumeMgr.m_decreaseRange
 
         diff = self.selectedPos - self.centerPos        
         diff[0] = int((diff[0] / self.bounds[0]) * decreaseRange[1] * 1000.0)
         diff[1] = int((diff[1] / self.bounds[1]) * decreaseRange[0] * 1000.0)
         
-
-        log = "Move Range Slide X : " + str(diff[1]) + ", Range Slide Y : " + str(diff[0])
-        self.Mgr.SetLog(log)
-        
-        
+        if selectedOrientation == 'SAG':
+            diff = [diff[1], diff[0]]
+                            
         curX = self.Mgr.mainFrm.m_rangeSlider[0].value()
-        curY = self.Mgr.mainFrm.m_rangeSlider[1].value()
-
+        curY = self.Mgr.mainFrm.m_rangeSlider[1].value()            
+    
         self.Mgr.mainFrm.m_rangeSlider[0].setSliderPosition(curX + diff[1])
         self.Mgr.mainFrm.m_rangeSlider[1].setSliderPosition(curY + diff[0])
-
-
-
-
-
-
-
-        
-        
 
         
     
