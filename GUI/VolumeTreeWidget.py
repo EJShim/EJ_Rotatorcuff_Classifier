@@ -32,7 +32,7 @@ class E_VolumeTreeWidget(QTreeWidget):
             description = serieses[series]['description'].lower()
 
             #Fat Supression
-            if not description.find('fs/') == -1 or not description.find('fs ') == -1 or not description.find('fat') == -1 or not description.find('f/s') == -1 or description.endswith('fs') or not description.find('fs_') == -1 or not description.find('stir') == -1:                
+            if description.find('pd') == -1 and not description.find('fs/') == -1 or not description.find('fs ') == -1 or not description.find('fat') == -1 or not description.find('f/s') == -1 or description.endswith('fs') or not description.find('fs_') == -1 or not description.find('stir') == -1:                
                 child.setBackground(0, QBrush(QColor('green')))
                 
                 if not description.find('cor') == -1:
