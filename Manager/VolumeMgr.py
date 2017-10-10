@@ -609,7 +609,7 @@ class E_VolumeManager:
         #if self.m_volumeArray == 0.0: return
 
         volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
-        volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
+        # volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
         self.AddVolume(volumeData, [1, 1, 1])        
         self.Mgr.PredictObject(volumeData)
 
@@ -691,6 +691,9 @@ class E_VolumeManager:
         #0,1 = x axes
         
         volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
+
+        #Normalize It
+        volumeArray = (volumeArray * 255.0) / np.amax(volumeArray)
         self.m_volumeArray = volumeArray    
 
         
