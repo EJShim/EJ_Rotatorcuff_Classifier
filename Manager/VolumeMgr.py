@@ -364,7 +364,7 @@ class E_VolumeManager:
 
         imageProperty = vtk.vtkImageProperty()
         imageProperty.SetInterpolationTypeToLinear()
-        imageProperty.SetLookupTable(lookupTable)
+        #imageProperty.SetLookupTable(lookupTable)
         # imageProperty.SetColorLevel((scalarRange[1] + scalarRange[0])/2)
         self.Mgr.SetLog(str(scalarRange))
         self.Mgr.SetLog(str(imageProperty.GetColorLevel()))
