@@ -1,16 +1,15 @@
-# i
-import random
+import numpy as np
 
-a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-random.shuffle(a)
-print ("Reshuffled list : ",  a)
-
-random.shuffle(a)
-print ("Reshuffled list : ",  a)
-
-    # print(data)
+arr = np.array([[-1, 2, 4],[-4, 3, 5],[3, 4, 5]])
 
 
+def normalize(arr):
+    tmp = arr - np.amin(arr)
+    tmp = tmp / np.amax(tmp)
+    tmp *= 255.0
+    return tmp.astype(int)
+
+print(normalize(arr))
 # import numpy as np;
  
 # # Read image

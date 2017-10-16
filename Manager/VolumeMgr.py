@@ -355,21 +355,21 @@ class E_VolumeManager:
 
 
         lookupTable = vtk.vtkLookupTable()
-        #lookupTable.SetTableRange(0.0, 255.0)
-        lookupTable.SetHueRange(0, 1)
-        lookupTable.SetSaturationRange(0, 1)
-        lookupTable.SetValueRange(0, 1)
+        lookupTable.SetTableRange(0.0, 255.0)
+        lookupTable.SetHueRange(0.7, 0.0)
+        # lookupTable.SetSaturationRange(0, 10)
+        #lookupTable.SetValueRange(scalarRange[0], scalarRange[1])
         lookupTable.Build()
 
 
         imageProperty = vtk.vtkImageProperty()
         imageProperty.SetInterpolationTypeToLinear()
-        #imageProperty.SetLookupTable(lookupTable)
+        imageProperty.SetLookupTable(lookupTable)
         # imageProperty.SetColorLevel((scalarRange[1] + scalarRange[0])/2)
         self.Mgr.SetLog(str(scalarRange))
         self.Mgr.SetLog(str(imageProperty.GetColorLevel()))
         self.Mgr.SetLog(str(imageProperty.GetColorWindow()))
-        imageProperty.SetOpacity(0.2)
+        imageProperty.SetOpacity(0.3)
 
         #Slice
         for i in range(3):

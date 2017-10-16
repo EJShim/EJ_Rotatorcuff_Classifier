@@ -371,9 +371,15 @@ class E_Manager:
 
             camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
             for i in range(colorMap.shape[1]):
-                camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]
-            # camsum = (camsum * 255.0) / np.amax(camsum)
-            camsum = scipy.ndimage.zoom(camsum, 16)
+                camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
+            camsum = scipy.ndimage.zoom(camsum, 16)\
+
+            #Normalize To 0-255
+            tmp = camsum - np.amin(camsum)
+            camsum = tmp / np.amax(tmp)               
+            camsum *= 255.0
+            camsum = camsum.astype(int)
+
             self.VolumeMgr.AddClassActivationMap(camsum)
 
             self.Redraw()
