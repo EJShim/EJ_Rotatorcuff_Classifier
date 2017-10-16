@@ -321,7 +321,7 @@ class E_VolumeManager:
         #         for k in range(dim[1]):
         #             imgData.SetScalarComponentFromDouble(k, j, i, 0, camArray[i][k][j])
 
-        floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
+        floatArray = numpy_support.numpy_to_vtk(num_array=camArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
         imgData.GetPointData().SetScalars(floatArray)
 
 
@@ -355,18 +355,20 @@ class E_VolumeManager:
 
 
         lookupTable = vtk.vtkLookupTable()
-        lookupTable.SetTableRange(scalarRange)
-        lookupTable.SetHueRange(scalarRange)
-        lookupTable.SetSaturationRange(scalarRange[0], scalarRange[1])
-        lookupTable.SetValueRange(scalarRange)
+        #lookupTable.SetTableRange(0.0, 255.0)
+        lookupTable.SetHueRange(0.0, 255.0)
+        #lookupTable.SetSaturationRange(scalarRange[0], scalarRange[1])
+        lookupTable.SetValueRange(0.0, 255.0)
         lookupTable.Build()
 
 
         imageProperty = vtk.vtkImageProperty()
         imageProperty.SetInterpolationTypeToLinear()
         imageProperty.SetLookupTable(lookupTable)
-        imageProperty.SetColorLevel((scalarRange[1] + scalarRange[0])/2)
-        imageProperty.SetColorWindow(scalarRange[1] - scalarRange[0]-1)
+        # imageProperty.SetColorLevel((scalarRange[1] + scalarRange[0])/2)
+        self.Mgr.SetLog(str(scalarRange))
+        self.Mgr.SetLog(str(imageProperty.GetColorLevel()))
+        self.Mgr.SetLog(str(imageProperty.GetColorWindow()))
         imageProperty.SetOpacity(0.2)
 
         #Slice

@@ -189,24 +189,7 @@ def main(args):
 
     #DATA_PATH = os.path.join(cwd, "../NetworkData/volume/rotatorcuff_train_5Sample_64.npz")
 
-    DATA_PATHS = ["/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/ManualData/Merged_Black.npz"]
-    # DATA_PATHS = ["/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/1_40patients_rotatorcuff_train_4320_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/3_33patients_rotatorcuff_train_4680_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/5_40patients_rotatorcuff_train_4356_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/7_40patients_rotatorcuff_train_5760_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/8_40patients_rotatorcuff_train_5796_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/9_4DATA_PATH0patients_rotatorcuff_train_5904_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/10_40patients_rotatorcuff_train_5652_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/11_40patients_rotatorcuff_train_5940_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/12_40patients_rotatorcuff_train_5796_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/13_40patients_rotatorcuff_train_5904_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/14_40patients_rotatorcuff_train_6012_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/15_40patients_rotatorcuff_train_6120_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/16_40patients_rotatorcuff_train_6156_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/17_40patients_rotatorcuff_train_6300_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/18_40patients_rotatorcuff_train_6228_64d.npz",
-    # "/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/NetworkData/volume/64_TrainingSet/19_34patients_rotatorcuff_train_5328_64d.npz"
-    # ]
+    DATA_PATHS = ["/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/new/TrainData.npz"]
 
     # Loop across training epochs!
     for epoch in range(cfg['max_epochs']):
@@ -308,9 +291,9 @@ def main(args):
                 # mlog.log(epoch=str(epoch).encode(), itr=str(itr).encode(), closs=str(closs).encode(),c_acc=str(c_acc).encode())
 
             # Every Nth epoch, save weights[:-3]
-            if not (epoch%cfg['checkpoint_every_nth']):
-                fname = str(weights_fname[:-4]) + "_epoch_" + str(epoch) + str(time.time()) + ".npz"
-                checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
+            # if not (epoch%cfg['checkpoint_every_nth']):
+            #     fname = str("NEW" + weights_fname[:-4]) + "_epoch_" + str(epoch) + str(time.time()) + ".npz"
+            #     checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})
 
         fname = str(weights_fname[:-4]) + "_epoch_" + str(epoch) + str(time.time()) + ".npz"
         checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'ts': time.time(), 'learning_rate': new_lr})

@@ -29,11 +29,11 @@ rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 
 #Network, Weight, Model Path
 try:
-    import trainingTest.VRN_64 as config_module
+    import trainedWeight.VRN_64 as config_module
 except Exception as e:
     print("No GPU Support")
-weightPath = rootPath + "/VRN_64_TEST_ALL_epoch_41501229117.5271132.npz"
-modelPath = rootPath + "/CorrectFeatures.npz"
+weightPath = rootPath + "/trainedWeight/VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz"
+modelPath = rootPath + "/new/TestData.npz"
 
 class E_Manager:
     def __init__(self, mainFrm):

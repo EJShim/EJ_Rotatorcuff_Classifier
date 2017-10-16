@@ -1,43 +1,47 @@
-import cv2
-import numpy as np;
- 
-# Read image
-im = cv2.imread("/Users/EJ/Desktop/blogsample/1.png", cv2.IMREAD_GRAYSCALE)
- 
-# Set up the detector with default parameters.
+# i
+import random
 
-params = cv2.SimpleBlobDetector_Params()
-# Change thresholds
-params.minThreshold = 100;    # the graylevel of images
-params.maxThreshold = 255;
+a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+random.shuffle(a)
+print ("Reshuffled list : ",  a)
 
-params.filterByColor = True
-params.blobColor = 255
+random.shuffle(a)
+print ("Reshuffled list : ",  a)
 
-# Filter by Area
-params.filterByArea = False
-params.minArea = 100000
-
-detector = cv2.SimpleBlobDetector_create(params)
- 
-# Detect blobs.
-keypoints = detector.detect(im)
- 
-# Draw detected blobs as red circles.
-# cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
-im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
- 
-# Show keypoints
-cv2.imshow("Keypoints", im_with_keypoints)
-cv2.waitKey(0)
-
-
-# import glob
-
-# for filename in glob.iglob('/home/ej/data/Shoulder/RCT_JunKim/**/*.npz', recursive = True):
-#     print(filename)
-    # data = dict(np.load(filename))
     # print(data)
+
+
+# import numpy as np;
+ 
+# # Read image
+# im = cv2.imread("/Users/EJ/Desktop/blogsample/1.png", cv2.IMREAD_GRAYSCALE)
+ 
+# # Set up the detector with default parameters.
+
+# params = cv2.SimpleBlobDetector_Params()
+# # Change thresholds
+# params.minThreshold = 100;    # the graylevel of images
+# params.maxThreshold = 255;
+
+# params.filterByColor = True
+# params.blobColor = 255
+
+# # Filter by Area
+# params.filterByArea = False
+# params.minArea = 100000
+
+# detector = cv2.SimpleBlobDetector_create(params)
+ 
+# # Detect blobs.
+# keypoints = detector.detect(im)
+ 
+# # Draw detected blobs as red circles.
+# # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
+# im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+ 
+# # Show keypoints
+# cv2.imshow("Keypoints", im_with_keypoints)
+# cv2.waitKey(0)
 
 
 
