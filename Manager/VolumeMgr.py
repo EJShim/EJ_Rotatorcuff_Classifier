@@ -356,9 +356,9 @@ class E_VolumeManager:
 
         lookupTable = vtk.vtkLookupTable()
         #lookupTable.SetTableRange(0.0, 255.0)
-        lookupTable.SetHueRange(0.0, 255.0)
-        lookupTable.SetSaturationRange(scalarRange[0], scalarRange[1])
-        lookupTable.SetValueRange(scalarRange[0], scalarRange[1])
+        lookupTable.SetHueRange(0, 1)
+        lookupTable.SetSaturationRange(0, 1)
+        lookupTable.SetValueRange(0, 1)
         lookupTable.Build()
 
 
