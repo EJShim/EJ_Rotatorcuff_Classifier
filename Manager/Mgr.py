@@ -50,8 +50,7 @@ class E_Manager:
         self.bInitNetowrk = False
 
         #Test function
-        self.predFunc = None
-        self.predList = None
+        self.predFunc = None        
 
 
 
@@ -269,7 +268,7 @@ class E_Manager:
 
         #Compile Functions
         self.SetLog('Compiling Theano Functions..')
-        self.predFunc, self.predList, self.colorMap = self.MakeFunctions(cfg, model)
+        self.predFunc, self.colorMap = self.MakeFunctions(cfg, model)
 
 
         #Load Weights
@@ -345,35 +344,27 @@ class E_Manager:
             inputData = np.asarray(inputData.reshape(1, 1, resolution, resolution, resolution), dtype=np.float32)
             #inputData = 4.0 * inputData - 1.0
 
-            pred = self.predFunc(inputData)
+            
             colorMap = self.colorMap(inputData)
-            pList = self.predList(inputData)
+            pred = self.predFunc(inputData)
 
-
-
+            predIdx = np.argmax(pred)
+            predRate = np.amax(pred)*100.0
             #Show Log
             gtlog = "Label : " + groundTruth
             self.groundTruthLog.SetInput(gtlog)
-            log = "Predicted : " + labels.rt[int(pred)] + " -> " + str(pList[0][int(pred)] * 100.0) + "%"
+            log = "Predicted : " + labels.rt[predIdx] + " -> " + str(predRate) + "%"
             self.predLog.SetInput(log)
 
 
 
-            # #Compute Class Activation Map
-            #Full_connected Layer Weights
-
+            # #Compute Class Activation Map            
             fc1_weight = self.param_dict['fc.W']
-
-            # fc2_weight = self.param_dict['fc2.W']
-            #
-            # weight__ = np.dot(fc1_weight, fc2_weight)
-            predWeights = fc1_weight[:,int(pred):int(pred)+1]
-
-
+            predWeights = fc1_weight[:,predIdx:predIdx+1]
             camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
             for i in range(colorMap.shape[1]):
                 camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
-            camsum = scipy.ndimage.zoom(camsum, 16)\
+            camsum = scipy.ndimage.zoom(camsum, 16)
 
             #Normalize To 0-255
             tmp = camsum - np.amin(camsum)
@@ -403,18 +394,18 @@ class E_Manager:
 
         #Output Layer
         l_out = model['l_out']
-        y_hat_deterministic = lasagne.layers.get_output(l_out, X, deterministic=True)
+        y_hat_deterministic = lasagne.layers.get_output(l_out, X, deterministic=True)        
         softmax = T.nnet.softmax(y_hat_deterministic)
-        pred = T.argmax(T.sum(y_hat_deterministic, axis=0))
-        pred_fn = theano.function([X], pred)
-        pred_list = theano.function([X], softmax)
+        pred_list_fn = theano.function([X], softmax)
+        
 
         #Get ColorMap
-        l_color = model['l_color']
+        l_color = model['l_color']        
+        
         color_map = lasagne.layers.get_output(l_color, X, deterministic=True)
         colorMap_fn = theano.function([X], color_map)
 
-        return  pred_fn, pred_list, colorMap_fn
+        return  pred_list_fn, colorMap_fn
 
     def DrawVoxelArray(self, arrayBuffer):
         #reshape

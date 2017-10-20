@@ -1,3 +1,10 @@
+#RADIO BUTTON -> DropDown Menu
+#Renderer View 
+#TESTDATA Animation Show
+#CLASS Activation Map Animation Show
+
+
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -82,7 +89,7 @@ class E_MainWindow(QMainWindow):
 
 
         objectToolbar = QToolBar();
-        objectToolbar.setIconSize(QSize(58, 58))
+        objectToolbar.setIconSize(QSize(30, 30))        
         objectToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         mainTab.addTab(objectToolbar, "3D Objects")
 
@@ -235,7 +242,7 @@ class E_MainWindow(QMainWindow):
 
 
         networkToolbar = QToolBar();
-        networkToolbar.setIconSize(QSize(58, 58))
+        networkToolbar.setIconSize(QSize(30, 30))
         networkToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         mainTab.addTab(networkToolbar, "VRN")
 
@@ -246,6 +253,10 @@ class E_MainWindow(QMainWindow):
         predAction = QAction(QIcon(iconPath + "/051-programming.png"), "Predict Random", self)
         predAction.triggered.connect(self.onRandomPred)
         networkToolbar.addAction(predAction)
+
+
+        
+        toolbar.setFixedHeight(140)
 
 
     def InitSliceViewWidget(self):
@@ -282,9 +293,9 @@ class E_MainWindow(QMainWindow):
         MainLayout.addWidget(self.m_sliceViewWidget)
 
         #dock widget
-        dockwidget = QDockWidget("LOG")
-        dockwidget.setFeatures(QDockWidget.DockWidgetMovable)
-
+        dockwidget = QDockWidget()
+        dockwidget.setMaximumHeight(100)
+        # dockwidget.setFeatures(QDockWidget.DockWidgetMovable)
         font = QFont()
         font.setPointSize(16)
         self.m_logWidget = QPlainTextEdit()
@@ -294,9 +305,8 @@ class E_MainWindow(QMainWindow):
 
         MainLayout.setStretch(0, 1)
         MainLayout.setStretch(1, 1)
-        MainLayout.setStretch(2, 2)
-        MainLayout.setStretch(3, 2)
-        MainLayout.setStretch(4, 0.1)
+        MainLayout.setStretch(2, 3)
+        MainLayout.setStretch(3, 3)        
 
     def InitManager(self):
         self.Mgr = E_Manager(self)

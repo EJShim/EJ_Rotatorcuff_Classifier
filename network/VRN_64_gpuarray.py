@@ -499,4 +499,5 @@ def get_model():
         nonlinearity = None,
         name = 'fc'
         )
+        
     return {'l_in':l_in, 'l_color':l_conv17, 'l_out':l_fc}
