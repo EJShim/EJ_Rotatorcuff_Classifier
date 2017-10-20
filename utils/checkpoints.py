@@ -21,13 +21,6 @@ def save_weights(fname, l_out, metadata=None):
     logging.info('saving {} parameters to {}'.format(len(params), fname))
 
 
-    # try to avoid half-written files
-    # fname = os.path(fname)
-    # if fname.exists():
-    #     tmp_fname = os.path(fname.stripext() + '.tmp.npz') # TODO yes, this is a hack
-    #     np.savez_compressed(str(tmp_fname), **param_dict)
-    #     tmp_fname.rename(fname)
-    # else:
     np.savez_compressed(str(fname), **param_dict)
 
 

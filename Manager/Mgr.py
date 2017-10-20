@@ -18,7 +18,7 @@ from Manager.InteractorStyle import E_InteractorStyle
 from Manager.InteractorStyle import E_InteractorStyle2D
 from Manager.VolumeMgr import E_VolumeManager
 from Manager.E_SliceRenderer import *
-from NetworkData import labels
+from data import labels
 
 v_res = 1
 
@@ -29,11 +29,13 @@ rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 
 #Network, Weight, Model Path
 try:
-    import trainedWeight.VRN_64 as config_module
+    import network.VRN_64_dnn as config_module
 except Exception as e:
-    print("No GPU Support")
-weightPath = rootPath + "/trainedWeight/VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz"
-modelPath = rootPath + "/new/TestData.npz"
+    print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
+    import network.VRN_64_gpuarray as config_module
+
+weightPath = rootPath + "/weights/VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz"
+modelPath = rootPath + "/data/TestData.npz"
 
 class E_Manager:
     def __init__(self, mainFrm):

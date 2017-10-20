@@ -138,6 +138,11 @@ class E_MainWindow(QMainWindow):
         sliceViewCheck.stateChanged.connect(self.onSliceViewState)
         checkLayout.addWidget(sliceViewCheck)
 
+        self.classCheck = QCheckBox("CAM")
+        self.classCheck.setCheckState(2)
+        self.classCheck.setEnabled(False)
+        self.classCheck.stateChanged.connect(self.onClassActivationMapState)
+        checkLayout.addWidget(self.classCheck)
 
         objectToolbar.addSeparator()
 
@@ -458,6 +463,9 @@ class E_MainWindow(QMainWindow):
             self.m_sliceViewWidget.show()
         else:
             self.m_sliceViewWidget.hide()
+
+    def onClassActivationMapState(self, state):
+        self.Mgr.VolumeMgr.ToggleClassActivationMap(state)
 
 
     def onSliderRangeChanged(self, min, max):
