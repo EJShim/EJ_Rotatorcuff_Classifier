@@ -484,7 +484,14 @@ def get_model():
         # (1, 512, 4, 4, 4)
 
 
-    l_pool = BN(lasagne.layers.GlobalPoolLayer(l_conv17),name='l_pool')
+    # l_pool = BN(lasagne.layers.GlobalPoolLayer(l_conv17),name='l_pool')
+    l_pool = lasagne.layers.Pool3DLayer(
+        incoming=l_conv17,
+        pool_size=(4,4,4),
+        mode='average_inc_pad'
+        )
+    l_pool=BN(lasagne.layers.FlattenLayer(incoming=l_pool, outdim=2))
+
     l_fc = lasagne.layers.DenseLayer(
         incoming = l_pool,
         num_units = n_classes,
@@ -492,24 +499,4 @@ def get_model():
         nonlinearity = None,
         name = 'fc'
         )
-
-    #
-    # l_fc1 = BN(lasagne.layers.DenseLayer(
-    #     incoming = l_pool,
-    #     num_units = 512,
-    #     W = initmethod('relu'),
-    #     nonlinearity = elu,
-    #     name =  'fc1'
-    #     ),name = 'bnorm_fc1')
-    #
-    #     #(1, 512) *
-    # l_fc2 = lasagne.layers.DenseLayer(
-    #     incoming = l_fc1,
-    #     num_units = n_classes,
-    #     W = initmethod(),
-    #     nonlinearity = None,
-    #     name = 'fc2'
-    #     )
-
-        #(1, 2)[ 50, 50]
     return {'l_in':l_in, 'l_color':l_conv17, 'l_out':l_fc}

@@ -52,7 +52,6 @@ class E_Manager:
         #Test function
         self.predFunc = None
         self.predList = None
-        self.testFunc = None
 
 
 
@@ -270,7 +269,7 @@ class E_Manager:
 
         #Compile Functions
         self.SetLog('Compiling Theano Functions..')
-        self.testFunc, tvars, model, self.predFunc, self.predList, self.colorMap = self.MakeFunctions(cfg, model)
+        self.predFunc, self.predList, self.colorMap = self.MakeFunctions(cfg, model)
 
 
         #Load Weights
@@ -399,53 +398,23 @@ class E_Manager:
         #Input Array
         X = T.TensorType('float32', [False]*5)('X')
 
-        #shared variable for input array
-        X_shared = lasagne.utils.shared_empty(5, dtype='float32')
-
         #Class Vector
         y = T.TensorType('int32', [False]*1)('y')
 
-        #Shared Variable for class vector
-        y_shared = lasagne.utils.shared_empty(1, dtype='float32')
-
         #Output Layer
         l_out = model['l_out']
-
-        #Global Pooling Layer
-        l_color = model['l_color']
-
-        #Batch Parameters
-        batch_index = T.iscalar('batch_index')
-        test_batch_slice = slice(batch_index*cfg['n_rotations'], (batch_index+1)*cfg['n_rotations'])
-
-        #Get Output
-        # weight = lasagne.layers.get_output(l_weight, X, deterministic=True)
-
         y_hat_deterministic = lasagne.layers.get_output(l_out, X, deterministic=True)
         softmax = T.nnet.softmax(y_hat_deterministic)
+        pred = T.argmax(T.sum(y_hat_deterministic, axis=0))
+        pred_fn = theano.function([X], pred)
+        pred_list = theano.function([X], softmax)
 
         #Get ColorMap
+        l_color = model['l_color']
         color_map = lasagne.layers.get_output(l_color, X, deterministic=True)
         colorMap_fn = theano.function([X], color_map)
 
-        #Average Across Rotation Examples
-        pred = T.argmax(T.sum(y_hat_deterministic, axis=0))
-
-        #Get Error Rate
-        classifier_test_error_rate = T.cast(T.mean(T.neq(pred, T.mean(y,dtype='int32'))), 'float32')
-
-        #Compile Functions
-        test_error_fn = theano.function([batch_index], [classifier_test_error_rate, pred], givens={X:X_shared[test_batch_slice], y:T.cast(y_shared[test_batch_slice], 'int32')})
-
-        pred_fn = theano.function([X], pred)
-        pred_list = theano.function([X], softmax)
-        # pred_weights = theano.function([X], weight
-
-        tfuncs = {'test_function':test_error_fn}
-        tvars = {'X':X, 'y':y, 'X_shared':X_shared, 'y_shared':y_shared}
-
-
-        return tfuncs, tvars, model, pred_fn, pred_list, colorMap_fn
+        return  pred_fn, pred_list, colorMap_fn
 
     def DrawVoxelArray(self, arrayBuffer):
         #reshape
