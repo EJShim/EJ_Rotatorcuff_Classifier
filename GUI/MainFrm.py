@@ -1,8 +1,11 @@
 #RADIO BUTTON -> DropDown Menu = not now
 
-#Renderer View 
-#TESTDATA Animation Show
-#CLASS Activation Map Animation Show
+#Renderer View  - FInisehd
+#TESTDATA Animation Show - Finisehd
+
+
+#CLASS Activation Map Animation Show -- Use Test Data ids no.4 or no.24
+#Use Multi-Thread when compiling theano functions
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -44,6 +47,7 @@ class E_MainWindow(QMainWindow):
         #Random Prediction Animation Thread
         self.th_randomPred = ListAnimationThread(self)
         self.th_randomPred.predRandom.connect(self.onRandomPred)
+        
 
         
 
@@ -560,6 +564,7 @@ class E_MainWindow(QMainWindow):
 
     def onCAMAnimation(self, e):
         self.Mgr.SetLog(str(e))
+        
 
 
 
@@ -567,16 +572,16 @@ class E_MainWindow(QMainWindow):
 
 #Multi-Thread Codes
 class ListAnimationThread(QThread):
-    predRandom = pyqtSignal(bool)
+    predRandom = pyqtSignal(bool)    
 
 
     def __init__(self, parent=None):
         super().__init__() 
 
     def __del__(self):
-        self.wait()
+        self.wait()    
 
     def run(self):
         while self.isRunning():
-            self.predRandom.emit(True)
+            self.predRandom.emit(True)            
             self.msleep(200)

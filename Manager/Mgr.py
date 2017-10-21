@@ -257,9 +257,6 @@ class E_Manager:
 
     def InitNetwork(self):
         self.SetLog("Import Pre-trained Network..")
-
-
-
         self.SetLog("Import Completed.")
         self.SetLog("Load config and model files..")
         cfg = config_module.cfg
