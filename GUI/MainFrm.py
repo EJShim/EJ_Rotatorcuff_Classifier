@@ -476,6 +476,9 @@ class E_MainWindow(QMainWindow):
     def onInitNetwork(self):
         self.Mgr.InitNetwork()
 
+        self.trainAction.setEnabled(False)
+        self.listAnimation.setEnabled(False)
+
     def onRandomPred(self):        
         self.Mgr.RandomPrediction()
 

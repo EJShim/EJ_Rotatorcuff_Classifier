@@ -276,9 +276,7 @@ class E_Manager:
         #Check if previous best accuracy is in metadata form previous test_batch_slice
         best_acc = metadata['best_acc'] if 'best_acc' in metadata else 0
         log = 'best_accuracy' + str(best_acc)
-        self.SetLog(log)
-
-        self.mainFrm.trainAction.setEnabled(False)
+        self.SetLog(log)        
 
         self.bInitNetowrk = True;
 
