@@ -63,7 +63,7 @@ class E_MainRenderingWidget(QWidget):
 
     def SetViewMainView(self):
         self.sliceView.setParent(self.sliceRenderLayout.parentWidget())
-        self.sliceRenderLayout.addWidget(self.sliceView)
+        self.sliceRenderLayout.insertWidget(0,self.sliceView)
         self.mainLayout.setStretch(0, 3)
         self.mainLayout.setStretch(1, 1)
         
@@ -71,7 +71,7 @@ class E_MainRenderingWidget(QWidget):
 
     def SetViewGridView(self):
         self.sliceView.setParent(self.mainRenderLayout.parentWidget())
-        self.mainRenderLayout.addWidget(self.sliceView)
+        self.mainRenderLayout.insertWidget(0,self.sliceView)
         self.mainLayout.setStretch(0, 1)
         self.mainLayout.setStretch(1, 1)
 
