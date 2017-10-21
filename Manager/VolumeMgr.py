@@ -362,7 +362,7 @@ class E_VolumeManager:
         colorFunction.AddRGBPoint(scalarRange[1], 1.0, 0.0, 0.0)
 
         opacityFunction.AddPoint((scalarRange[0] + scalarRange[1])*0.0, 0.0)
-        opacityFunction.AddPoint(scalarRange[1], 0.05)
+        opacityFunction.AddPoint(scalarRange[1], 1.0)
 
         volumeProperty.SetColor(colorFunction)
         volumeProperty.SetScalarOpacity(opacityFunction)
