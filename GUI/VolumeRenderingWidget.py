@@ -10,7 +10,7 @@ class E_VolumeRenderingWidget(QWidget):
         self.setMaximumWidth(300)
 
         self.mainLayout = QVBoxLayout()
-        self.mainLayout.setSpacing(0)
+        self.mainLayout.setSpacing(0)        
         self.setLayout(self.mainLayout)
 
         self.m_widget = QVTKRenderWindowInteractor();
@@ -34,9 +34,12 @@ class E_VolumeRenderingWidget(QWidget):
         # colorFunc = self.Mgr.VolumeMgr.m_colorFunctions[0]
         # self.onChangeIndex()
 
-    def Initialize(self):
+    def Initialize(self):        
+
         #CTF Controller
-        self.addWidget(QLabel("Volume CTF"))
+        # comboTitle = QLabel("Volume CTF")
+        # comboTitle.setStyleSheet("QLabel {border: 1px solid gray;border-radius: 2px;background-color: white;margin: 0px 0px 0px 0px;}");        
+        # self.addWidget(comboTitle)
 
         #Add ComboBox
         self.combo = QComboBox()

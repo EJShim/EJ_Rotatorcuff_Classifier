@@ -7,6 +7,7 @@ class E_VolumeListWidget(QListWidget):
         super(QListWidget, self).__init__(parent)
 
         self.mainFrm = parent
+        self.setAlternatingRowColors(True)
 
         self.itemDoubleClicked.connect(self.onRenderItem)
 

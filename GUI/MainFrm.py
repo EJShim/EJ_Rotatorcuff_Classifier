@@ -1,9 +1,8 @@
-#RADIO BUTTON -> DropDown Menu
+#RADIO BUTTON -> DropDown Menu = not now
+
 #Renderer View 
 #TESTDATA Animation Show
 #CLASS Activation Map Animation Show
-
-
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -16,6 +15,7 @@ from Manager.Mgr import E_Manager
 from GUI.VolumeRenderingWidget import E_VolumeRenderingWidget
 from GUI.VolumeListWidget import E_VolumeListWidget
 from GUI.VolumeTreeWidget import E_VolumeTreeWidget
+from GUI.RendererViewWidget import E_MainRenderingWidget
 
 import numpy as np
 
@@ -29,7 +29,7 @@ class E_MainWindow(QMainWindow):
 
         self.m_saveDir = None;
 
-        self.setWindowTitle("EJ ModelNet Project")
+        self.setWindowTitle("VRN Rotator-Cuff-Tear Classifier")
         self.keyPlaying = {}
 
 
@@ -41,39 +41,23 @@ class E_MainWindow(QMainWindow):
         #Volume List Dialog
         self.m_volumeListDlg = E_VolumeListWidget()
 
-        #vtk Renderer Widget
-        self.m_vtkWidget = [0, 0]
-        for i in range(2):
-            self.m_vtkWidget[i] = QVTKRenderWindowInteractor();
+        
 
         #Bone Color, RCT
         self.m_bBoneColorBlack = "Black"
-        self.m_bRCT = True
-
-
-        self.m_vtkSliceWidget = [0,0,0]
+        self.m_bRCT = True        
         self.m_sliceSlider = [0, 0, 0]
-        for i in range(3):            
-            #Slice View            
-            self.m_vtkSliceWidget[i] = QVTKRenderWindowInteractor();
 
-            #Slice Image Slider
-            self.m_sliceSlider[i] = QSlider(Qt.Horizontal)
-            self.m_sliceSlider[i].setRange(0, 0)
-            self.m_sliceSlider[i].setSingleStep(1)
-
-            self.m_sliceSlider[i].rangeChanged.connect(self.onSliderRangeChanged)
-            self.m_sliceSlider[i].valueChanged.connect(self.onSliderValueChanged)
-
-
-        self.m_sliceViewWidget = QWidget()
+        #vtk Renderer Widget
+        self.m_vtkWidget = [0, 0]
+        self.m_vtkSliceWidget = [0,0,0]      
 
 
         #Initialize
 
         self.InitToolbar()
         self.InitCentralWidget()
-        self.InitSliceViewWidget()
+        # self.InitSliceViewWidget()
         self.InitManager()
 
 
@@ -89,7 +73,7 @@ class E_MainWindow(QMainWindow):
 
 
         objectToolbar = QToolBar();
-        objectToolbar.setIconSize(QSize(30, 30))        
+        objectToolbar.setIconSize(QSize(50, 50))        
         objectToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         mainTab.addTab(objectToolbar, "3D Objects")
 
@@ -150,8 +134,26 @@ class E_MainWindow(QMainWindow):
         self.classCheck.setEnabled(False)
         self.classCheck.stateChanged.connect(self.onClassActivationMapState)
         checkLayout.addWidget(self.classCheck)
-
+    
         objectToolbar.addSeparator()
+
+        ##View 1, 4 View
+        viewcontrolLayout = QVBoxLayout()
+        viewControl = QGroupBox("View Control")
+        viewControl.setLayout(viewcontrolLayout)
+        radioNormal = QRadioButton("Normal View")
+        radioNormal.clicked.connect(self.SetViewModeNromal)
+        radioGrid = QRadioButton("Grid View")
+        radioGrid.clicked.connect(self.SetViewModeGrid)
+
+
+        viewcontrolLayout.addWidget(radioNormal)
+        viewcontrolLayout.addWidget(radioGrid)                   
+        viewcontrolLayout.itemAt(0).widget().setChecked(True)        
+        objectToolbar.addWidget(viewControl)
+
+        objectToolbar.addSeparator()        
+
 
 
         cropWidget = QWidget()
@@ -213,7 +215,7 @@ class E_MainWindow(QMainWindow):
         protocolAndSeriesWidget.layout().setSpacing(0)
 
 
-        self.protocolGroup = QVBoxLayout()
+        self.protocolGroup = QHBoxLayout()
         groupBoxPro = QGroupBox("Protocol")
         groupBoxPro.setLayout(self.protocolGroup)
         protocolAndSeriesWidget.layout().addWidget(groupBoxPro)
@@ -235,14 +237,14 @@ class E_MainWindow(QMainWindow):
         objectToolbar.addSeparator()        
 
         #Save Object Action
-        SaveAction = QAction(QIcon(iconPath + "/051-cmyk.png"), "Save Processed Data", self)
+        SaveAction = QAction(QIcon(iconPath + "/051-business-card.png"), "Save Processed Data", self)
         SaveAction.triggered.connect(self.onSaveData)
         objectToolbar.addAction(SaveAction)
 
 
 
         networkToolbar = QToolBar();
-        networkToolbar.setIconSize(QSize(30, 30))
+        networkToolbar.setIconSize(QSize(50, 50))
         networkToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         mainTab.addTab(networkToolbar, "VRN")
 
@@ -254,27 +256,55 @@ class E_MainWindow(QMainWindow):
         predAction.triggered.connect(self.onRandomPred)
         networkToolbar.addAction(predAction)
 
+        networkToolbar.addSeparator()
+
+        listAnimation = QAction(QIcon(iconPath + "/051-pantone-1.png"), "List Animation", self)
+        listAnimation.triggered.connect(self.onRandomPred)
+        networkToolbar.addAction(listAnimation)
+
+        camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)
+        camAnimation.triggered.connect(self.onRandomPred)
+        networkToolbar.addAction(camAnimation)
+
 
         
         toolbar.setFixedHeight(140)
 
 
-    def InitSliceViewWidget(self):
-        layout = QVBoxLayout()
+    def InitRendererView(self, layout):
+
+        self.renderViewWidget = E_MainRenderingWidget()
+        layout.addWidget(self.renderViewWidget)        
 
 
-        for i in range(3):
-            layout.addWidget(self.m_vtkSliceWidget[i])
-            rendererIdx = (i+1)%3
-            layout.addWidget(self.m_sliceSlider[rendererIdx])
+        #Initialize Renderers
+        for i in range(2):
+            self.m_vtkWidget[i] = QVTKRenderWindowInteractor();
+            self.renderViewWidget.AddMainRenderer(self.m_vtkWidget[i])
 
-        #hide initialize
-        self.m_sliceViewWidget.setLayout(layout)
-        self.m_sliceViewWidget
+        self.m_vtkWidget[0].hide()
+
+
+        for i in range(3):            
+            #Slice View            
+            self.m_vtkSliceWidget[i] = QVTKRenderWindowInteractor();
+
+            #Slice Image Slider
+            self.m_sliceSlider[i] = QSlider(Qt.Horizontal)
+            self.m_sliceSlider[i].setRange(0, 0)
+            self.m_sliceSlider[i].setSingleStep(1)
+
+            self.m_sliceSlider[i].rangeChanged.connect(self.onSliderRangeChanged)
+            self.m_sliceSlider[i].valueChanged.connect(self.onSliderValueChanged)
+
+            self.renderViewWidget.AddSliceRenderer(self.m_vtkSliceWidget[i])        
+
 
 
     def InitCentralWidget(self):
         MainLayout = QHBoxLayout()
+        MainLayout.setSpacing(0)
+        MainLayout.setContentsMargins(0,0,0,0)
         self.m_centralWidget.setLayout(MainLayout)
 
         self.m_listWidget = E_VolumeListWidget(self)        
@@ -285,12 +315,9 @@ class E_MainWindow(QMainWindow):
         MainLayout.addWidget(self.m_treeWidget)
 
 
-        for i in range(2):
-            self.m_vtkWidget[i]
-            MainLayout.addWidget(self.m_vtkWidget[i])
-
-        self.m_vtkWidget[0].hide()
-        MainLayout.addWidget(self.m_sliceViewWidget)
+        #Initialize Main View
+        self.InitRendererView(MainLayout)                
+        
 
         #dock widget
         dockwidget = QDockWidget()
@@ -305,8 +332,7 @@ class E_MainWindow(QMainWindow):
 
         MainLayout.setStretch(0, 1)
         MainLayout.setStretch(1, 1)
-        MainLayout.setStretch(2, 3)
-        MainLayout.setStretch(3, 3)        
+        MainLayout.setStretch(2, 4)          
 
     def InitManager(self):
         self.Mgr = E_Manager(self)
@@ -509,3 +535,21 @@ class E_MainWindow(QMainWindow):
             self.m_rangeSlider[1].setValue(self.m_rangeSlider[0].value()+1)
         else:
             return
+    
+
+
+    def SetViewModeNromal(self):
+        self.renderViewWidget.SetViewMainView()
+
+    def SetViewModeGrid(self):
+        self.renderViewWidget.SetViewGridView()
+
+
+    def onListAnimation(self):
+        self.Mgr.SetLog("List Animation")
+
+    def onCAMAnimation(self):
+        self.Mgr.SetLog("Cam Animation")
+
+        
+

@@ -290,10 +290,9 @@ class E_Manager:
         try:
             zt = np.asarray(np.load(modelPath)['targets'])
 
-
             for i in range(len(zt)):
 
-                self.mainFrm.m_listWidget.insertItem(i, str(zt[i]))
+                self.mainFrm.m_listWidget.insertItem(i, str(labels.rt[int(zt[i])]))
         except Exception as e:
             self.SetLog("Model Path not defined or wrong")
             self.SetLog(str(e))
