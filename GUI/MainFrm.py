@@ -266,10 +266,10 @@ class E_MainWindow(QMainWindow):
 
         networkToolbar.addSeparator()
 
-        listAnimation = QAction(QIcon(iconPath + "/051-pantone-1.png"), "List Animation", self)
-        listAnimation.setCheckable(True)
-        listAnimation.triggered.connect(self.onListAnimation)
-        networkToolbar.addAction(listAnimation)
+        self.listAnimation = QAction(QIcon(iconPath + "/051-pantone-1.png"), "List Animation", self)
+        self.listAnimation.setCheckable(True)
+        self.listAnimation.triggered.connect(self.onListAnimation)
+        networkToolbar.addAction(self.listAnimation)
 
         camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)
         camAnimation.setCheckable(True)

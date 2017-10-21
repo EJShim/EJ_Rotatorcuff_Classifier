@@ -370,7 +370,7 @@ class E_VolumeManager:
         volumeProperty.SetInterpolationTypeToLinear()
 
         self.m_colorMapMapper.SetInputData(imgData)
-        self.m_colorMapMapper.SetBlendModeToAverageIntensity()
+        self.m_colorMapMapper.SetBlendModeToComposite()
 
         #Actor
         self.m_colorMapVolume = vtk.vtkVolume()
