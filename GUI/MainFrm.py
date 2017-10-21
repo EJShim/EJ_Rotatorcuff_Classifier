@@ -41,6 +41,10 @@ class E_MainWindow(QMainWindow):
         #Volume List Dialog
         self.m_volumeListDlg = E_VolumeListWidget()
 
+        #Random Prediction Animation Thread
+        self.th_randomPred = ListAnimationThread(self)
+        self.th_randomPred.predRandom.connect(self.onRandomPred)
+
         
 
         #Bone Color, RCT
@@ -259,11 +263,13 @@ class E_MainWindow(QMainWindow):
         networkToolbar.addSeparator()
 
         listAnimation = QAction(QIcon(iconPath + "/051-pantone-1.png"), "List Animation", self)
-        listAnimation.triggered.connect(self.onRandomPred)
+        listAnimation.setCheckable(True)
+        listAnimation.triggered.connect(self.onListAnimation)
         networkToolbar.addAction(listAnimation)
 
         camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)
-        camAnimation.triggered.connect(self.onRandomPred)
+        camAnimation.setCheckable(True)
+        camAnimation.triggered.connect(self.onCAMAnimation)
         networkToolbar.addAction(camAnimation)
 
 
@@ -466,7 +472,7 @@ class E_MainWindow(QMainWindow):
     def onInitNetwork(self):
         self.Mgr.InitNetwork()
 
-    def onRandomPred(self):
+    def onRandomPred(self):        
         self.Mgr.RandomPrediction()
 
     def onListViewState(self, state):
@@ -545,11 +551,32 @@ class E_MainWindow(QMainWindow):
         self.renderViewWidget.SetViewGridView()
 
 
-    def onListAnimation(self):
-        self.Mgr.SetLog("List Animation")
+    def onListAnimation(self, e):
+        if e:
+            self.th_randomPred.start()
+        else:
+            self.th_randomPred.terminate()
 
-    def onCAMAnimation(self):
-        self.Mgr.SetLog("Cam Animation")
 
-        
+    def onCAMAnimation(self, e):
+        self.Mgr.SetLog(str(e))
 
+
+
+
+
+#Multi-Thread Codes
+class ListAnimationThread(QThread):
+    predRandom = pyqtSignal(bool)
+
+
+    def __init__(self, parent=None):
+        super().__init__() 
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        while self.isRunning():
+            self.predRandom.emit(True)
+            self.msleep(200)

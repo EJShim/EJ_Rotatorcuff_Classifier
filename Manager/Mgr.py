@@ -301,7 +301,7 @@ class E_Manager:
 
 
         #Get Random
-        randIdx = random.randint(0, len(self.xt))
+        randIdx = random.randint(0, len(self.xt)-1)
 
         #Draw Object
         resolution = self.VolumeMgr.resolution
