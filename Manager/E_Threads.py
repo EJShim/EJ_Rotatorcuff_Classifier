@@ -9,8 +9,7 @@ file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
 sys.path.append(root_path)
 
-import network.module_functions as function_compiler
-from utils import checkpoints
+
 
 class CamHistoryThread(QThread):
     cam_data = pyqtSignal(object)
@@ -77,6 +76,9 @@ class NetworkInitializationThread(QThread):
         except Exception as e:
             self.onmessage.emit("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
             import network.VRN_64_gpuarray as config_module
+
+        import network.module_functions as function_compiler
+        from utils import checkpoints
 
 
         
