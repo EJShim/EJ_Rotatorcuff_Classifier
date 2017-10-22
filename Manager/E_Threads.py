@@ -1,0 +1,58 @@
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+import os
+import numpy as np
+
+curPath = os.path.dirname(os.path.realpath(__file__))
+rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
+
+class CamHistoryThread(QThread):
+    cam_data = pyqtSignal(object)
+    onprogress = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__()
+        self.cam_history_data = np.load(os.path.join(rootPath, "cam_history", "cam_history_data.npz"))
+        self.selectedIdx = self.cam_history_data['index']
+        self.updating = False
+
+    def __del__(self):
+        self.wait()       
+
+    def run(self):
+        if self.isRunning(): self.quit()
+
+        total = len(self.cam_history_data['data'])
+        for idx, data in enumerate(self.cam_history_data['data']):
+            
+            progress = int((idx/total) * 100.0)
+
+            if not self.updating:
+                self.cam_data.emit(data)
+                self.onprogress.emit(progress)
+
+            self.msleep(100)
+
+        self.quit()
+
+    
+        
+
+
+
+#Multi-Thread Codes
+class ListAnimationThread(QThread):
+    predRandom = pyqtSignal(bool)
+
+
+    def __init__(self, parent=None):
+        super().__init__() 
+
+    # def __del__(self):
+    #     self.wait()    
+
+    def run(self):
+        while self.isRunning():
+            self.predRandom.emit(True)            
+            self.msleep(150)        
