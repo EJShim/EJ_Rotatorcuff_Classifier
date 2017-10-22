@@ -290,9 +290,9 @@ class E_MainWindow(QMainWindow):
         self.listAnimation.triggered.connect(self.onListAnimation)
         networkToolbar.addAction(self.listAnimation)
 
-        camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)        
-        camAnimation.triggered.connect(self.onCAMAnimation)
-        networkToolbar.addAction(camAnimation)
+        self.camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)        
+        self.camAnimation.triggered.connect(self.onCAMAnimation)
+        networkToolbar.addAction(self.camAnimation)
 
 
         
@@ -496,6 +496,7 @@ class E_MainWindow(QMainWindow):
 
         self.trainAction.setEnabled(False)
         self.listAnimation.setEnabled(False)
+        self.camAnimation.setEnabled(False)
 
     def onRandomPred(self):        
         self.Mgr.RandomPrediction()
