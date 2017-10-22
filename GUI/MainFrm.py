@@ -498,9 +498,10 @@ class E_MainWindow(QMainWindow):
             self.Mgr.SetLog(str(e), error=True)
 
     def onInitNetwork(self):        
-        self.trainAction.setEnabled(False)
-        self.trainAction.setText("initializing...")
-        self.th_network_initializer.start()
+        self.Mgr.InitNetwork()
+        # self.trainAction.setEnabled(False)
+        # self.trainAction.setText("initializing...")
+        # self.th_network_initializer.start()
 
     def onCompiled(self, function):
         self.trainAction.setText("initialize complete")

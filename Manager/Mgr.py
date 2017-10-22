@@ -7,6 +7,17 @@ import scipy.ndimage
 
 from PyQt5.QtWidgets import QApplication
 
+#Theano
+import theano
+import lasagne
+try:
+    import network.VRN_64_dnn as config_module
+except Exception as e:
+    print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
+    import network.VRN_64_gpuarray as config_module
+
+import network.module_functions as function_compiler
+from utils import checkpoints
 
 #utils
 from utils import checkpoints
@@ -248,6 +259,25 @@ class E_Manager:
         self.param_dict = param
         self.bInitNetowrk = True;
 
+    def InitNetwork(self):        
+        self.SetLog("Load config and model files..")
+        cfg = config_module.cfg
+        model = config_module.get_model()
+
+
+        #Compile Functions
+        self.SetLog('Compiling Theano Functions..')
+        self.predFunc, self.colorMap = function_compiler.make_functions(cfg, model)
+
+
+        #Load Weights
+        metadata, self.param_dict = checkpoints.load_weights(weightPath, model['l_out'])
+
+        log = 'Import Completed'
+        self.SetLog(log) 
+
+        self.bInitNetowrk = True;
+
     def InitData(self):
 
         try:
@@ -261,6 +291,7 @@ class E_Manager:
             self.SetLog(str(e))
 
     def RandomPrediction(self):
+
 
         #Get Random
         randIdx = random.randint(0, len(self.xt)-1)
