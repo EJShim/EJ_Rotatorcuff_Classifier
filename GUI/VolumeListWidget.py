@@ -15,3 +15,5 @@ class E_VolumeListWidget(QListWidget):
         idx = self.row(item)
 
         self.mainFrm.Mgr.RenderPreProcessedObject(idx)
+        self.mainFrm.Mgr.Redraw()
+        self.mainFrm.Mgr.Redraw2D()

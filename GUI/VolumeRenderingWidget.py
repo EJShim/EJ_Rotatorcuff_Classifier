@@ -87,7 +87,7 @@ class E_VolumeRenderingWidget(QWidget):
         self.m_view.Render()
 
 
-    def onChangeIndex(self, idx):
+    def onChangeIndex(self, idx, Update = True):
 
         #Update Preset Function
         self.Mgr.VolumeMgr.SetPresetFunctions(idx)
@@ -117,7 +117,9 @@ class E_VolumeRenderingWidget(QWidget):
 
         #redraw Plot
         self.Redraw()
-        self.Mgr.Redraw()
+
+        if Update:
+            self.Mgr.Redraw()
 
     def onVolumeOTFState(self, state):
         if state == 2:

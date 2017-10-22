@@ -15,10 +15,12 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 import sys, os
 from Manager.Mgr import E_Manager
+from Manager.E_Threads import *
 from GUI.VolumeRenderingWidget import E_VolumeRenderingWidget
 from GUI.VolumeListWidget import E_VolumeListWidget
 from GUI.VolumeTreeWidget import E_VolumeTreeWidget
 from GUI.RendererViewWidget import E_MainRenderingWidget
+
 
 import numpy as np
 
@@ -47,6 +49,15 @@ class E_MainWindow(QMainWindow):
         #Random Prediction Animation Thread
         self.th_randomPred = ListAnimationThread(self)
         self.th_randomPred.predRandom.connect(self.onRandomPred)
+
+
+        #Cam History Animation thread
+        self.cam_history_data = None
+        self.th_camHistory = CamHistoryThread(self)
+        self.th_camHistory.cam_data.connect(self.updateCAM)
+        self.th_camHistory.onprogress.connect(self.onProgress)
+        self.th_camHistory.finished.connect(self.onFinishedCamHistory)
+
         
 
         
@@ -67,6 +78,14 @@ class E_MainWindow(QMainWindow):
         self.InitCentralWidget()
         # self.InitSliceViewWidget()
         self.InitManager()
+
+
+
+        #Status Bar
+        self.statusBar().showMessage('Ready')
+        self.progressBar = QProgressBar()
+        self.progressBar.setGeometry(30, 40, 200, 25)        
+        self.statusBar().addPermanentWidget(self.progressBar)
 
 
     def InitToolbar(self):
@@ -271,8 +290,7 @@ class E_MainWindow(QMainWindow):
         self.listAnimation.triggered.connect(self.onListAnimation)
         networkToolbar.addAction(self.listAnimation)
 
-        camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)
-        camAnimation.setCheckable(True)
+        camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)        
         camAnimation.triggered.connect(self.onCAMAnimation)
         networkToolbar.addAction(camAnimation)
 
@@ -481,6 +499,7 @@ class E_MainWindow(QMainWindow):
 
     def onRandomPred(self):        
         self.Mgr.RandomPrediction()
+        self.Mgr.Redraw()
 
     def onListViewState(self, state):
         if state == 2:
@@ -566,25 +585,26 @@ class E_MainWindow(QMainWindow):
 
 
     def onCAMAnimation(self, e):
-        self.Mgr.SetLog(str(e))
+        self.th_camHistory.start()
+        self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx)
+
+        self.statusBar().showMessage('Class Animation History among epochs')
+
+    def updateCAM(self, array):
+        self.th_camHistory.updating = True
+        self.Mgr.ClearScene()
+        self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx)
+
         
+        # self.Mgr.ClearCAM()
+        self.Mgr.VolumeMgr.AddClassActivationMap(array)
+        self.th_camHistory.updating = False
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
 
+    def onFinishedCamHistory(self):        
+        self.statusBar().showMessage('Finished CAM')
+        self.progressBar.setValue(0)
 
-
-
-
-#Multi-Thread Codes
-class ListAnimationThread(QThread):
-    predRandom = pyqtSignal(bool)    
-
-
-    def __init__(self, parent=None):
-        super().__init__() 
-
-    def __del__(self):
-        self.wait()    
-
-    def run(self):
-        while self.isRunning():
-            self.predRandom.emit(True)            
-            self.msleep(200)
+    def onProgress(self, progress):
+        self.progressBar.setValue(progress)

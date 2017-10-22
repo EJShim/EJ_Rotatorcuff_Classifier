@@ -312,9 +312,9 @@ class E_VolumeManager:
             #Add To Renderer
             for i in range(3):
                 rendererIdx = i
-                self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_colorMapResliceActor[i])
-                self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
-                self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)
+                self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_colorMapResliceActor[i])
+                self.Mgr.m_sliceRenderer[i].ResetCamera()
+                self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(1.5)
 
             #Add Actor
             self.Mgr.renderer[1].AddVolume(self.m_colorMapVolume)
@@ -323,9 +323,8 @@ class E_VolumeManager:
             self.m_bShowCAM = False
 
             #Remove From Renderer
-            for i in range(3):
-                rendererIdx = i
-                self.Mgr.m_sliceRenderer[rendererIdx].RemoveViewProp(self.m_colorMapResliceActor[i])
+            for i in range(3):                
+                self.Mgr.m_sliceRenderer[i].RemoveViewProp(self.m_colorMapResliceActor[i])
 
             #Add Actor
             self.Mgr.renderer[1].RemoveVolume(self.m_colorMapVolume)
@@ -489,7 +488,7 @@ class E_VolumeManager:
         self.Mgr.renderer[1].ResetCamera()
 
         #Set preset
-        self.Mgr.mainFrm.volumeWidget.onChangeIndex(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex())
+        self.Mgr.mainFrm.volumeWidget.onChangeIndex(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex(), Update=False)
         #self.Mgr.Redraw()
 
     def ForwardSliceImage(self, idx):

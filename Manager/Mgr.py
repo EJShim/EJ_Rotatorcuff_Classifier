@@ -322,8 +322,8 @@ class E_Manager:
             #Predict 3D object
             self.PredictObject(self.xt[idx], log)
 
-        self.Redraw()
-        self.Redraw2D()
+        # self.Redraw()
+        # self.Redraw2D()
 
 
 
@@ -365,7 +365,7 @@ class E_Manager:
 
             self.VolumeMgr.AddClassActivationMap(camsum)
 
-            self.Redraw()
+            # self.Redraw()
 
         else:
             #$self.SetLog('Network Need to be Initialized')
@@ -439,6 +439,18 @@ class E_Manager:
 
         for i in range(3):
             self.m_sliceRenderer[i].RemoveAllViewProps()
+
+    def ClearCAM(self):
+        self.renderer[1].RemoveViewProp(self.VolumeMgr.m_colorMapVolume)
+
+        for i in range(3):
+            self.m_sliceRenderer[i].RemoveViewProp(self.VolumeMgr.m_colorMapResliceActor[i])
+
+            
+            # self.m_sliceRenderer[i].RemoveAllViewProps()
+
+        # self.SetLog(str(self.m_sliceRenderer[0].GetViewProps()))
+        
 
     def SetLog(self, text, error=False):
         QApplication.processEvents()
