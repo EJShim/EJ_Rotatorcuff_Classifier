@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import QApplication
 
 #Theano
 import theano
-import theano.tensor as T
 import lasagne
 
 #utils
@@ -33,6 +32,8 @@ try:
 except Exception as e:
     print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
     import network.VRN_64_gpuarray as config_module
+
+import network.module_functions as function_compiler
 
 weightPath = rootPath + "/weights/VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz"
 modelPath = rootPath + "/data/TestData.npz"
@@ -265,18 +266,14 @@ class E_Manager:
 
         #Compile Functions
         self.SetLog('Compiling Theano Functions..')
-        self.predFunc, self.colorMap = self.MakeFunctions(cfg, model)
+        self.predFunc, self.colorMap = function_compiler.make_functions(cfg, model)
 
 
         #Load Weights
         metadata, self.param_dict = checkpoints.load_weights(weightPath, model['l_out'])
 
-
-
-        #Check if previous best accuracy is in metadata form previous test_batch_slice
-        best_acc = metadata['best_acc'] if 'best_acc' in metadata else 0
-        log = 'best_accuracy' + str(best_acc)
-        self.SetLog(log)        
+        log = 'Import Completed'
+        self.SetLog(log) 
 
         self.bInitNetowrk = True;
 
@@ -376,30 +373,7 @@ class E_Manager:
 
 
     def MakeDataMatrix(self, x, intensity):
-        return intensity*np.repeat(np.repeat(np.repeat(x[0][0], v_res, axis=0), v_res, axis=1), v_res, axis=2)
-
-
-    def MakeFunctions(self, cfg, model):
-        #Input Array
-        X = T.TensorType('float32', [False]*5)('X')
-
-        #Class Vector
-        y = T.TensorType('int32', [False]*1)('y')
-
-        #Output Layer
-        l_out = model['l_out']
-        y_hat_deterministic = lasagne.layers.get_output(l_out, X, deterministic=True)        
-        softmax = T.nnet.softmax(y_hat_deterministic)
-        pred_list_fn = theano.function([X], softmax)
-        
-
-        #Get ColorMap
-        l_color = model['l_color']        
-        
-        color_map = lasagne.layers.get_output(l_color, X, deterministic=True)
-        colorMap_fn = theano.function([X], color_map)
-
-        return  pred_list_fn, colorMap_fn
+        return intensity*np.repeat(np.repeat(np.repeat(x[0][0], v_res, axis=0), v_res, axis=1), v_res, axis=2)    
 
     def DrawVoxelArray(self, arrayBuffer):
         #reshape
