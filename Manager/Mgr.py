@@ -30,10 +30,10 @@ from data import labels
 v_res = 1
 
 #define argument path
-curPath = os.path.dirname(os.path.realpath(__file__))
-rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
-
-modelPath = rootPath + "/data/TestData.npz"
+file_path = os.path.dirname(os.path.realpath(__file__))
+root_path = os.path.abspath(os.path.join(file_path, os.pardir))
+weight_path = os.path.join(root_path, "weights", "VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz")
+modelPath = root_path + "/data/TestData.npz"
 
 class E_Manager:
     def __init__(self, mainFrm):
@@ -271,7 +271,7 @@ class E_Manager:
 
 
         #Load Weights
-        metadata, self.param_dict = checkpoints.load_weights(weightPath, model['l_out'])
+        metadata, self.param_dict = checkpoints.load_weights(weight_path, model['l_out'])
 
         log = 'Import Completed'
         self.SetLog(log) 
