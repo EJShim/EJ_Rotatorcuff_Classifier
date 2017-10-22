@@ -7,9 +7,6 @@ import scipy.ndimage
 
 from PyQt5.QtWidgets import QApplication
 
-#Theano
-import theano
-import lasagne
 
 #utils
 from utils import checkpoints
@@ -25,17 +22,6 @@ v_res = 1
 curPath = os.path.dirname(os.path.realpath(__file__))
 rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 
-
-#Network, Weight, Model Path
-try:
-    import network.VRN_64_dnn as config_module
-except Exception as e:
-    print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
-    import network.VRN_64_gpuarray as config_module
-
-import network.module_functions as function_compiler
-
-weightPath = rootPath + "/weights/VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz"
 modelPath = rootPath + "/data/TestData.npz"
 
 class E_Manager:
@@ -256,25 +242,10 @@ class E_Manager:
         else:
             self.SetLog('File Extension Not Supported')
 
-    def InitNetwork(self):
-        self.SetLog("Import Pre-trained Network..")
-        self.SetLog("Import Completed.")
-        self.SetLog("Load config and model files..")
-        cfg = config_module.cfg
-        model = config_module.get_model()
-
-
-        #Compile Functions
-        self.SetLog('Compiling Theano Functions..')
-        self.predFunc, self.colorMap = function_compiler.make_functions(cfg, model)
-
-
-        #Load Weights
-        metadata, self.param_dict = checkpoints.load_weights(weightPath, model['l_out'])
-
-        log = 'Import Completed'
-        self.SetLog(log) 
-
+    def SetFunctions(self, pred, color, param):
+        self.predFunc = pred
+        self.colorMap = color
+        self.param_dict = param
         self.bInitNetowrk = True;
 
     def InitData(self):
@@ -290,7 +261,6 @@ class E_Manager:
             self.SetLog(str(e))
 
     def RandomPrediction(self):
-
 
         #Get Random
         randIdx = random.randint(0, len(self.xt)-1)
@@ -309,12 +279,12 @@ class E_Manager:
         #Predict 3D object
         self.PredictObject(arr, log)
 
-    def RenderPreProcessedObject(self, idx):
+    def RenderPreProcessedObject(self, idx, predict=True):
         arr = self.xt[idx][0]
         self.VolumeMgr.AddVolume(arr)
 
 
-        if self.bInitNetowrk:
+        if self.bInitNetowrk and predict:
             #Predict
             # self.yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
             log = labels.rt[int(self.yt[idx])]

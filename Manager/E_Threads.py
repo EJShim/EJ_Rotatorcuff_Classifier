@@ -47,7 +47,8 @@ class ListAnimationThread(QThread):
 
 
     def __init__(self, parent=None):
-        super().__init__() 
+        super().__init__()        
+        
 
     # def __del__(self):
     #     self.wait()    
@@ -64,10 +65,12 @@ class NetworkInitializationThread(QThread):
     oncompiled = pyqtSignal(object)
 
     def __init__(self, parent=None):
-        super().__init()
+        super().__init__()
+
+        self.weight_path = os.path.join(root_path, "weights", "VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz")
 
     def run(self):
-
+        self.onmessage.emit("initialize network")
         #Import Network Module
         try:
             import network.VRN_64_dnn as config_module
@@ -78,15 +81,24 @@ class NetworkInitializationThread(QThread):
 
         
         self.onmessage.emit("Load config and model files..")
+        self.onprogress.emit(10)
         cfg = config_module.cfg
         model = config_module.get_model()
+        self.onprogress.emit(20)
 
 
         #Compile Functions
         self.onmessage.emit('Compiling Theano Functions..')
+        self.onprogress.emit(50)
 
 
         predict_function, colormap_function = function_compiler.make_functions(cfg, model)
+        self.onprogress.emit(80)
         #Load Weights
-        metadata, param_dict = checkpoints.load_weights(weightPath, model['l_out'])
+        metadata, param_dict = checkpoints.load_weights(self.weight_path, model['l_out'])
+        self.onprogress.emit(95)
+
+        self.onmessage.emit("Finished compiling theano functions")
+        self.onprogress.emit(99)
+        self.oncompiled.emit([predict_function, colormap_function, param_dict])
 

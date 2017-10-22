@@ -51,12 +51,18 @@ class E_MainWindow(QMainWindow):
         self.th_randomPred.predRandom.connect(self.onRandomPred)
 
 
-        #Cam History Animation thread
-        self.cam_history_data = None
+        #Cam History Animation thread        
         self.th_camHistory = CamHistoryThread(self)
         self.th_camHistory.cam_data.connect(self.updateCAM)
         self.th_camHistory.onprogress.connect(self.onProgress)
         self.th_camHistory.finished.connect(self.onFinishedCamHistory)
+
+
+        #Network Initializer
+        self.th_network_initializer = NetworkInitializationThread(self)
+        self.th_network_initializer.onmessage.connect(self.onMessage)
+        self.th_network_initializer.onprogress.connect(self.onProgress)
+        self.th_network_initializer.oncompiled.connect(self.onCompiled)
 
         
 
@@ -491,12 +497,19 @@ class E_MainWindow(QMainWindow):
             self.Mgr.SetLog(exc_tb.tb_lineno, error=True)
             self.Mgr.SetLog(str(e), error=True)
 
-    def onInitNetwork(self):
-        self.Mgr.InitNetwork()
-
+    def onInitNetwork(self):        
         self.trainAction.setEnabled(False)
+        self.th_network_initializer.start()
+
+    def onCompiled(self, function):
+        self.Mgr.SetFunctions(function[0], function[1], function[2])        
         self.listAnimation.setEnabled(False)
-        self.camAnimation.setEnabled(False)
+        # self.camAnimation.setEnabled(False)
+
+    
+
+        
+
 
     def onRandomPred(self):        
         self.Mgr.RandomPrediction()
@@ -587,7 +600,7 @@ class E_MainWindow(QMainWindow):
 
     def onCAMAnimation(self, e):
         self.th_camHistory.start()
-        self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx)
+        self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
         self.Mgr.Redraw2D()
 
         self.statusBar().showMessage('Class Animation History among epochs')
@@ -595,7 +608,7 @@ class E_MainWindow(QMainWindow):
     def updateCAM(self, array):
         self.th_camHistory.updating = True
         self.Mgr.ClearScene()
-        self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx)
+        self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
 
         
         # self.Mgr.ClearCAM()
@@ -610,3 +623,6 @@ class E_MainWindow(QMainWindow):
 
     def onProgress(self, progress):
         self.progressBar.setValue(progress)
+
+    def onMessage(self, msg):
+        self.statusBar().showMessage(msg)
