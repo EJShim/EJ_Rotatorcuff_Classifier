@@ -47,6 +47,7 @@ inputData = np.asarray(np.load(modelPath)['features'], dtype=np.float32)[TESTDAT
 
 for idx, weight_file in enumerate(weight_list):
     #Load Weights
+    print("Load ", weight_file)
     metadata, param_dict = checkpoints.load_weights(weight_file, model['l_out'])
 
     resolution = 64
