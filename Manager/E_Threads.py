@@ -1,11 +1,16 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import os
+import os, sys
 import numpy as np
 
-curPath = os.path.dirname(os.path.realpath(__file__))
-rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
+
+file_path = os.path.dirname(os.path.realpath(__file__))
+root_path = os.path.abspath(os.path.join(file_path, os.pardir))
+sys.path.append(root_path)
+
+import network.module_functions as function_compiler
+from utils import checkpoints
 
 class CamHistoryThread(QThread):
     cam_data = pyqtSignal(object)
@@ -13,7 +18,7 @@ class CamHistoryThread(QThread):
 
     def __init__(self, parent=None):
         super().__init__()
-        self.cam_history_data = np.load(os.path.join(rootPath, "cam_history", "cam_history_data.npz"))
+        self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
         self.selectedIdx = self.cam_history_data['index']
         self.updating = False
 
@@ -36,11 +41,6 @@ class CamHistoryThread(QThread):
 
         self.quit()
 
-    
-        
-
-
-
 #Multi-Thread Codes
 class ListAnimationThread(QThread):
     predRandom = pyqtSignal(bool)
@@ -56,3 +56,37 @@ class ListAnimationThread(QThread):
         while self.isRunning():
             self.predRandom.emit(True)            
             self.msleep(150)        
+        
+
+class NetworkInitializationThread(QThread):
+    onprogress = pyqtSignal(int)
+    onmessage = pyqtSignal(str)
+    oncompiled = pyqtSignal(object)
+
+    def __init__(self, parent=None):
+        super().__init()
+
+    def run(self):
+
+        #Import Network Module
+        try:
+            import network.VRN_64_dnn as config_module
+        except Exception as e:
+            self.onmessage.emit("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
+            import network.VRN_64_gpuarray as config_module
+
+
+        
+        self.onmessage.emit("Load config and model files..")
+        cfg = config_module.cfg
+        model = config_module.get_model()
+
+
+        #Compile Functions
+        self.onmessage.emit('Compiling Theano Functions..')
+
+
+        predict_function, colormap_function = function_compiler.make_functions(cfg, model)
+        #Load Weights
+        metadata, param_dict = checkpoints.load_weights(weightPath, model['l_out'])
+

@@ -588,6 +588,7 @@ class E_MainWindow(QMainWindow):
     def onCAMAnimation(self, e):
         self.th_camHistory.start()
         self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx)
+        self.Mgr.Redraw2D()
 
         self.statusBar().showMessage('Class Animation History among epochs')
 
