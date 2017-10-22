@@ -499,9 +499,11 @@ class E_MainWindow(QMainWindow):
 
     def onInitNetwork(self):        
         self.trainAction.setEnabled(False)
+        self.trainAction.setText("initializing...")
         self.th_network_initializer.start()
 
     def onCompiled(self, function):
+        self.trainAction.setText("initialize complete")
         self.Mgr.SetFunctions(function[0], function[1], function[2])        
         self.listAnimation.setEnabled(False)
         # self.camAnimation.setEnabled(False)
