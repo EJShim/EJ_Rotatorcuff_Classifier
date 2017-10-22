@@ -37,7 +37,6 @@ predict_function, colormap_function = function_compiler.make_functions(cfg, mode
 print("Import Completed")
 
 
-
 weight_path = os.path.join(root_path, "weights")
 weight_list = list(glob.iglob(str(weight_path) + '/*.npz', recursive = False))
 weight_list.sort()
@@ -77,4 +76,4 @@ for idx, weight_file in enumerate(weight_list):
     print(idx, "-->", camsum.shape)
 
 
-np.savez_compressed(str(os.path.join(file_path, "cam_history_data.npz")), {index:TESTDATA_IDX, data:camsum})
+np.savez_compressed(str(os.path.join(file_path, "cam_history_data.npz")), index=TESTDATA_IDX, data=RESULT)
