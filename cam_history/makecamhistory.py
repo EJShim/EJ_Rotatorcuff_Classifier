@@ -1,4 +1,4 @@
-TESTDATA_IDX = 1
+TESTDATA_IDX = 39
 RESULT = []
 
 
@@ -15,11 +15,7 @@ sys.path.append(root_path)
 
 #Import Local Modules
 from utils import checkpoints
-try:
-    import network.VRN_64_dnn as config_module
-except Exception as e:
-    print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
-    import network.VRN_64_gpuarray as config_module
+import network.VRN_64_gpuarray as config_module
 import network.module_functions as function_compiler
 
 
@@ -37,7 +33,7 @@ predict_function, colormap_function = function_compiler.make_functions(cfg, mode
 print("Import Completed")
 
 
-weight_path = os.path.join(root_path, "weights")
+weight_path = os.path.join(root_path, "train_test_module", "tmp")
 weight_list = list(glob.iglob(str(weight_path) + '/*.npz', recursive = False))
 weight_list.sort()
 
