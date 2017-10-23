@@ -13,7 +13,7 @@ sys.path.append(root_path)
 try:
     import network.VRN_64_dnn as config_module
 except Exception as e:
-    self.onmessage.emit("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
+    print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
     import network.VRN_64_gpuarray as config_module
 
 import network.module_functions as function_compiler
