@@ -499,7 +499,8 @@ class E_MainWindow(QMainWindow):
 
     def onInitNetwork(self):        
         self.Mgr.InitNetwork()
-        # self.trainAction.setEnabled(False)
+        self.trainAction.setEnabled(False)
+        self.listAnimation.setEnabled(False)
         # self.trainAction.setText("initializing...")
         # self.th_network_initializer.start()
 
