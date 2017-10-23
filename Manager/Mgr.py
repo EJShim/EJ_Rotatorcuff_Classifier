@@ -10,11 +10,7 @@ from PyQt5.QtWidgets import QApplication
 #Theano
 import theano
 import lasagne
-try:
-    import network.VRN_64_dnn as config_module
-except Exception as e:
-    print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
-    import network.VRN_64_gpuarray as config_module
+import network.VRN_64_gpuarray as config_module
 
 import network.module_functions as function_compiler
 from utils import checkpoints
@@ -32,7 +28,7 @@ v_res = 1
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "VRN_64_TEST_ALL_epoch_a1071508107119.2387402.npz")
+weight_path = os.path.join(root_path, "weights",'tmp', "10-23 04_36_59gpuarray_oct_20_epoch_88.npz")
 modelPath = root_path + "/data/TestData.npz"
 
 class E_Manager:
