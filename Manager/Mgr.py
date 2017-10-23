@@ -28,7 +28,7 @@ v_res = 1
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "10-23 06:26:17gpuarray_oct_20_epoch_90.npz")
+weight_path = os.path.join(root_path, "weights", "10-23 09:43:11gpuarray_oct_20_epoch_94.npz")
 modelPath = root_path + "/data/TestData.npz"
 
 class E_Manager:

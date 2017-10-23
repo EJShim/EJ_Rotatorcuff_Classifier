@@ -27,7 +27,7 @@ from collections import OrderedDict
 
 #Import Network
 import network.VRN_64_gpuarray as config_module
-TRAIN_DATA_PATH = os.path.join(rootDir, "data/TrainData.npz")
+TRAIN_DATA_PATH = os.path.join(rootDir, "data", "TrainData.npz")
 
 #####################
 # Training Functions#
@@ -154,7 +154,7 @@ def main(args):
 
     # Get weights and metrics filename
     # weights_fname =str(args.config_path)[:-3]+'.npz'
-    weights_fname = 'gpuarray_oct_20.npz'
+    weights_fname = 'oc23.npz'
     metrics_fname = weights_fname[:-4]+'METRICS.jsonl'
 
     # Prepare logs
@@ -274,11 +274,11 @@ def main(args):
             [closs,c_acc] = [float(np.mean(lvs)),1.0-float(np.mean(accs))]
 
             # Report and log losses and accuracies
-            logging.info('epoch: {0:^3d}, itr: {1:d}, c_loss: {2:.6f}, class_acc: {3:.5f}'.format(epoch, cfg['max_epochs'], itr, closs, c_acc))
+            logging.info('epoch: {0:^3d}, num_chunks: {1:d}, chunk_index: {2:d}, class_acc: {3:.5f}'.format(epoch, cfg['max_epochs'], num_chunks, chunk_index, c_acc))
 
 
-        fname = strftime("%m-%d %H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
-        fname = os.path.join(cwd, "tmp", fname)
+        fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
+        fname = os.path.join(cwd, strftime("%m-%d", gmtime()), fname)
         checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'learning_rate': new_lr})
 
 
