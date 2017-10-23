@@ -10,11 +10,7 @@ from PyQt5.QtWidgets import QApplication
 #Theano
 import theano
 import lasagne
-try:
-    import network.VRN_64_dnn as config_module
-except Exception as e:
-    print("No DNN Support. import gpuarray Support,, DNN support will be deprecated soon.")
-    import network.VRN_64_gpuarray as config_module
+import network.VRN_64_gpuarray as config_module
 
 import network.module_functions as function_compiler
 from utils import checkpoints

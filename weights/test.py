@@ -27,8 +27,8 @@ from utils import checkpoints, metrics_logging
 from collections import OrderedDict
 import matplotlib
 
-CONFIG_PATH = './trainingTest/VRN_64.py'
-DATA_PATH = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/new/TestData.npz'
+CONFIG_PATH = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/network/VRN_64_gpuarray.py'
+DATA_PATH = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/data/TestData.npz'
 
 
 # Define the testing functions
@@ -84,7 +84,7 @@ def make_testing_functions(cfg,model):
             }
     return tfuncs, tvars, model, predFunc
 
-listFile = list(glob.iglob('./trainedWeight/*.npz', recursive = False))
+listFile = list(glob.iglob('/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/train-test_module/tmp/*.npz', recursive = False))
 listFile.sort()
 
 xData = []
@@ -102,7 +102,7 @@ for idx, WEIGHT_PATH in enumerate(listFile):
 
     # Load config module
     # Compile functions
-    config_module = __import__('VRN_64', CONFIG_PATH[:-3])
+    config_module = __import__('VRN_64_gpuarray', CONFIG_PATH[:-3])
     cfg = config_module.cfg
 
     # Find weights file
