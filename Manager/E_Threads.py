@@ -61,7 +61,7 @@ class ListAnimationThread(QThread):
     def run(self):
         while self.isRunning():
             self.predRandom.emit(True)            
-            self.msleep(150)        
+            self.msleep(500)        
         
 
 class NetworkInitializationThread(QThread):
