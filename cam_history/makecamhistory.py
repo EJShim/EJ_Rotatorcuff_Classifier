@@ -33,7 +33,7 @@ predict_function, colormap_function = function_compiler.make_functions(cfg, mode
 print("Import Completed")
 
 
-weight_path = os.path.join(root_path, "train_test_module", "tmp")
+weight_path = os.path.join(root_path, "train_test_module", "tmp2")
 weight_list = list(glob.iglob(str(weight_path) + '/*.npz', recursive = False))
 weight_list.sort()
 

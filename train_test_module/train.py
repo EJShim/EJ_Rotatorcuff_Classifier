@@ -274,11 +274,16 @@ def main(args):
             [closs,c_acc] = [float(np.mean(lvs)),1.0-float(np.mean(accs))]
 
             # Report and log losses and accuracies
-            logging.info('epoch: {0:^3d}, num_chunks: {1:d}, chunk_index: {2:d}, class_acc: {3:.5f}'.format(epoch, cfg['max_epochs'], num_chunks, chunk_index, c_acc))
+            logging.info('epoch: {0:^3d}, num_chunks: {1:d}, chunk_index: {2:d}, class_acc: {3:.5f}'.format(epoch, num_chunks, chunk_index, c_acc))
+
+            if epoch < 25 and chunk_index % int(num_chunks/(50))  == 0:
+                fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
+                fname = os.path.join(cwd, 'tmp3', fname)
+                checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'learning_rate': new_lr})
 
 
         fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
-        fname = os.path.join(cwd, strftime("%m-%d", gmtime()), fname)
+        fname = os.path.join(cwd, 'tmp2', fname)
         checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'learning_rate': new_lr})
 
 
