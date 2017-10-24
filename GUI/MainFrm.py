@@ -29,6 +29,9 @@ rootPath = os.path.abspath(os.path.join(curPath, os.pardir))
 iconPath = rootPath + "/icons"
 
 class E_MainWindow(QMainWindow):
+    update_cam = pyqtSignal(bool)
+
+
     def __init__(self, parent = None):
         super(E_MainWindow, self).__init__(parent)
 
@@ -609,26 +612,28 @@ class E_MainWindow(QMainWindow):
 
 
     def onCAMAnimation(self, e):
-        # self.timer.start(30/1000)
+        
         self.th_camHistory.start()
+        # self.timer.start(30/1000)
         self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
 
         self.statusBar().showMessage('Class Animation History among epochs')
 
-    def updateCAM(self, array):
-        self.th_camHistory.updating = True
+    def updateCAM(self, array):        
+        self.Mgr.SetLog("Update Cam")
         self.Mgr.ClearScene()
         self.Mgr.RotateCamera()
         self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
 
         
         # self.Mgr.ClearCAM()
-        self.Mgr.VolumeMgr.AddClassActivationMap(array)
-        self.th_camHistory.updating = False
+        self.Mgr.VolumeMgr.AddClassActivationMap(array)        
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
+
+        # self.update_cam.emit()
 
     def onFinishedCamHistory(self):        
         self.statusBar().showMessage('Finished CAM')        
