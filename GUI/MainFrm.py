@@ -46,6 +46,10 @@ class E_MainWindow(QMainWindow):
         #Volume List Dialog
         self.m_volumeListDlg = E_VolumeListWidget()
 
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.UpdateRenderer)
+
         #Random Prediction Animation Thread
         self.th_randomPred = ListAnimationThread(self)
         self.th_randomPred.predRandom.connect(self.onRandomPred)
@@ -597,14 +601,18 @@ class E_MainWindow(QMainWindow):
 
     def onListAnimation(self, e):
         if e:
+            self.timer.start(30/1000)
             self.th_randomPred.start()
         else:
             self.th_randomPred.terminate()
+            self.timer.stop()
 
 
     def onCAMAnimation(self, e):
+        # self.timer.start(30/1000)
         self.th_camHistory.start()
         self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
+        self.Mgr.Redraw()
         self.Mgr.Redraw2D()
 
         self.statusBar().showMessage('Class Animation History among epochs')
@@ -612,6 +620,7 @@ class E_MainWindow(QMainWindow):
     def updateCAM(self, array):
         self.th_camHistory.updating = True
         self.Mgr.ClearScene()
+        self.Mgr.RotateCamera()
         self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
 
         
@@ -622,11 +631,17 @@ class E_MainWindow(QMainWindow):
         self.Mgr.Redraw2D()
 
     def onFinishedCamHistory(self):        
-        self.statusBar().showMessage('Finished CAM')
+        self.statusBar().showMessage('Finished CAM')        
         self.progressBar.setValue(0)
+        # self.timer.stop()
 
     def onProgress(self, progress):
         self.progressBar.setValue(progress)
 
     def onMessage(self, msg):
         self.statusBar().showMessage(msg)
+
+    def UpdateRenderer(self):        
+        self.Mgr.RotateCamera()
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()

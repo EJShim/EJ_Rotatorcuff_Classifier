@@ -42,7 +42,7 @@ class CamHistoryThread(QThread):
                 self.cam_data.emit(data)
                 self.onprogress.emit(progress)
 
-            self.msleep(100)
+            self.msleep(20/1000)
 
         self.quit()
 
@@ -61,7 +61,7 @@ class ListAnimationThread(QThread):
     def run(self):
         while self.isRunning():
             self.predRandom.emit(True)            
-            self.msleep(500)        
+            self.msleep(1000)        
         
 
 class NetworkInitializationThread(QThread):
@@ -84,6 +84,7 @@ class NetworkInitializationThread(QThread):
         cfg = config_module.cfg
         model = config_module.get_model()
         self.onprogress.emit(20)
+
 
 
         #Compile Functions

@@ -50,7 +50,6 @@ class E_VolumeManager:
         for i in range(3):
             self.m_resliceMapper[i] = vtk.vtkImageSliceMapper()
             self.m_resliceActor[i] = vtk.vtkImageSlice()
-
             self.m_colorMapResliceMapper[i] = vtk.vtkImageSliceMapper()
             self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()
 
@@ -334,7 +333,7 @@ class E_VolumeManager:
         self.Mgr.Redraw2D()
         self.Mgr.SetLog(str(self.m_bShowCAM))
 
-    def AddClassActivationMap(self, camArray):
+    def AddClassActivationMap(self, camArray):        
         ata_string = camArray.tostring()
         dim = camArray.shape
 

@@ -448,6 +448,10 @@ class E_Manager:
 
         # self.SetLog(str(self.m_sliceRenderer[0].GetViewProps()))
         
+    def RotateCamera(self):
+        camera = self.renderer[1].GetActiveCamera()        
+        camera.Azimuth(1)
+        camera.SetViewUp(0.0, 1.0, 0.0)
 
     def SetLog(self, text, error=False):
         QApplication.processEvents()
