@@ -33,7 +33,7 @@ predict_function, colormap_function = function_compiler.make_functions(cfg, mode
 print("Import Completed")
 
 
-weight_path = os.path.join(root_path, "train_test_module", "tmp2")
+weight_path = os.path.join(root_path, "train_test_module", "sigmoid")
 weight_list = list(glob.iglob(str(weight_path) + '/*.npz', recursive = False))
 weight_list.sort()
 
@@ -58,7 +58,7 @@ for idx, weight_file in enumerate(weight_list):
     predWeights = fc1_weight[:,predIdx:predIdx+1]
     camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
     for i in range(colorMap.shape[1]):
-        camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
+        camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]           
     camsum = scipy.ndimage.zoom(camsum, 16)
 
     #Normalize To 0-255

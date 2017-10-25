@@ -17,6 +17,7 @@ from lasagne.layers import ElemwiseSumLayer as ESL
 from lasagne.layers import NonlinearityLayer as NL
 from lasagne.init import Orthogonal as initmethod
 from lasagne.nonlinearities import elu
+from lasagne.nonlinearities import sigmoid
 from lasagne.layers import batch_norm as BN
 
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
@@ -489,7 +490,7 @@ def get_model():
         incoming = l_pool,
         num_units = n_classes,
         W = initmethod(),
-        nonlinearity = None,
+        nonlinearity = sigmoid,
         name = 'fc'
         )
     return {'l_in':l_in, 'l_color':l_conv17, 'l_out':l_fc}
