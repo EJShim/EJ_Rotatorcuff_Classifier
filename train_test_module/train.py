@@ -154,7 +154,7 @@ def main(args):
 
     # Get weights and metrics filename
     # weights_fname =str(args.config_path)[:-3]+'.npz'
-    weights_fname = 'oc23.npz'
+    weights_fname = 'sigmoid.npz'
     metrics_fname = weights_fname[:-4]+'METRICS.jsonl'
 
     # Prepare logs
@@ -276,14 +276,14 @@ def main(args):
             # Report and log losses and accuracies
             logging.info('epoch: {0:^3d}, num_chunks: {1:d}, chunk_index: {2:d}, class_acc: {3:.5f}'.format(epoch, num_chunks, chunk_index, c_acc))
 
-            if epoch < 25 and chunk_index % int(num_chunks/(50))  == 0:
+            if epoch < 3 and chunk_index % int(num_chunks/(50))  == 0:
                 fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
-                fname = os.path.join(cwd, 'tmp3', fname)
+                fname = os.path.join(cwd, 'sigmoid', fname)
                 checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'learning_rate': new_lr})
 
 
         fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
-        fname = os.path.join(cwd, 'tmp2', fname)
+        fname = os.path.join(cwd, 'sigmoid', fname)
         checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'learning_rate': new_lr})
 
 

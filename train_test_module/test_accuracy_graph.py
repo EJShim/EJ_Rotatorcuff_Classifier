@@ -89,7 +89,7 @@ def make_testing_functions(cfg,model):
     return tfuncs, tvars, model, predFunc
 
 
-weight_p = os.path.join(file_path,"tmp", "*.npz")
+weight_p = os.path.join(file_path,"sigmoid", "*.npz")
 listFile = list(glob.iglob(weight_p, recursive = False))
 listFile.sort()
 
