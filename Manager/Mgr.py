@@ -345,7 +345,8 @@ class E_Manager:
             self.predLog.SetInput(log)
 
 
-
+            #Draw only RCT
+            predIdx = 1
             # #Compute Class Activation Map            
             fc1_weight = self.param_dict['fc.W']
             predWeights = fc1_weight[:,predIdx:predIdx+1]
@@ -354,9 +355,17 @@ class E_Manager:
                 camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
             camsum = scipy.ndimage.zoom(camsum, 16)
 
+            log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
+            self.SetLog(log)
+            
+
+            cam_min = np.amin(camsum)
+            cam_max = np.amax(camsum)
+
+
             #Normalize To 0-255
-            tmp = camsum - np.amin(camsum)
-            camsum = tmp / np.amax(tmp)               
+            tmp = camsum - cam_min
+            camsum = tmp / cam_max               
             camsum *= 255.0
             camsum = camsum.astype(int)
 
