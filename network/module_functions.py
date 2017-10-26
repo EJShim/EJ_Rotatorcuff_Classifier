@@ -2,7 +2,7 @@ import theano
 import theano.tensor as T
 import lasagne
 
-def make_functions(cfg, model):
+def make_functions(model):
         #Input Array
         X = T.TensorType('float32', [False]*5)('X')
 
@@ -23,3 +23,15 @@ def make_functions(cfg, model):
         colorMap_fn = theano.function([X], color_map)
 
         return  pred_list_fn, colorMap_fn
+
+
+def make_score_functions(model):
+
+        #Input Array
+        X = T.TensorType('float32', [False]*5)('X')
+        l_out = model['l_out']
+
+        y = lasagne.layers.get_output(l_out, X, deterministic=True)        
+        score_volume_function = theano.function([X], y)
+
+        return score_volume_function

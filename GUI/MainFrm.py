@@ -308,6 +308,11 @@ class E_MainWindow(QMainWindow):
         networkToolbar.addAction(self.camAnimation)
 
 
+        self.roiAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
+        self.roiAnimation.triggered.connect(self.PredictROI)
+        networkToolbar.addAction(self.roiAnimation)
+
+
         
         toolbar.setFixedHeight(140)
 
@@ -650,3 +655,7 @@ class E_MainWindow(QMainWindow):
         self.Mgr.RotateCamera()
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
+
+
+    def PredictROI(self):
+        self.Mgr.PredictROI()

@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QApplication
 import theano
 import lasagne
 import network.VRN_64_gpuarray as config_module
+import network.VRN_64_score as score_module
 
 import network.module_functions as function_compiler
 from utils import checkpoints
@@ -45,6 +46,7 @@ class E_Manager:
 
         #Test function
         self.predFunc = None        
+        self.scoreFunc = None
 
 
 
@@ -257,17 +259,20 @@ class E_Manager:
 
     def InitNetwork(self):        
         self.SetLog("Load config and model files..")
-        cfg = config_module.cfg
+        
         model = config_module.get_model()
+        scoreModel = score_module.get_model()
 
 
         #Compile Functions
         self.SetLog('Compiling Theano Functions..')
-        self.predFunc, self.colorMap = function_compiler.make_functions(cfg, model)
-
+        self.predFunc, self.colorMap = function_compiler.make_functions(model)
+        self.scoreFunc = function_compiler.make_score_functions(scoreModel)
+        print(self.scoreFunc)
 
         #Load Weights
         metadata, self.param_dict = checkpoints.load_weights(weight_path, model['l_out'])
+        metadata2, param_dict2 = checkpoints.load_weights(weight_path, scoreModel['l_out'])
 
         log = 'Import Completed'
         self.SetLog(log) 
@@ -470,3 +475,37 @@ class E_Manager:
         else:
             self.mainFrm.m_logWidget.setStyleSheet("color: rgb(0, 0, 0);")            
         self.mainFrm.m_logWidget.appendPlainText(text)
+
+    def PredictROI(self):
+        selectedVolume = self.VolumeMgr.m_volumeArray
+        shape = selectedVolume.shape
+        self.SetLog(str(shape))
+        inputData = np.asarray(selectedVolume.reshape(1, 1, shape[0], shape[1], shape[2]), dtype=np.float32)
+
+        
+        try:            
+            scoreVol = self.scoreFunc(inputData)[0][1]
+            self.SetLog(str(scoreVol.shape))
+        except Exception as e:
+            self.SetLog(e)
+
+        camsum = scoreVol
+        camsum = scipy.ndimage.zoom(camsum, 16)
+
+        log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
+        self.SetLog(log)
+        
+
+        cam_min = np.amin(camsum)
+        cam_max = np.amax(camsum)
+
+
+        #Normalize To 0-255
+        tmp = camsum - cam_min
+        camsum = tmp / cam_max               
+        camsum *= 255.0
+        camsum = camsum.astype(int)
+
+        self.VolumeMgr.AddClassActivationMap(camsum)
+
+        self.SetLog("ROI Prediction")

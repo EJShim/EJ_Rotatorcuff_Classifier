@@ -484,7 +484,7 @@ def get_model():
 
         # (1, 512, 4, 4, 4)
 
-
+    # l_pool = BN(lasagne.layers.Pool3DLayer(incoming=l_conv17, pool_size=(4,4,4), mode='avg_inc_pad'))
     l_pool = BN(lasagne.layers.GlobalPoolLayer(l_conv17),name='l_pool')
     l_fc = lasagne.layers.DenseLayer(
         incoming = l_pool,

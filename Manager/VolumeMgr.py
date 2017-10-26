@@ -12,7 +12,7 @@ class E_VolumeManager:
     def __init__(self, Mgr):
         self.Mgr = Mgr
 
-        self.m_volumeArray = 0.0
+        self.m_volumeArray = None
         self.m_resampledVolumeData = np.array([None])
         self.m_volumeInfo = None
         self.m_selectedIdx = None
