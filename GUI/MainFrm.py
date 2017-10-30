@@ -313,6 +313,11 @@ class E_MainWindow(QMainWindow):
         networkToolbar.addAction(self.roiAnimation)
 
 
+        self.saveSlice = QAction(QIcon(iconPath + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
+        self.saveSlice.triggered.connect(self.onSaveSliceImage)
+        networkToolbar.addAction(self.saveSlice)
+
+
         
         toolbar.setFixedHeight(140)
 
@@ -471,25 +476,15 @@ class E_MainWindow(QMainWindow):
                     rct = item.text()
                     break
 
-            
 
             #Save Series and Resampling Position For Futer Work
             series = int(self.m_SeriesNumber.text())
             xPos = self.m_rangeSlider[0].value() / 1000
             yPos = self.m_rangeSlider[1].value() / 1000
 
-
-
             savePath = self.m_saveDir + '/' + rct + "_" + orientation + "_" + protocol
             log = "Save Processed Data in (" + savePath   + ".npz" +  ")"            
             self.Mgr.SetLog(log)
-
-            # saveData = dict(series = series, 
-            #                 x = xPos, y = yPos, 
-            #                 status = rct, 
-            #                 orientation = orientation, 
-            #                 protocol = protocol, 
-            #                 data=self.Mgr.VolumeMgr.m_resampledVolumeData)
             
             np.savez_compressed(savePath, series = series, 
                                             x = xPos, y = yPos, 
@@ -659,3 +654,7 @@ class E_MainWindow(QMainWindow):
 
     def PredictROI(self):
         self.Mgr.PredictROI()
+
+
+    def onSaveSliceImage(self):
+        self.Mgr.SaveSliceImage()

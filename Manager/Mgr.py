@@ -4,6 +4,7 @@ import os
 import numpy as np
 import random
 import scipy.ndimage
+from time import gmtime, strftime
 
 from PyQt5.QtWidgets import QApplication
 
@@ -22,6 +23,7 @@ from Manager.InteractorStyle import E_InteractorStyle
 from Manager.InteractorStyle import E_InteractorStyle2D
 from Manager.VolumeMgr import E_VolumeManager
 from Manager.E_SliceRenderer import *
+import matplotlib.pyplot as plt
 from data import labels
 
 v_res = 1
@@ -509,3 +511,25 @@ class E_Manager:
         self.VolumeMgr.AddClassActivationMap(camsum)
 
         self.SetLog("ROI Prediction")
+
+    def SaveSliceImage(self):
+
+        if self.VolumeMgr.m_resampledVolumeData.any() == None:
+            self.SetLog("No Resampled Volume Data is being rendered")
+            return
+
+        save_directory = os.path.join(root_path, "humerus_detector", "none_humerus_data")
+        data = self.VolumeMgr.m_resampledVolumeData
+        
+        slice_data = []
+        slice_data.append(data[32])
+        slice_data.append(np.rot90(data, axes=(0,1))[32])
+        slice_data.append(np.rot90(data, axes=(0,2))[32])
+
+        slice_data = np.array(slice_data)
+        self.SetLog("slice Data Dim : " + str(slice_data.shape))
+
+
+        save_directory = os.path.join(root_path, "humerus_detector", "none_humerus_data")
+        fname = strftime("%m-%d-%H:%M:%S", gmtime())
+        np.savez_compressed(os.path.join(save_directory, fname), features=slice_data)
