@@ -24,14 +24,6 @@ for false_path in false_path_list:
     for feature in features:
         false_data_list.append(feature)
 
-false_data_list = np.array(false_data_list)
-
-
-print("False Data : ", false_data_list.shape)
-
-    
-
-
 
 true_volume_list = np.load(modelPath)['features']
 true_image_list = []
@@ -42,11 +34,28 @@ for volume in true_volume_list:
     true_image_list.append(np.rot90(vol, axes=(0,2))[32])
 
 
-
+#Get Features and Targets
 true_image_list = np.array(true_image_list)
-print(true_image_list.shape)
-# shape = image_slice.shape
-# image_slice = np.reshape(image_slice, (shape[0], 1, shape[1], shape[2]))
+true_targets = np.ones(len(true_image_list))
 
-# print(image_slice.shape)
+false_image_list = np.array(false_data_list)
+false_targets = np.zeros(len(false_image_list))
 
+
+
+#Concatenate True and False Data
+features = np.concatenate((true_image_list, false_image_list))
+targets = np.concatenate((true_targets, false_targets))
+
+
+#Shuffle Features and targets
+random_seed = np.arange(len(features))
+np.random.shuffle(random_seed)
+
+features = features[random_seed]
+targets = targets[random_seed]
+
+print(features.shape)
+print(targets.shape)
+
+np.savez_compressed(file_path + "/train_data", features=features, targets=targets)
