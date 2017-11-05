@@ -1,8 +1,3 @@
-import matplotlib.pyplot as plt
-
-
-
-
 ###
 # Discriminative Voxel-Based ConvNet Training Function
 # A Brock, 2016
@@ -218,7 +213,7 @@ for idx, WEIGHT_PATH in enumerate(listFile):
     xData.append(idx)
     yData.append(t_class_error)
 
-    ax.plot(xData, yData, 'ro-')
+    ax.plot(xData, yData, 'r-')
     fig.canvas.draw()
 
 plt.show(block=True)
