@@ -1,0 +1,2 @@
+model_checkpoint_path: "/Users/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/humerus_detector/weights/model.ckpt"
+all_model_checkpoint_paths: "/Users/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/humerus_detector/weights/model.ckpt"
