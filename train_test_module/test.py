@@ -190,7 +190,7 @@ def test_accuracy(weight_path, tfuncs, tvars,model, predFunc):
 
     min_score = min(score)
     max_score = max(score)
-    thr = np.linspace(min_score, max_score, 100)
+    thr = np.linspace(0, 1, 100)
 
     
     T = sum(y)
