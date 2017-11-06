@@ -102,7 +102,6 @@ ax.grid(True)
 
 # Get Model
 
-
 print('Compiling theano functions...')
 cfg = config_module.cfg
 model = config_module.get_model()
@@ -111,8 +110,6 @@ tfuncs, tvars,model, predFunc = make_testing_functions(cfg,model)
 
 for idx, WEIGHT_PATH in enumerate(listFile):
     print(WEIGHT_PATH, idx)
-
-
 
     # Load weights
     metadata = checkpoints.load_weights(WEIGHT_PATH, model['l_out'])

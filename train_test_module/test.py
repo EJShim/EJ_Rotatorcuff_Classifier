@@ -1,17 +1,8 @@
-###
-# Discriminative Voxel-Based ConvNet Training Function
-# A Brock, 2016
-
-
-import argparse
-import imp
-import time
 import logging
 import math
-import os
+import glob
 
-
-
+import matplotlib.pyplot as plt
 import numpy as np
 import theano
 import theano.tensor as T
@@ -24,8 +15,16 @@ from utils import checkpoints, metrics_logging
 from collections import OrderedDict
 import matplotlib
 
-# import VRN as config_module
+#Add Root Dir
+file_path = os.path.dirname(os.path.realpath(__file__))
+root_path = os.path.abspath(os.path.join(file_path, os.pardir))
+sys.path.insert(0, root_path)
+sys.setrecursionlimit(2000)
 
+import network.VRN_64_gpuarray as config_module
+DATA_PATH = os.path.join(root_path, "data/TestData.npz")
+WEIGHT_NAME = "10-23 09:43:11gpuarray_oct_20_epoch_94.npz"
+WEIGHT_PATH = os.path.join(root_path, 'weights', WEIGHT_NAME)
 
 # Define the testing functions
 def make_testing_functions(cfg,model):
@@ -55,13 +54,13 @@ def make_testing_functions(cfg,model):
 
     # Average across rotation examples
     pred = T.argmax(T.sum(y_hat_deterministic,axis=0))
+    softmax = T.nnet.softmax(T.sum(y_hat_deterministic, axis=0))
+
 
     #Get Annotation
     anot = T.mean(y,dtype='int32')
 
     predFunc = theano.function([X], pred)
-
-
 
 
     # Get error rate
@@ -70,7 +69,7 @@ def make_testing_functions(cfg,model):
 
 
     # Compile Functions
-    test_error_fn = theano.function([batch_index], [classifier_test_error_rate,pred, anot], givens={
+    test_error_fn = theano.function([batch_index], [classifier_test_error_rate,pred, anot, softmax], givens={
             X: X_shared[test_batch_slice],
             y:  T.cast( y_shared[test_batch_slice], 'int32')
         })
@@ -82,26 +81,13 @@ def make_testing_functions(cfg,model):
             }
     return tfuncs, tvars, model, predFunc
 
-# Main Function
-def main(args):
 
-    # Load config module
-    print(args.config_path)
-    config_module = __import__('VRN_64', args.config_path[:-3])
-    cfg = config_module.cfg
-
-    # Find weights file
-    weights_fname = args.weight_path
-
-    # Get Model
-    model = config_module.get_model()
-
-    # Compile functions
-    print('Compiling theano functions...')
-    tfuncs, tvars,model, predFunc = make_testing_functions(cfg,model)
+def test_accuracy(weight_path, tfuncs, tvars,model, predFunc):
+    
+    print(weight_path)
 
     # Load weights
-    metadata = checkpoints.load_weights(weights_fname, model['l_out'])
+    metadata = checkpoints.load_weights(weight_path, model['l_out'])
 
     # Check if previous best accuracy is in metadata from previous tests
     best_acc = metadata['best_acc'] if 'best_acc' in metadata else 0
@@ -112,41 +98,12 @@ def main(args):
     itr = 0
 
     # Load testing data into memory
-    xt = np.asarray(np.load(args.data_path)['features'],dtype=np.float32)
-    yt = np.asarray(np.load(args.data_path)['targets'],dtype=np.float32)
+    xt = np.asarray(np.load(DATA_PATH)['features'],dtype=np.float32)
+    yt = np.asarray(np.load(DATA_PATH)['targets'],dtype=np.float32)
 
     print(xt.shape[0])
     print(yt.shape)
 
-    #
-    # length = xt.shape[0]
-    # test_class_error = []
-    #
-    # for i in range(length):
-    #     inputData = xt[i].reshape(1, 1, 32, 32, 32)
-    #     inputData = 4.0 * inputData-1.0 #WHY????
-    #     anot = yt[i]
-    #     pred = predFunc(inputData)
-    #
-    #     if anot == pred:
-    #         neq = 0.0;
-    #     else:
-    #         neq = 1.0;
-    #
-    #     test_class_error.append(neq)
-    #     print(i, "-> anot : ", anot, "// pred : ", pred, "//neq : ", neq)
-    #
-    #
-    # # Get total accuracyn_rotations
-    # t_class_error = 1-float(np.mean(test_class_error))
-    # print('Test accuracy is: ' , t_class_error)
-    #
-    # return
-
-    # Get number of rotations to average across. If you want this to be different from
-    # the number of rotations specified in the config file, make sure to change the
-    # indices of the test_batch_slice variable above, as well as which data file
-    # you're reading from.
     n_rotations = cfg['n_rotations']
     print("n_rotations", n_rotations)
 
@@ -154,14 +111,8 @@ def main(args):
     # Determine chunk size
     test_chunk_size = n_rotations*cfg['batches_per_chunk']
     print("test chunk size", test_chunk_size)
-    # Determine number of chunks
     num_test_chunks=int(math.ceil(float(len(xt))/test_chunk_size))
     print("num_test_chunks", num_test_chunks)
-    # Total number of test batches. Note that we're treating all the rotations
-    # of a single instance as a single batch. There's definitely a more efficient
-    # way to do this, and you'll want to be more efficient if you implement this in
-    # a validation loop, but testing should be infrequent enough that the extra few minutes
-    # this costs is irrelevant.
     num_test_batches = int(math.ceil(float(len(xt))/float(n_rotations)))
     print(num_test_batches)
 
@@ -173,6 +124,11 @@ def main(args):
 
     correct_features = []
     correct_targets = []
+
+    score = []
+    y = []
+
+
     # Loop across chunks!
     for chunk_index in range(num_test_chunks):
 
@@ -186,7 +142,7 @@ def main(args):
         # Get number of batches for this chunk
         num_batches = len(x_shared)//n_rotations
 
-        # Prepare data
+        # Prepare dat
         # tvars['X_shared'].set_value(4.0 * x_shared-1.0, borrow=True)
         tvars['X_shared'].set_value(x_shared, borrow=True)
         tvars['y_shared'].set_value(y_shared, borrow=True)
@@ -198,14 +154,20 @@ def main(args):
             test_itr+=1
 
             # Test!
-            [batch_test_class_error,pred, anot] = tfuncs['test_function'](bi)
+            [batch_test_class_error,pred, anot, softmax] = tfuncs['test_function'](bi)
 
             # Record test results
             test_class_error.append(batch_test_class_error)
 
-            # if batch_test_class_error == 1.0:
-            print(test_itr, "-> Input : ", anot , " // pred : " , pred , " // neq : " , batch_test_class_error)
+            
 
+            # if batch_test_class_error == 1.0:
+            print(test_itr, "-> Input : ", anot , " // pred : " , pred , " // neq : " , batch_test_class_error, softmax)
+
+
+            
+            y.append(int(anot))
+            score.append(softmax[0][1])
             if int(batch_test_class_error) == 0:
                 correct_features.append(x_shared[bi])
                 correct_targets.append(y_shared[bi])
@@ -221,30 +183,48 @@ def main(args):
     # Get total accuracy
     t_class_error = 1-float(np.mean(test_class_error))
     print('Test accuracy is: ' + str(t_class_error))
+    
+
+    roc_x = []
+    roc_y = []
+
+    min_score = min(score)
+    max_score = max(score)
+    thr = np.linspace(min_score, max_score, 100)
+
+    
+    T = sum(y)
+    F = len(y) - T
+
+    FP=0
+    TP=0
+
+    for th in thr:
+        for i in range(0, len(score)):
+            if score[i]> th:
+                if(y[i]==1):
+                    TP += 1
+                if(y[i]==0):
+                    FP += 1
+
+        sensitivity = FP/F
+        specificity = TP/T
 
 
-    #Save Correct Features
-    np.savez_compressed( "CorrectFeatures", features=correct_features, targets=correct_targets)
-
-    # Optionally save best accuracy
-    # if t_class_error>best_acc:
-            # best_acc = t_class_error
-            # checkpoints.save_weights(weights_fname, model['l_out'],
-                                            # {'best_acc':best_acc})
-
-
+        roc_x.append(FP/F)
+        roc_y.append(TP/T)
+        FP=0
+        TP=0
+    
+    np.savez_compressed(os.path.join(file_path, 'roc_data', WEIGHT_NAME[:-4]+'roc'), x=roc_x, y=roc_y)
+    plt.plot(roc_x, roc_y, 'b-')
+    plt.show()
 
 
-### TODO: Clean this up and add the necessary arguments to enable all of the options we want.
-if __name__=='__main__':
+# Get Model
 
-    root = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER'
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config_path', nargs='?', default='./trainingTest/VRN_64.py', help='config .py file')
-
-    parser.add_argument('weight_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/VRN_64_TEST_ALL_epoch_11507803433.8123636.npz')
-
-    parser.add_argument('data_path', nargs='?', default = '/home/ej/projects/EJ_ROTATORCUFF_CLASSIFIER/new/TestData.npz')
-    args = parser.parse_args()
-    main(args)
+print('Compiling theano functions...')
+cfg = config_module.cfg
+model = config_module.get_model()
+tfuncs, tvars,model, predFunc = make_testing_functions(cfg,model)
+test_accuracy(WEIGHT_PATH, tfuncs, tvars,model, predFunc)
