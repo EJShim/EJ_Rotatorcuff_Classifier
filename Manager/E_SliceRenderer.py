@@ -2,7 +2,7 @@ import vtk
 import numpy as np
 import math
 
-class E_SliceRenderer(vtk.vtk.vtkRenderer):
+class E_SliceRenderer(vtk.vtkRenderer):
     def __init__(self, mgr, idx = 0):        
         view = ['SAG', 'AXL', 'COR']
         self.idx = idx

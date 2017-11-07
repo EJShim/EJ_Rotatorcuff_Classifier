@@ -25,6 +25,7 @@ else:
 
 #Initialize Renderers
 renderers = []
+selected_renderer = [0]
 
 
 #Initialize Props
@@ -39,6 +40,9 @@ volume_prop.SetScalarOpacity(opac_func)
 volume_actor.SetMapper(volume_mapper)
 volume_actor.SetProperty(volume_prop)
 volume_actor.SetPosition([0, 0, 0])
+volume_prop.ShadeOff()
+volume_prop.SetInterpolationTypeToLinear()
+volume_mapper.SetBlendModeToMaximumIntensity()
 
 
 image_prop = vtk.vtkImageProperty()
@@ -46,7 +50,9 @@ slice_mapper = []
 slice_actor = []
 for i in range(3):
     slice_mapper.append(vtk.vtkImageSliceMapper())
+    slice_mapper[i].BorderOn()
     slice_actor.append(vtk.vtkImageSlice())
+
 
     slice_mapper[i].SetOrientation(i)
     slice_actor[i].SetMapper(slice_mapper[i])
@@ -70,8 +76,9 @@ def get_volume(idx = None):
 def get_renderers(idx = None):    
 
     if len(renderers) == 0:    
-        for i in range(0, 4):
-            renderers.append(vtk.vtkRenderer())
+        renderers.append(vtk.vtkRenderer())
+        for i in range(1, 4):
+            renderers.append(E_SliceRenderer(idx = i-1))
             
 
 
@@ -79,6 +86,20 @@ def get_renderers(idx = None):
         return renderers
     else:
         return renderers[idx]
+
+def set_preset(scalar_range):
+
+    image_prop.SetColorLevel((scalar_range[1] + scalar_range[0])/2)
+    image_prop.SetColorWindow(scalar_range[1] - scalar_range[0]-1)
+
+    color_func.RemoveAllPoints()
+    opac_func.RemoveAllPoints()
+
+    color_func.AddRGBPoint(scalar_range[0], 1.0, 1.0, 1.0)
+    color_func.AddRGBPoint(scalar_range[1], 1.0, 1.0, 1.0)
+
+    opac_func.AddPoint(scalar_range[0], 0.0)
+    opac_func.AddPoint(scalar_range[1], 1.0)    
 
 def add_volume(vol_array):    
     dim = vol_array.shape
@@ -89,6 +110,8 @@ def add_volume(vol_array):
     imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
     floatArray = numpy_support.numpy_to_vtk(num_array=vol_array.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
     imgData.GetPointData().SetScalars(floatArray)
+
+    set_preset(imgData.GetScalarRange())
     
     #Clear Scene
     clear_scene()
@@ -99,10 +122,13 @@ def add_volume(vol_array):
     #slice Actor
     for i in range(3):
         slice_mapper[i].SetInputData(imgData)        
+        slice_mapper[i].SetSliceNumber(32)
 
         renderers[i+1].AddViewProp(slice_actor[i])
         renderers[i+1].ResetCamera()
         renderers[i+1].GetActiveCamera().Zoom(1.5)
+
+        renderers[0].AddViewProp(slice_actor[i])
 
 
     
@@ -111,6 +137,24 @@ def add_volume(vol_array):
     renderers[0].AddVolume(volume_actor)
     renderers[0].ResetCamera()
 
+    redraw()
+
+def forward_slice(idx):
+    slice_num = slice_mapper[idx].GetSliceNumber()
+    if slice_num >= slice_mapper[idx].GetSliceNumberMaxValue():
+        return
+    
+    change_slice(idx, slice_num+1)
+
+def backward_slice(idx):
+    slice_num = slice_mapper[idx].GetSliceNumber()
+    if slice_num <= slice_mapper[idx].GetSliceNumberMinValue():
+        return
+    
+    change_slice(idx, slice_num-1)
+
+def change_slice(idx, slice_number):    
+    slice_mapper[idx].SetSliceNumber(slice_number)        
     redraw()
 
 def redraw():
@@ -129,27 +173,134 @@ class E_InteractorStyle(vtk.vtkInteractorStyleSwitch):
 
         #Style to
         self.SetCurrentStyleToTrackballCamera()
+
+        self.GetCurrentStyle().AddObserver("LeftButtonPressEvent", self.OnLeftButtonPressed)
         self.GetCurrentStyle().AddObserver("MouseMoveEvent", self.MouseMoveEvent)
 
 
+    def OnLeftButtonPressed(self, obj, event):
+        self.GetCurrentStyle().OnLeftButtonDown()
+        selected_renderer[0] = 0
 
     def MouseMoveEvent(self, obj, event):
         self.GetCurrentStyle().OnMouseMove()
 
 
 class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
-    def __init__(self):        
+    def __init__(self, idx = 0):
+        self.idx = idx
 
+        self.AddObserver("LeftButtonPressEvent", self.OnLeftButtonPressed)
         self.AddObserver("MouseWheelForwardEvent", self.OnMouseWheelForward)
         self.AddObserver("MouseWheelBackwardEvent", self.OnMouseWheelBackward)    
 
-         
+    def OnLeftButtonPressed(self, obj, event):
+        selected_renderer[0] = self.idx+1   
+
     def OnMouseWheelForward(self, obj, event):        
-        print("for")
+        forward_slice(self.idx)
 
     def OnMouseWheelBackward(self, obj, event):
-        print("back")
+        backward_slice(self.idx)
+        
+import vtk
+import numpy as np
+import math
+
+class E_SliceRenderer(vtk.vtkRenderer):
+    def __init__(self, idx = 0):        
+        view = ['SAG', 'AXL', 'COR']
+        self.idx = idx
+        self.viewType = view[idx]
+        self.lineColor = [0.0, 0.0, 0.0]
+        self.lineColor[(idx+2)%3] = 1.0
+
+        self.centerPos = np.array([0.0, 0.0])
+        self.selectedPos = np.array([0.0, 0.0])
+
+        self.selectedPositionActor = None
+        self.bounds = [0.0, 0.0, 0.0]
+
+
+        self.SetBackground(0.0, 0.0, 0.0)
+        self.GetActiveCamera().SetPosition(0.0, 0.0, 100.0)
+        self.GetActiveCamera().ParallelProjectionOn()
+
+        self.InitSelectedPosition()
+        
+    def InitSelectedPosition(self):        
+
+        self.selectedPositionActor = vtk.vtkActor()        
+        self.selectedPositionActor.GetProperty().SetColor([1.0, 0.0, 1.0])
+        
+        self.AddActor(self.selectedPositionActor)
+
+    def AddGuide(self, bounds = [0.0, 0.0, 0.0]):
+        self.bounds = bounds
+
+        
+        #ADD TEXT
+        txt = vtk.vtkTextActor()
+        txt.SetInput(self.viewType)        
+        txt.SetPosition(10, 10)
+        txt.GetTextProperty().SetFontSize(24)
+
+        
+        txt.GetTextProperty().SetColor(self.lineColor)
+        self.AddActor2D(txt)
+
+        #ADD Outer Line   
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(4)
+        
+        point0 = np.array([0.0, 0.0, bounds[2]])
+        point1 = np.array([bounds[0], 0.0, bounds[2]])
+        point2 = np.array([bounds[0], bounds[1], bounds[2]])
+        point3 = np.array([0.0, bounds[1], bounds[2]])
         
 
+        points.SetPoint(0, point0)
+        points.SetPoint(1, point1)
+        points.SetPoint(2, point2)
+        points.SetPoint(3, point3)
+
+        lines = vtk.vtkCellArray()
+        lines.InsertNextCell(5)
+        lines.InsertCellPoint(0)
+        lines.InsertCellPoint(1)
+        lines.InsertCellPoint(2)
+        lines.InsertCellPoint(3)
+        lines.InsertCellPoint(0)        
+
+        polygon = vtk.vtkPolyData()
+        polygon.SetPoints(points)
+        polygon.SetLines(lines)
+
+        polygonMapper = vtk.vtkPolyDataMapper()
+        polygonMapper.SetInputData(polygon)
+        polygonMapper.Update()
+
+        polygonActor = vtk.vtkActor()
+        polygonActor.SetMapper(polygonMapper)
+        polygonActor.GetProperty().SetColor(self.lineColor)
+
+        self.AddActor(polygonActor)
+    
+
+    def AddViewProp(self, prop):
+        rotateProp = vtk.vtkImageSlice()
+        rotateProp.SetMapper(prop.GetMapper())
+        rotateProp.SetProperty(prop.GetProperty())
+
+        if self.viewType == 'AXL':
+            rotateProp.RotateX(-90)        
+        elif self.viewType == 'SAG':
+            rotateProp.RotateY(90)
+
+        bounds = [rotateProp.GetMaxXBound(), rotateProp.GetMaxYBound(), rotateProp.GetMaxZBound()]        
+        
+
+        super(E_SliceRenderer, self).AddViewProp(rotateProp)
+        self.AddGuide(bounds)
 
 

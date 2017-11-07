@@ -18,8 +18,10 @@ class AnnotationWindow(QMainWindow):
 
     def __init__(self, parent = None):
         super(AnnotationWindow, self).__init__(parent)
+        self.one_view = False
 
         self.central_layout = QHBoxLayout()        
+        self.installEventFilter(self)
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(self.central_layout)        
 
@@ -82,7 +84,7 @@ class AnnotationWindow(QMainWindow):
         
         #Add Renderers to the widget
         renderers = manager.get_renderers()
-        ren_widget = []
+        self.ren_widget = []
 
         for idx, renderer in enumerate(renderers):
             widget = QVTKRenderWindowInteractor()
@@ -93,20 +95,18 @@ class AnnotationWindow(QMainWindow):
             if idx == 0:
                 interactor = manager.E_InteractorStyle()
             else:
-                interactor = manager.E_InteractorStyle2D()
+                interactor = manager.E_InteractorStyle2D(idx = idx-1)
             widget.GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
 
-            ren_widget.append(widget)
+            self.ren_widget.append(widget)
             
                 
 
-
-
         # renderers = manager.get_renderers(
 
-        self.widget_renderers.AddMainRenderer(ren_widget[0])    
+        self.widget_renderers.AddMainRenderer(self.ren_widget[0])    
         for i in range(1, 4):
-            self.widget_renderers.AddSliceRenderer(ren_widget[i])
+            self.widget_renderers.AddSliceRenderer(self.ren_widget[i])
 
 
     #SLOTS
@@ -121,11 +121,35 @@ class AnnotationWindow(QMainWindow):
 
     def on_list_dbclicked(self, item):
         idx = self.widget_list.row(item)
-        volume_arr = manager.get_volume(idx)
-
-        print(volume_arr.shape)
+        volume_arr = manager.get_volume(idx)        
         manager.add_volume(volume_arr)
-        print("list widget double clicked", idx)
+
+    def toggle_view_mode(self):
+        print(manager.selected_renderer[0])
+        selected_renderer = self.ren_widget[manager.selected_renderer[0]]
+        self.one_view = not self.one_view
+
+        if self.one_view:
+            self.widget_renderers.SetViewOneView(selected_renderer)
+        else:
+            self.widget_renderers.SetViewFourView()
+
+
+
+
+    def eventFilter(self, obj, event):
+        # print(event)
+        if event.type() == QEvent.ShortcutOverride:
+            
+            if event.key() == Qt.Key_Space:
+                print(obj)
+                self.toggle_view_mode()
+                
+
+            return True # means stop event propagation
+        else:
+            return QMainWindow.eventFilter(self, obj, event)
+
 
 
 
@@ -136,7 +160,10 @@ class E_MainRenderingWidget(QWidget):
 
         self.mainLayout = QHBoxLayout()
         self.setLayout(self.mainLayout)
+        
         self.sliceView = None
+        self.mainView = None
+        self.selectedView = None
 
 
         mainRenderWidget = QWidget()
@@ -169,7 +196,9 @@ class E_MainRenderingWidget(QWidget):
     
 
     def AddMainRenderer(self, rendererWidget):        
-        self.mainRenderLayout.addWidget(rendererWidget)      
+        self.mainRenderLayout.addWidget(rendererWidget)
+        self.mainView = rendererWidget
+        self.selectedView = rendererWidget
     
     def AddSliceRenderer(self, rendererWidget):
         self.sliceRenderLayout.addWidget(rendererWidget)  
@@ -191,5 +220,23 @@ class E_MainRenderingWidget(QWidget):
         self.mainLayout.setStretch(0, 1)
         self.mainLayout.setStretch(1, 1)
 
+    def SetViewOneView(self, renderingWidget):
+        self.mainView.setParent(self.sliceRenderLayout.parentWidget())
+        renderingWidget.setParent(self.mainRenderLayout.parentWidget())
+        self.mainRenderLayout.insertWidget(0,renderingWidget)
+        self.selectedView = renderingWidget
+
+        self.sliceRenderLayout.parentWidget().hide()
+
+    def SetViewFourView(self):
+        self.selectedView.setParent(self.sliceRenderLayout.parentWidget())
+        self.sliceRenderLayout.insertWidget(0,self.selectedView)
+
+        self.mainView.setParent(self.mainRenderLayout.parentWidget())
+        self.mainRenderLayout.insertWidget(0, self.mainView)        
+
+        self.sliceRenderLayout.parentWidget().show()
+
+        self.SetViewGridView()
         
 
