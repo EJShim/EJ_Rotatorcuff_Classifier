@@ -54,7 +54,7 @@ def make_testing_functions(cfg,model):
 
     # Average across rotation examples
     pred = T.argmax(T.sum(y_hat_deterministic,axis=0))
-    softmax = T.nnet.sigmoid(T.sum(y_hat_deterministic, axis=0))
+    softmax = T.nnet.softmax(T.sum(y_hat_deterministic, axis=0))
 
     #Get Annotation
     anot = T.mean(y,dtype='int32')
@@ -166,7 +166,7 @@ def test_accuracy(weight_path, tfuncs, tvars,model, predFunc):
 
             
             y.append(int(anot))
-            score.append(softmax[1])
+            score.append(softmax[0][1])
             if int(batch_test_class_error) == 0:
                 correct_features.append(x_shared[bi])
                 correct_targets.append(y_shared[bi])
@@ -184,40 +184,11 @@ def test_accuracy(weight_path, tfuncs, tvars,model, predFunc):
     print('Test accuracy is: ' + str(t_class_error))
     
 
-    roc_x = []
-    roc_y = []
-
-    min_score = min(score)
-    max_score = max(score)
-    thr = np.linspace(0, 1, 100)
-
+  
     
-    T = sum(y)
-    F = len(y) - T
-
-    FP=0
-    TP=0
-
-    for th in thr:
-        for i in range(0, len(score)):
-            if score[i]> th:
-                if(y[i]==1):
-                    TP += 1
-                if(y[i]==0):
-                    FP += 1
-
-        sensitivity = FP/F
-        specificity = TP/T
-
-
-        roc_x.append(FP/F)
-        roc_y.append(TP/T)
-        FP=0
-        TP=0
-    
-    np.savez_compressed(os.path.join(file_path, 'roc_data', WEIGHT_NAME[:-4]+'roc'), x=roc_x, y=roc_y)
-    plt.plot(roc_x, roc_y, 'b-')
-    plt.show()
+    np.savez_compressed(os.path.join(file_path, 'roc_data', WEIGHT_NAME[:-4]+'roc'), y=y, score=score)
+    # plt.plot(roc_x, roc_y, 'b-')
+    # plt.show()
 
 
 # Get Model
