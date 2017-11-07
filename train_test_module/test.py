@@ -23,7 +23,7 @@ sys.setrecursionlimit(2000)
 
 import network.VRN_64_gpuarray as config_module
 DATA_PATH = os.path.join(root_path, "data/TestData.npz")
-WEIGHT_NAME = "10-23 09:43:11gpuarray_oct_20_epoch_94.npz"
+WEIGHT_NAME = "10-20 08:28:29gpuarray_oct_20_epoch_1.npz"
 WEIGHT_PATH = os.path.join(root_path, 'weights', WEIGHT_NAME)
 
 # Define the testing functions
@@ -54,8 +54,7 @@ def make_testing_functions(cfg,model):
 
     # Average across rotation examples
     pred = T.argmax(T.sum(y_hat_deterministic,axis=0))
-    softmax = T.nnet.softmax(T.sum(y_hat_deterministic, axis=0))
-
+    softmax = T.nnet.sigmoid(T.sum(y_hat_deterministic, axis=0))
 
     #Get Annotation
     anot = T.mean(y,dtype='int32')
@@ -167,7 +166,7 @@ def test_accuracy(weight_path, tfuncs, tvars,model, predFunc):
 
             
             y.append(int(anot))
-            score.append(softmax[0][1])
+            score.append(softmax[1])
             if int(batch_test_class_error) == 0:
                 correct_features.append(x_shared[bi])
                 correct_targets.append(y_shared[bi])
