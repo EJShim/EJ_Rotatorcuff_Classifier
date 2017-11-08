@@ -49,18 +49,18 @@ class AnnotationWindow(QMainWindow):
 
         #View Control
          ##View 1, 4 View
-        view_control = QGroupBox("View Control")
-        toolbar.addWidget(view_control)
-        layout_view_control = QVBoxLayout()
-        view_control.setLayout(layout_view_control)
-        radio_normal = QRadioButton("Normal View")
-        radio_normal.clicked.connect(self.set_view_normal)
-        radio_normal.setEnabled(False)
-        radio_grid = QRadioButton("Grid View")
-        radio_grid.clicked.connect(self.set_view_grid)
-        layout_view_control.addWidget(radio_grid)
-        layout_view_control.addWidget(radio_normal)
-        layout_view_control.itemAt(0).widget().setChecked(True)
+        # view_control = QGroupBox("View Control")
+        # toolbar.addWidget(view_control)
+        # layout_view_control = QVBoxLayout()
+        # view_control.setLayout(layout_view_control)
+        # radio_normal = QRadioButton("Normal View")
+        # radio_normal.clicked.connect(self.set_view_normal)
+        # radio_normal.setEnabled(False)
+        # radio_grid = QRadioButton("Grid View")
+        # radio_grid.clicked.connect(self.set_view_grid)
+        # layout_view_control.addWidget(radio_grid)
+        # layout_view_control.addWidget(radio_normal)
+        # layout_view_control.itemAt(0).widget().setChecked(True)
 
 
 
