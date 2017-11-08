@@ -266,7 +266,8 @@ class E_MainRenderingWidget(QWidget):
         self.mainLayout.setStretch(0, 1)
         self.mainLayout.setStretch(1, 1)
 
-    def SetViewOneView(self, renderingWidget):        
+    def SetViewOneView(self, renderingWidget):
+        print("change view")
         self.selectedView = renderingWidget
         
         #Remove Widget from Main Layout
