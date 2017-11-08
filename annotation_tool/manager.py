@@ -189,10 +189,10 @@ class E_InteractorStyle(vtk.vtkInteractorStyleSwitch):
 class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
     def __init__(self, idx = 0):
         self.idx = idx
-
+        
         self.AddObserver("LeftButtonPressEvent", self.OnLeftButtonPressed)
         self.AddObserver("MouseWheelForwardEvent", self.OnMouseWheelForward)
-        self.AddObserver("MouseWheelBackwardEvent", self.OnMouseWheelBackward)    
+        self.AddObserver("MouseWheelBackwardEvent", self.OnMouseWheelBackward) 
 
     def OnLeftButtonPressed(self, obj, event):
         self.OnLeftButtonDown()
@@ -200,13 +200,12 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
 
     def OnMouseWheelForward(self, obj, event):        
         forward_slice(self.idx)
+        selected_renderer[0] = self.idx+1
 
     def OnMouseWheelBackward(self, obj, event):
         backward_slice(self.idx)
-        
-import vtk
-import numpy as np
-import math
+        selected_renderer[0] = self.idx+1
+
 
 class E_SliceRenderer(vtk.vtkRenderer):
     def __init__(self, idx = 0):        

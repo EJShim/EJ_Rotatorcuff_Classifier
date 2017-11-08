@@ -31,9 +31,12 @@ class AnnotationWindow(QMainWindow):
         self.init_mainfrm()
         self.set_view_grid()
 
+        timer = QTimer(self)        
+        timer.timeout.connect(self.on_save_labels)
+        timer.start(120000)
+
         self.central_layout.setStretch(0, 1)
         self.central_layout.setStretch(1, 5)
-
         
 
 
@@ -47,30 +50,13 @@ class AnnotationWindow(QMainWindow):
         toolbar.addAction(save_action)
 
 
-        #View Control
-         ##View 1, 4 View
-        # view_control = QGroupBox("View Control")
-        # toolbar.addWidget(view_control)
-        # layout_view_control = QVBoxLayout()
-        # view_control.setLayout(layout_view_control)
-        # radio_normal = QRadioButton("Normal View")
-        # radio_normal.clicked.connect(self.set_view_normal)
-        # radio_normal.setEnabled(False)
-        # radio_grid = QRadioButton("Grid View")
-        # radio_grid.clicked.connect(self.set_view_grid)
-        # layout_view_control.addWidget(radio_grid)
-        # layout_view_control.addWidget(radio_normal)
-        # layout_view_control.itemAt(0).widget().setChecked(True)
-
-
-
         label_control = QGroupBox("data label")
         toolbar.addWidget(label_control)        
         self.layout_label_control = QVBoxLayout()
         label_control.setLayout(self.layout_label_control)
-        radio_none = QRadioButton("None ('X' key)")
+        radio_none = QRadioButton("None ('W' key)")
         radio_none.toggled.connect(self.on_none_label)        
-        radio_rct = QRadioButton("RCT ('Z' key)")
+        radio_rct = QRadioButton("RCT ('Q' key)")
         radio_rct.toggled.connect(self.on_rct_label)
         self.layout_label_control.addWidget(radio_none)
         self.layout_label_control.addWidget(radio_rct)                   
@@ -126,6 +112,7 @@ class AnnotationWindow(QMainWindow):
                 interactor = manager.E_InteractorStyle()
             else:
                 interactor = manager.E_InteractorStyle2D(idx = idx-1)
+
             widget.GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
 
             self.ren_widget.append(widget)
@@ -141,6 +128,7 @@ class AnnotationWindow(QMainWindow):
 
     #SLOTS
     def on_save_labels(self):
+        print("label saved")
         manager.save_tmp_data()
     
     def set_view_normal(self):
@@ -150,6 +138,10 @@ class AnnotationWindow(QMainWindow):
         self.widget_renderers.SetViewGridView()
 
     def on_list_dbclicked(self, item):
+        for i in range(2):
+            self.layout_label_control.itemAt(i).widget().setChecked(False)
+
+
         idx = self.widget_list.row(item)
         self.selected_idx = idx
         volume_arr = manager.get_volume(idx)        
@@ -188,9 +180,11 @@ class AnnotationWindow(QMainWindow):
             
             if event.key() == Qt.Key_Space:          
                 self.toggle_view_mode()
-            elif event.key() == Qt.Key_X:
+            elif event.key() == Qt.Key_W:
+                self.layout_label_control.itemAt(1).widget().setChecked(True)
                 self.layout_label_control.itemAt(0).widget().setChecked(True)
-            elif event.key() == Qt.Key_Z:
+            elif event.key() == Qt.Key_Q:
+                self.layout_label_control.itemAt(0).widget().setChecked(True)
                 self.layout_label_control.itemAt(1).widget().setChecked(True)
                 
 
@@ -259,16 +253,14 @@ class E_MainRenderingWidget(QWidget):
         self.mainLayout.setStretch(1, 1)
         
 
-    def SetViewGridView(self):
-        print("view grid view")
+    def SetViewGridView(self):        
         self.sliceView[0].setParent(self.mainRenderLayout.parentWidget())        
         self.mainRenderLayout.insertWidget(0,self.sliceView[0])
         self.mainRenderLayout.insertWidget(1, self.mainView)
         self.mainLayout.setStretch(0, 1)
         self.mainLayout.setStretch(1, 1)
 
-    def SetViewOneView(self, renderingWidget):
-        print("change view one view")
+    def SetViewOneView(self, renderingWidget):        
         self.selectedView = renderingWidget
         
         #Remove Widget from Main Layout
@@ -282,8 +274,7 @@ class E_MainRenderingWidget(QWidget):
         renderingWidget.setParent(self.mainRenderLayout.parentWidget())
         self.mainRenderLayout.insertWidget(0,renderingWidget)
 
-    def SetViewFourView(self):
-        print("change view four view")
+    def SetViewFourView(self):        
         self.sliceView[0].setParent(self.mainRenderLayout.parentWidget())
         self.mainRenderLayout.insertWidget(0,self.sliceView[0])
         self.mainView.setParent(self.mainRenderLayout.parentWidget())
