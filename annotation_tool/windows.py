@@ -19,6 +19,7 @@ class AnnotationWindow(QMainWindow):
     def __init__(self, parent = None):
         super(AnnotationWindow, self).__init__(parent)
         self.one_view = False
+        self.selected_idx = None
 
         self.central_layout = QHBoxLayout()        
         self.installEventFilter(self)
@@ -31,6 +32,8 @@ class AnnotationWindow(QMainWindow):
 
         self.central_layout.setStretch(0, 1)
         self.central_layout.setStretch(1, 5)
+
+        
 
 
     def init_toolbar(self):
@@ -49,15 +52,27 @@ class AnnotationWindow(QMainWindow):
         toolbar.addWidget(view_control)
         layout_view_control = QVBoxLayout()
         view_control.setLayout(layout_view_control)
-        
         radio_normal = QRadioButton("Normal View")
         radio_normal.clicked.connect(self.set_view_normal)
         radio_grid = QRadioButton("Grid View")
         radio_grid.clicked.connect(self.set_view_grid)
-
         layout_view_control.addWidget(radio_normal)
         layout_view_control.addWidget(radio_grid)                   
         layout_view_control.itemAt(0).widget().setChecked(True)
+
+
+
+        label_control = QGroupBox("data label")
+        toolbar.addWidget(label_control)        
+        self.layout_label_control = QVBoxLayout()
+        label_control.setLayout(self.layout_label_control)
+        radio_none = QRadioButton("None ('X' key)")
+        radio_none.toggled.connect(self.on_none_label)        
+        radio_rct = QRadioButton("RCT ('Z' key)")
+        radio_rct.toggled.connect(self.on_rct_label)
+        self.layout_label_control.addWidget(radio_none)
+        self.layout_label_control.addWidget(radio_rct)                   
+        self.layout_label_control.itemAt(0).widget().setChecked(True)
         
 
     def init_list(self):
@@ -66,14 +81,25 @@ class AnnotationWindow(QMainWindow):
         self.widget_list.itemDoubleClicked.connect(self.on_list_dbclicked)
         self.central_layout.addWidget(self.widget_list)
 
+        self.update_list()
 
-        #Load Data Annotation                
-        annot_data = manager.tmp_data        
+
         
-        for idx, data in enumerate(annot_data):
-            self.widget_list.insertItem(idx, str(data))
+    
+    def update_list(self):
+        #Load Data Annotation                
+        annot_data = manager.tmp_data
+        
+        for idx, data in enumerate(annot_data):            
             if data == None:
+                self.widget_list.insertItem(idx, str("(undefined)"))                
+            elif data == 0: #NONE_RCT
+                self.widget_list.insertItem(idx, str("None-RCT"))
+                self.widget_list.item(idx).setBackground(QBrush(QColor('green')))
+            elif data == 1: #RCT_RCT
+                self.widget_list.insertItem(idx, str("RCT"))
                 self.widget_list.item(idx).setBackground(QBrush(QColor('red')))
+
             
 
 
@@ -121,6 +147,7 @@ class AnnotationWindow(QMainWindow):
 
     def on_list_dbclicked(self, item):
         idx = self.widget_list.row(item)
+        self.selected_idx = idx
         volume_arr = manager.get_volume(idx)        
         manager.add_volume(volume_arr)
 
@@ -133,6 +160,21 @@ class AnnotationWindow(QMainWindow):
         else:
             self.widget_renderers.SetViewFourView()
 
+    def on_none_label(self):
+        if self.selected_idx == None:
+            return        
+
+        #Update data and list
+        manager.tmp_data[self.selected_idx] = 0
+        self.update_list()
+
+    def on_rct_label(self):
+        if self.selected_idx == None:
+            return
+
+        manager.tmp_data[self.selected_idx] = 1
+        self.update_list()
+
 
 
 
@@ -140,8 +182,12 @@ class AnnotationWindow(QMainWindow):
         # print(event)
         if event.type() == QEvent.ShortcutOverride:
             
-            if event.key() == Qt.Key_Space:                
+            if event.key() == Qt.Key_Space:          
                 self.toggle_view_mode()
+            elif event.key() == Qt.Key_X:
+                self.layout_label_control.itemAt(0).widget().setChecked(True)
+            elif event.key() == Qt.Key_Z:
+                self.layout_label_control.itemAt(1).widget().setChecked(True)
                 
 
             return True # means stop event propagation
