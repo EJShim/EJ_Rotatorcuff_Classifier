@@ -260,6 +260,7 @@ class E_MainRenderingWidget(QWidget):
         
 
     def SetViewGridView(self):
+        print("view grid view")
         self.sliceView[0].setParent(self.mainRenderLayout.parentWidget())        
         self.mainRenderLayout.insertWidget(0,self.sliceView[0])
         self.mainRenderLayout.insertWidget(1, self.mainView)
@@ -267,7 +268,7 @@ class E_MainRenderingWidget(QWidget):
         self.mainLayout.setStretch(1, 1)
 
     def SetViewOneView(self, renderingWidget):
-        print("change view")
+        print("change view one view")
         self.selectedView = renderingWidget
         
         #Remove Widget from Main Layout
@@ -282,6 +283,7 @@ class E_MainRenderingWidget(QWidget):
         self.mainRenderLayout.insertWidget(0,renderingWidget)
 
     def SetViewFourView(self):
+        print("change view four view")
         self.sliceView[0].setParent(self.mainRenderLayout.parentWidget())
         self.mainRenderLayout.insertWidget(0,self.sliceView[0])
         self.mainView.setParent(self.mainRenderLayout.parentWidget())
