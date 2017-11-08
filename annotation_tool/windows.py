@@ -29,6 +29,7 @@ class AnnotationWindow(QMainWindow):
         self.init_toolbar()
         self.init_list()
         self.init_mainfrm()
+        self.set_view_grid()
 
         self.central_layout.setStretch(0, 1)
         self.central_layout.setStretch(1, 5)
@@ -54,10 +55,11 @@ class AnnotationWindow(QMainWindow):
         view_control.setLayout(layout_view_control)
         radio_normal = QRadioButton("Normal View")
         radio_normal.clicked.connect(self.set_view_normal)
+        radio_normal.setEnabled(False)
         radio_grid = QRadioButton("Grid View")
         radio_grid.clicked.connect(self.set_view_grid)
+        layout_view_control.addWidget(radio_grid)
         layout_view_control.addWidget(radio_normal)
-        layout_view_control.addWidget(radio_grid)                   
         layout_view_control.itemAt(0).widget().setChecked(True)
 
 
@@ -89,6 +91,8 @@ class AnnotationWindow(QMainWindow):
     def update_list(self):
         #Load Data Annotation                
         annot_data = manager.tmp_data
+
+        self.widget_list.clear()
         
         for idx, data in enumerate(annot_data):            
             if data == None:
@@ -205,7 +209,7 @@ class E_MainRenderingWidget(QWidget):
         self.mainLayout = QHBoxLayout()
         self.setLayout(self.mainLayout)
         
-        self.sliceView = None
+        self.sliceView = []
         self.mainView = None
         self.selectedView = None
 
@@ -246,38 +250,46 @@ class E_MainRenderingWidget(QWidget):
     
     def AddSliceRenderer(self, rendererWidget):
         self.sliceRenderLayout.addWidget(rendererWidget)  
-        
-        if self.sliceView == None:
-            self.sliceView = rendererWidget
+        self.sliceView.append(rendererWidget)
 
     def SetViewMainView(self):
-        self.sliceView.setParent(self.sliceRenderLayout.parentWidget())
+        self.sliceView[0].setParent(self.sliceRenderLayout.parentWidget())
         self.sliceRenderLayout.insertWidget(0,self.sliceView)
         self.mainLayout.setStretch(0, 3)
         self.mainLayout.setStretch(1, 1)
         
 
-
     def SetViewGridView(self):
-        self.sliceView.setParent(self.mainRenderLayout.parentWidget())
-        self.mainRenderLayout.insertWidget(0,self.sliceView)
+        self.sliceView[0].setParent(self.mainRenderLayout.parentWidget())        
+        self.mainRenderLayout.insertWidget(0,self.sliceView[0])
+        self.mainRenderLayout.insertWidget(1, self.mainView)
         self.mainLayout.setStretch(0, 1)
         self.mainLayout.setStretch(1, 1)
 
-    def SetViewOneView(self, renderingWidget):
-        self.mainView.setParent(self.sliceRenderLayout.parentWidget())
-        renderingWidget.setParent(self.mainRenderLayout.parentWidget())
-        self.mainRenderLayout.insertWidget(0,renderingWidget)
+    def SetViewOneView(self, renderingWidget):        
         self.selectedView = renderingWidget
-
+        
+        #Remove Widget from Main Layout
+        self.mainView.setParent(self.sliceRenderLayout.parentWidget())     
+        for widget in self.sliceView:
+            widget.setParent(self.sliceRenderLayout.parentWidget())
         self.sliceRenderLayout.parentWidget().hide()
 
-    def SetViewFourView(self):
-        self.selectedView.setParent(self.sliceRenderLayout.parentWidget())
-        self.sliceRenderLayout.insertWidget(0,self.selectedView)
 
+        #Add Render Widget To Main View
+        renderingWidget.setParent(self.mainRenderLayout.parentWidget())
+        self.mainRenderLayout.insertWidget(0,renderingWidget)
+
+    def SetViewFourView(self):
+        self.sliceView[0].setParent(self.mainRenderLayout.parentWidget())
+        self.mainRenderLayout.insertWidget(0,self.sliceView[0])
         self.mainView.setParent(self.mainRenderLayout.parentWidget())
-        self.mainRenderLayout.insertWidget(0, self.mainView)        
+        self.mainRenderLayout.insertWidget(1,self.mainView)
+        
+        self.sliceView[1].setParent(self.sliceRenderLayout.parentWidget())
+        self.sliceRenderLayout.insertWidget(0,self.sliceView[1])
+        self.sliceView[2].setParent(self.sliceRenderLayout.parentWidget())
+        self.sliceRenderLayout.insertWidget(1,self.sliceView[2])
 
         self.sliceRenderLayout.parentWidget().show()
         
