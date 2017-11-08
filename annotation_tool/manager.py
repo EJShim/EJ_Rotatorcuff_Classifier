@@ -63,8 +63,8 @@ for i in range(3):
 def get_tmp_data():
     return tmp_data
 
-def save_tmp_data(tmp_arr):
-    np.savez_compressed(tmp_path, data=tmp_arr)
+def save_tmp_data():
+    np.savez_compressed(tmp_path, data=tmp_data)
 
 def get_volume(idx = None):
     volume_list = data['features']

@@ -141,7 +141,7 @@ class AnnotationWindow(QMainWindow):
 
     #SLOTS
     def on_save_labels(self):
-        print("save labels")
+        manager.save_tmp_data()
     
     def set_view_normal(self):
         self.widget_renderers.SetViewMainView()
