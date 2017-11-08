@@ -195,7 +195,8 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
         self.AddObserver("MouseWheelBackwardEvent", self.OnMouseWheelBackward)    
 
     def OnLeftButtonPressed(self, obj, event):
-        selected_renderer[0] = self.idx+1   
+        self.OnLeftButtonDown()
+        selected_renderer[0] = self.idx+1
 
     def OnMouseWheelForward(self, obj, event):        
         forward_slice(self.idx)
