@@ -124,8 +124,7 @@ class AnnotationWindow(QMainWindow):
         volume_arr = manager.get_volume(idx)        
         manager.add_volume(volume_arr)
 
-    def toggle_view_mode(self):
-        print(manager.selected_renderer[0])
+    def toggle_view_mode(self):        
         selected_renderer = self.ren_widget[manager.selected_renderer[0]]
         self.one_view = not self.one_view
 
@@ -141,8 +140,7 @@ class AnnotationWindow(QMainWindow):
         # print(event)
         if event.type() == QEvent.ShortcutOverride:
             
-            if event.key() == Qt.Key_Space:
-                print(obj)
+            if event.key() == Qt.Key_Space:                
                 self.toggle_view_mode()
                 
 
@@ -236,7 +234,5 @@ class E_MainRenderingWidget(QWidget):
         self.mainRenderLayout.insertWidget(0, self.mainView)        
 
         self.sliceRenderLayout.parentWidget().show()
-
-        self.SetViewGridView()
         
 
