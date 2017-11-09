@@ -593,7 +593,7 @@ def get_model():
 
     l_fc = tf.layers.conv3d(
         inputs=l_pool,
-        filters=n_classes,0.90
+        filters=n_classes,
         kernel_size=(1,1,1),
         name='fc'
     )
