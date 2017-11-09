@@ -10,7 +10,6 @@ import numpy as np
 import lasagne
 import lasagne.layers
 
-
 # I use a lot of aliases to help keep my code more compact;
 # consider changing these back to their full callouts if you like.
 from lasagne.layers import ElemwiseSumLayer as ESL
