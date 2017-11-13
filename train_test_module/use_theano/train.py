@@ -11,7 +11,7 @@ import os
 import sys, os
 #Add Root Dir
 cwd = os.path.dirname(os.path.realpath(__file__))
-rootDir = os.path.abspath(os.path.join(cwd, os.pardir))
+rootDir = os.path.abspath(os.path.join(cwd, os.pardir, os.pardir))
 sys.path.insert(0, rootDir)
 sys.setrecursionlimit(2000)
 
@@ -65,11 +65,6 @@ def make_training_functions(cfg,model):
     # Get outputs
     y_hat = lasagne.layers.get_output(l_out,X)
 
-
-    # Get deterministic outputs for validation
-    y_hat_deterministic = lasagne.layers.get_output(l_out,X,deterministic=True)
-
-
     #################################
     # Step 2: Define loss functions #
     #################################
@@ -103,7 +98,7 @@ def make_training_functions(cfg,model):
 
     updates=lasagne.updates.nesterov_momentum(reg_loss,params,learning_rate=learning_rate)
 
-    update_iter = theano.function([batch_index], [classifier_loss,classifier_error_rate],
+    update_iter = theano.function([batch_index], [l2_all,classifier_error_rate],
             updates=updates, givens={
             X: X_shared[batch_slice],
             y:  T.cast( y_shared[batch_slice], 'int32')
@@ -263,6 +258,7 @@ def main(args):
                 # Train!
                 [classifier_loss,class_acc] = tfuncs['update_iter'](bi)
 
+
                 # Record batch loss and accuracy
                 lvs.append(classifier_loss)
                 accs.append(class_acc)
@@ -274,12 +270,12 @@ def main(args):
             [closs,c_acc] = [float(np.mean(lvs)),1.0-float(np.mean(accs))]
 
             # Report and log losses and accuracies
-            logging.info('epoch: {0:^3d}, num_chunks: {1:d}, chunk_index: {2:d}, class_acc: {3:.5f}'.format(epoch, num_chunks, chunk_index, c_acc))
+            logging.info('epoch: {0:^3d}, num_chunks: {1:d}, chunk_index: {2:d}, loss: {3:.5f}'.format(epoch, num_chunks, chunk_index, float(classifier_loss)))
 
-            if epoch < 3 and chunk_index % int(num_chunks/(50))  == 0:
-                fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
-                fname = os.path.join(cwd, 'sigmoid', fname)
-                checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'learning_rate': new_lr})
+            # if epoch < 3 and chunk_index % int(num_chunks/(50))  == 0:
+            #     fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"
+            #     fname = os.path.join(cwd, 'sigmoid', fname)
+            #     checkpoints.save_weights(fname, model['l_out'], {'itr': itr, 'learning_rate': new_lr})
 
 
         fname = strftime("%m-%d=%H:%M:%S", gmtime()) + str(weights_fname[:-4]) + "_epoch_" + str(epoch) + ".npz"

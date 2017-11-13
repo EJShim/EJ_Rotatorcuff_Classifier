@@ -1,12 +1,8 @@
-import tensorflow as tf
+import matplotlib.pyplot as plt
 
+plt.title("ha")
 
-keep_prob = tf.placeholder(dtype=tf.float32)
+plt.rcParams['figure.facecolor'] = 'blue'
+plt.plot([0, 1],[0,1], 'r-')
 
-oneone = 1.0 - (1.0 - keep_prob)*0.95
-
-
-with tf.Session() as sess:
-    ha = sess.run(oneone, feed_dict={keep_prob:0.0})
-
-    print(ha)
+plt.show()

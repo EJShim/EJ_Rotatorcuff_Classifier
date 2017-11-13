@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 cfg = {
-    'batch_size' : 16,       
+    'batch_size' : 12,       
     'decay_rate' : 0,
     'reg' : 0.001,
     'momentum' : 0.9,
@@ -11,6 +11,7 @@ cfg = {
     'batches_per_chunk': 1,
     'max_epochs' : 250,
     'n_rotations' : 1,
+    'lr':[0.002, 0.0002]
 }
 
 def printLayer(layer):
@@ -111,7 +112,8 @@ def get_model():
                     }],
                 block_name = 'conv1'
             ),
-            p=1.0-(1.0-keep_prob)*0.95)
+            p=(1.0-keep_prob)*(1.0-0.95)
+    )
     l_conv2 = ResDrop(
             inputs = l_conv1,
             IB = InceptionLayer(
@@ -137,7 +139,8 @@ def get_model():
                     }],
                 block_name = 'conv2'
             ),
-            p=1.0-(1.0-keep_prob)*0.90)
+            p=(1.0-keep_prob)*(1.0-0.90)
+    )
 
     l_conv3 = ResDrop(
             inputs = l_conv2,
@@ -164,7 +167,8 @@ def get_model():
                     }],
                 block_name = 'conv3'
             ),
-            p=1.0-(1.0-keep_prob)*0.8)
+            p=(1.0-keep_prob)*(1.0-0.8)
+    )
 
 
 
@@ -234,7 +238,7 @@ def get_model():
                 }],
             block_name = 'conv5'
         ),
-        p=1.0-(1.0-keep_prob)*0.7
+        p=(1.0-keep_prob)*(1.0-0.7)
     )
     l_conv6 = ResDrop(
         inputs = l_conv5,
@@ -261,7 +265,7 @@ def get_model():
                 }],
             block_name = 'conv6'
         ),
-        p=1.0-(1.0-keep_prob)*0.6
+        p=(1.0-keep_prob)*(1.0-0.6)
     )
     l_conv7 = ResDrop(
         inputs = l_conv6,
@@ -288,7 +292,7 @@ def get_model():
                 }],
             block_name = 'conv7'
         ),
-        p=1.0-(1.0-keep_prob)*0.5
+        p=(1.0-keep_prob)*(1.0-0.5)
     )
     l_conv8 = InceptionLayer(
         inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv7,name='bn_conv7')),
@@ -356,7 +360,7 @@ def get_model():
                 }],
             block_name = 'conv9'
         ),
-        p=1.0-(1.0-keep_prob)*0.5
+        p=(1.0-keep_prob)*(1.0-0.5)
     )
     l_conv10 = ResDrop(
         inputs = l_conv9,
@@ -383,7 +387,7 @@ def get_model():
                 }],
             block_name = 'conv10'
         ),
-        p=1.0-(1.0-keep_prob)*0.45
+        p=(1.0-keep_prob)*(1.0-0.45)
     )
     l_conv11 = ResDrop(
         inputs = l_conv10,
@@ -410,7 +414,7 @@ def get_model():
                 }],
             block_name = 'conv11'
         ),
-        p=1.0-(1.0-keep_prob)*0.40
+        p=(1.0-keep_prob)*(1.0-0.4)
     )
     l_conv12 = InceptionLayer(
         inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv11,name='bn_conv11')),
@@ -478,7 +482,7 @@ def get_model():
                 }],
             block_name = 'conv13'
         ),
-        p=1.0-(1.0-keep_prob)*0.35
+        p=(1.0-keep_prob)*(1.0-0.35)
     )
     l_conv14 = ResDrop(
         inputs = l_conv13,
@@ -505,7 +509,7 @@ def get_model():
                 }],
             block_name = 'conv14'
         ),
-        p=1.0-(1.0-keep_prob)*0.30
+        p=(1.0-keep_prob)*(1.0-0.3)
     )
     l_conv15 = ResDrop(
         inputs = l_conv14,
@@ -532,7 +536,7 @@ def get_model():
                 }],
             block_name = 'conv15'
         ),
-        p=1.0-(1.0-keep_prob)*0.25
+        p=(1.0-keep_prob)*(1.0-0.25)
     )
     l_conv16 = InceptionLayer(
         inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv15,name='bn_conv15')),

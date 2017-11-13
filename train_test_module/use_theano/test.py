@@ -17,13 +17,13 @@ import matplotlib
 
 #Add Root Dir
 file_path = os.path.dirname(os.path.realpath(__file__))
-root_path = os.path.abspath(os.path.join(file_path, os.pardir))
+root_path = os.path.abspath(os.path.join(file_path, os.pardir, os.pardir))
 sys.path.insert(0, root_path)
 sys.setrecursionlimit(2000)
 
 import network.VRN_64_gpuarray as config_module
 DATA_PATH = os.path.join(root_path, "data/TestData.npz")
-WEIGHT_NAME = "10-20 08:28:29gpuarray_oct_20_epoch_1.npz"
+WEIGHT_NAME = "10-20 07:41:21gpuarray_oct_20_epoch_0.npz"
 WEIGHT_PATH = os.path.join(root_path, 'weights', WEIGHT_NAME)
 
 # Define the testing functions
@@ -161,7 +161,7 @@ def test_accuracy(weight_path, tfuncs, tvars,model, predFunc):
             
 
             # if batch_test_class_error == 1.0:
-            print(test_itr, "-> Input : ", anot , " // pred : " , pred , " // neq : " , batch_test_class_error, softmax)
+            print(test_itr, "-> Input : ", anot , " // pred : " , pred , " // soft: " ,  softmax)
 
 
             
