@@ -14,6 +14,8 @@ cfg = {
     'lr':[0.002, 0.0002]
 }
 
+initializer = tf.contrib.layers.variance_scaling_initializer(factor=0.1, mode='FAN_IN', uniform=False)
+
 def printLayer(layer):
     print("Output Shape : ", layer.shape)
     print("Number of Params : ", len(tf.trainable_variables()) )
@@ -38,7 +40,8 @@ def InceptionLayer(inputs,param_dict,block_name):
                     kernel_size = dict['filter_size'][j],
                     padding = dict['padding'][j],
                     strides = dict['strides'][j],                    
-                    activation = dict['activation'][j],
+                    activation = dict['activation'][j],    
+                    kernel_initializer= initializer,
                     name = block_name+'_'+str(i)+'_'+str(j)
                 )  
             else:
@@ -85,6 +88,7 @@ def get_model():
         kernel_size = (3,3,3),
         strides=(1, 1, 1),
         padding='same',
+        kernel_initializer=initializer,
         name='l_conv0'
     )
     l_conv1 = ResDrop(
@@ -584,8 +588,8 @@ def get_model():
         filters = 512,
         kernel_size = (3,3,3),
         padding = 'same',
-        # kernel_initializer=tf.nn.relu,
         activation = None,
+        kernel_initializer=initializer,
         name = 'l_conv17'),name='bn_conv17'),0.5)
 
     # print("conv17 shape : ", l_conv17.shape)
