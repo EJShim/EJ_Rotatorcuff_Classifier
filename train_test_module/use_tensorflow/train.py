@@ -16,6 +16,13 @@ import network.VRN_64_TF as config_module
 TRAIN_DATA_PATH = os.path.join(root_path, "data", "TrainData.npz")
 TEST_DATA_PATH =  os.path.join(root_path, "data", "TestData.npz")
 
+def subsample_array(arr):
+    ratio = int(len(arr)/100)
+    if ratio == 0:
+        return arr
+
+    return arr[0::ratio]
+
 
 #Load Features and Targets
 data_load = np.load(TRAIN_DATA_PATH)
@@ -37,13 +44,9 @@ batch_size = cfg['batch_size']
 #Initialize Figure
 figure = plt.figure(1)
 loss_ax = figure.add_subplot(211)
-loss_ax.set_ylabel("loss")
-loss_ax.set_xlabel("iterations")
 loss_data = []
 
 acc_ax = figure.add_subplot(212)
-acc_ax.set_ylabel("accuracy")
-acc_ax.set_xlabel("epoch")
 acc_data = []
 
 #Get TF Functions
@@ -52,8 +55,9 @@ y_true = tf.placeholder(tf.int32)
 sess = tf.InteractiveSession()
 
 #Predict Functions
-pred_classes = tf.argmax(y, axis=1)
-pred_probs = tf.nn.softmax(y)
+y_deter = tf.layers.flatten(y)
+pred_classes = tf.argmax(y_deter, axis=1)
+pred_probs = tf.nn.softmax(y_deter)
 
 #Training Functions
 learning_rate = tf.placeholder(tf.float32)
@@ -68,44 +72,48 @@ saver = tf.train.Saver()
 
 lr = 0.002
 sess.run(init)
-for i in range(max_epochs):
-    if i == 12: lr=0.0002
+for epoch in range(max_epochs):
+    #Run Test, Get Accuracy 
+    score = []
+    n_true = 0
+    for idx, t_target in enumerate(test_targets):
 
+        pred, soft = sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[idx]], keep_prob:1.0})
+        if pred[0] == t_target:
+            n_true += 1
+        score.append(soft[0][1])
+    
+    acc_data.append((n_true / 200) * 100.0)
+    acc_ax.cla()
+    acc_ax.set_ylabel("accuracy")
+    acc_ax.set_xlabel("epoch")
+    acc_ax.plot(acc_data, 'b-')
+
+    loss_ax.cla()
+    loss_ax.set_ylabel("loss")
+    loss_ax.set_xlabel("iterations")
+    loss_ax.plot(loss_data, 'r-')
+    plt.pause(1e-45)
+    #Save ROC Data
+    np.savez_compressed(os.path.join(file_path, os.pardir, 'roc_data', 'tf_epoch' + str(epoch)), y=test_targets, score=score)
+    np.savez_compressed(os.path.join(file_path, 'train_record'), loss=loss_data, accuracy=acc_data)
+
+    #Training Module
+    if epoch == 12: lr=0.0002
     idx = 0
     while idx < len(features):
         input_feed = features[idx:idx+batch_size]
         label_feed = targets[idx:idx+batch_size]
         idx = idx+batch_size
         _,loss_out = sess.run([optimize, loss_op], feed_dict={x:input_feed, y_true:label_feed, learning_rate:lr, keep_prob:0.0})
-        
         loss_data.append(loss_out)
-        loss_ax.plot(loss_data, 'r-')
-        plt.pause(1e-1)
-    
-    save_path = saver.save(sess, os.path.join(file_path, 'weights', 'epoch'+str(i)+'model.ckpt'))
-    
-    #Run Test, Plot to the 
-    score = []
-    n_true = 0
-    for i, t_target in enumerate(test_targets):
-
-        pred, soft = sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[i]], keep_prob:1.0})
-        if pred[0] == t_target:
-            n_true += 1
-        score.append(soft[0][1])
-    acc_data.append((n_true / 200) * 100.0)
-    acc_ax.plot(acc_data, 'b-')
-    plt.pause(1e-1)
-
-    #Save ROC Data
-    np.savez_compressed(os.path.join(file_path, os.pardir, 'roc_data' 'tf_epoch' + str(idx+1)), y=test_targets, score=score)
-    np.savez_compressed(os.path.join(file_path, 'train_record'), loss=loss_data, accuracy=acc_data)
+       
+        plt.pause(1e-45)
+    save_path = saver.save(sess, os.path.join(file_path, 'weights', 'epoch'+str(epoch)+'model.ckpt'))
 
     #Shuffle Features  and Targets
     p = np.random.permutation(len(targets))
     features = features[p]
     targets = targets[p]
-
-
 
 plt.show()
