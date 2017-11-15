@@ -99,10 +99,13 @@ for i in range(max_epochs):
 
     #Save ROC Data
     np.savez_compressed(os.path.join(file_path, os.pardir, 'roc_data' 'tf_epoch' + str(idx+1)), y=test_targets, score=score)
+    np.savez_compressed(os.path.join(file_path, 'train_record'), loss=loss_data, accuracy=acc_data)
 
     #Shuffle Features  and Targets
     p = np.random.permutation(len(targets))
     features = features[p]
     targets = targets[p]
+
+
 
 plt.show()
