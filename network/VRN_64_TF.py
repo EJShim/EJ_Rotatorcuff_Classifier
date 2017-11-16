@@ -60,7 +60,7 @@ def InceptionLayer(inputs,param_dict,block_name):
                 
             # Apply Batchnorm
             if dict['bnorm'][j]:
-                branch[i] = tf.layers.batch_normalization(branch[i],name = block_name+'_bnorm_'+str(i)+'_'+str(j))
+                branch[i] = tf.layers.batch_normalization(branch[i], training=dict['training'],name = block_name+'_bnorm_'+str(i)+'_'+str(j))
         
     # Concatenate Sublayers
     return tf.concat(branch, axis=4)
@@ -81,6 +81,7 @@ shape = (None,) + dims + (1,)
 
 def get_model():
     keep_prob = tf.placeholder(dtype=tf.float32)
+    b_training = tf.cast(1.0-keep_prob, tf.bool)
     l_in = tf.placeholder(dtype=tf.float32, shape=shape)
     l_conv0 = tf.layers.conv3d(
         inputs = l_in,
@@ -94,7 +95,7 @@ def get_model():
     l_conv1 = ResDrop(
             inputs = l_conv0,
             IB = InceptionLayer(
-                inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv0, name='bn_conv0')),
+                inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv0, training=b_training, name='bn_conv0')),
                 param_dict = [
                     {
                         'style': [tf.layers.conv3d]*3,
@@ -103,7 +104,8 @@ def get_model():
                         'padding':['same']*3,
                         'strides':[(1,1,1)]*3,
                         'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                        'bnorm':[1,1,0]
+                        'bnorm':[1,1,0],
+                        'training':b_training
                     },
                     {   
                         'style': [tf.layers.conv3d]*2,
@@ -112,7 +114,8 @@ def get_model():
                         'padding':['same']*2,
                         'strides':[(1,1,1)]*2,
                         'activation': [tf.nn.elu,None],                    
-                        'bnorm':[1,0]
+                        'bnorm':[1,0],
+                        'training':b_training
                     }],
                 block_name = 'conv1'
             ),
@@ -121,7 +124,7 @@ def get_model():
     l_conv2 = ResDrop(
             inputs = l_conv1,
             IB = InceptionLayer(
-                inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv1, name='bn_conv1')),
+                inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv1,training=b_training, name='bn_conv1')),
                 param_dict = [
                     {
                         'style': [tf.layers.conv3d]*3,
@@ -130,7 +133,8 @@ def get_model():
                         'padding':['same']*3,
                         'strides':[(1,1,1)]*3,
                         'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                        'bnorm':[1,1,0]
+                        'bnorm':[1,1,0],
+                        'training':b_training
                     },
                     {   
                         'style': [tf.layers.conv3d]*2,
@@ -139,7 +143,8 @@ def get_model():
                         'padding':['same']*2,
                         'strides':[(1,1,1)]*2,
                         'activation': [tf.nn.elu,None],                    
-                        'bnorm':[1,0]
+                        'bnorm':[1,0],
+                        'training':b_training
                     }],
                 block_name = 'conv2'
             ),
@@ -149,7 +154,7 @@ def get_model():
     l_conv3 = ResDrop(
             inputs = l_conv2,
             IB = InceptionLayer(
-                inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv2, name='bn_conv2')),
+                inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv2, training=b_training, name='bn_conv2')),
                 param_dict = [
                     {
                         'style': [tf.layers.conv3d]*3,
@@ -158,7 +163,8 @@ def get_model():
                         'padding':['same']*3,
                         'strides':[(1,1,1)]*3,
                         'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                        'bnorm':[1,1,0]
+                        'bnorm':[1,1,0],
+                        'training':b_training
                     },
                     {   
                         'style': [tf.layers.conv3d]*2,
@@ -167,7 +173,8 @@ def get_model():
                         'padding':['same']*2,
                         'strides':[(1,1,1)]*2,
                         'activation': [tf.nn.elu,None],                    
-                        'bnorm':[1,0]
+                        'bnorm':[1,0],
+                        'training':b_training
                     }],
                 block_name = 'conv3'
             ),
@@ -177,7 +184,7 @@ def get_model():
 
 
     l_conv4 = InceptionLayer(
-        inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv3, name='bn_conv3')),
+        inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv3, training=b_training, name='bn_conv3')),
         param_dict = [
             {
                 'style': [tf.layers.conv3d],
@@ -186,7 +193,8 @@ def get_model():
                 'padding':['same'],
                 'strides':[(2,2,2)],
                 'activation': [None],      
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d],
@@ -195,7 +203,8 @@ def get_model():
                 'padding':['valid'],
                 'strides':[(2,2,2)],
                 'activation': [None],                
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.max_pooling3d],                
@@ -204,7 +213,8 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.average_pooling3d],                
@@ -213,14 +223,15 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             }],
         block_name = 'conv4'
     )
     l_conv5 = ResDrop(
         inputs = l_conv4,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv4, name='bn_conv4')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv4, training=b_training, name='bn_conv4')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -229,7 +240,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -238,7 +250,8 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv5'
         ),
@@ -247,7 +260,7 @@ def get_model():
     l_conv6 = ResDrop(
         inputs = l_conv5,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv5, name='bn_conv5')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(inputs=l_conv5, training=b_training, name='bn_conv5')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -256,7 +269,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -265,7 +279,8 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv6'
         ),
@@ -274,7 +289,7 @@ def get_model():
     l_conv7 = ResDrop(
         inputs = l_conv6,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv6,name='bn_conv6')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv6, training=b_training, name='bn_conv6')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -283,7 +298,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -292,14 +308,15 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv7'
         ),
         p=(1.0-keep_prob)*(1.0-0.5)
     )
     l_conv8 = InceptionLayer(
-        inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv7,name='bn_conv7')),
+        inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv7, training=b_training,name='bn_conv7')),
         param_dict = [
             {
                 'style': [tf.layers.conv3d],
@@ -308,7 +325,8 @@ def get_model():
                 'padding':['same'],
                 'strides':[(2,2,2)],
                 'activation': [None],      
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d],
@@ -317,7 +335,8 @@ def get_model():
                 'padding':['valid'],
                 'strides':[(2,2,2)],
                 'activation': [None],                
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.max_pooling3d],                
@@ -326,7 +345,8 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.average_pooling3d],                
@@ -335,14 +355,15 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             }],
         block_name = 'conv8'
     )
     l_conv9 = ResDrop(
         inputs = l_conv8,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv8,name='bn_conv8')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv8, training=b_training,name='bn_conv8')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -351,7 +372,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -360,7 +382,8 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv9'
         ),
@@ -369,7 +392,7 @@ def get_model():
     l_conv10 = ResDrop(
         inputs = l_conv9,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv9,name='bn_conv9')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv9,training=b_training,name='bn_conv9')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -378,7 +401,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -387,7 +411,8 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv10'
         ),
@@ -396,7 +421,7 @@ def get_model():
     l_conv11 = ResDrop(
         inputs = l_conv10,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv10,name='bn_conv10')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv10,training=b_training,name='bn_conv10')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -405,7 +430,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -414,14 +440,15 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv11'
         ),
         p=(1.0-keep_prob)*(1.0-0.4)
     )
     l_conv12 = InceptionLayer(
-        inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv11,name='bn_conv11')),
+        inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv11,training=b_training,name='bn_conv11')),
         param_dict = [
             {
                 'style': [tf.layers.conv3d],
@@ -430,7 +457,8 @@ def get_model():
                 'padding':['same'],
                 'strides':[(2,2,2)],
                 'activation': [None],      
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d],
@@ -439,7 +467,8 @@ def get_model():
                 'padding':['valid'],
                 'strides':[(2,2,2)],
                 'activation': [None],                
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.max_pooling3d],                
@@ -448,7 +477,8 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.average_pooling3d],                
@@ -457,14 +487,15 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             }],
         block_name = 'conv12'
     )
     l_conv13 = ResDrop(
         inputs = l_conv12,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv12,name='bn_conv12')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv12,training=b_training,name='bn_conv12')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -473,7 +504,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -482,7 +514,8 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv13'
         ),
@@ -491,7 +524,7 @@ def get_model():
     l_conv14 = ResDrop(
         inputs = l_conv13,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv13,name='bn_conv13')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv13,training=b_training,name='bn_conv13')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -500,7 +533,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -509,7 +543,8 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv14'
         ),
@@ -518,7 +553,7 @@ def get_model():
     l_conv15 = ResDrop(
         inputs = l_conv14,
         IB = InceptionLayer(
-            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv14,name='bn_conv14')),
+            inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv14,training=b_training,name='bn_conv14')),
             param_dict = [
                 {
                     'style': [tf.layers.conv3d]*3,
@@ -527,7 +562,8 @@ def get_model():
                     'padding':['same']*3,
                     'strides':[(1,1,1)]*3,
                     'activation': [tf.nn.elu,tf.nn.elu,None],                    
-                    'bnorm':[1,1,0]
+                    'bnorm':[1,1,0],
+                    'training':b_training
                 },
                 {   
                     'style': [tf.layers.conv3d]*2,
@@ -536,14 +572,15 @@ def get_model():
                     'padding':['same']*2,
                     'strides':[(1,1,1)]*2,
                     'activation': [tf.nn.elu,None],                    
-                    'bnorm':[1,0]
+                    'bnorm':[1,0],
+                    'training':b_training
                 }],
             block_name = 'conv15'
         ),
         p=(1.0-keep_prob)*(1.0-0.25)
     )
     l_conv16 = InceptionLayer(
-        inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv15,name='bn_conv15')),
+        inputs = tf.nn.elu(tf.layers.batch_normalization(l_conv15,training=b_training,name='bn_conv15')),
         param_dict = [
             {
                 'style': [tf.layers.conv3d],
@@ -552,7 +589,8 @@ def get_model():
                 'padding':['same'],
                 'strides':[(2,2,2)],
                 'activation': [None],      
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d],
@@ -561,7 +599,8 @@ def get_model():
                 'padding':['valid'],
                 'strides':[(2,2,2)],
                 'activation': [None],                
-                'bnorm':[1]
+                'bnorm':[1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.max_pooling3d],                
@@ -570,7 +609,8 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             },
             {
                 'style': [tf.layers.conv3d,tf.layers.average_pooling3d],                
@@ -579,7 +619,8 @@ def get_model():
                 'padding':['same','same'],
                 'strides':[(1,1,1),(2,2,2)],
                 'activation': [None,None],                
-                'bnorm':[0,1]
+                'bnorm':[0,1],
+                'training':b_training
             }],
         block_name = 'conv16'
     )
@@ -590,14 +631,14 @@ def get_model():
         padding = 'same',
         activation = None,
         kernel_initializer=initializer,
-        name = 'l_conv17'),name='bn_conv17'),0.5)
+        name = 'l_conv17'),training=b_training, name='bn_conv17'),0.5)
 
     # print("conv17 shape : ", l_conv17.shape)
 
 
     #Global Average Pooling : Pool_size = Input Volume Dimensions    
     l_pool = tf.layers.batch_normalization(tf.layers.average_pooling3d(
-        inputs = l_conv17, pool_size=(4,4,4), strides=(1,1,1)),name='l_pool')
+        inputs = l_conv17, pool_size=(4,4,4), strides=(1,1,1)),training=b_training,name='l_pool')
 
     l_fc = tf.layers.conv3d(
         inputs=l_pool,
