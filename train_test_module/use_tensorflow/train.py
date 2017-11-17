@@ -65,7 +65,12 @@ loss_op = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y
 regularizer = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])#
 loss = loss_op + 0.001*regularizer
 trainer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9, use_nesterov=True)
-optimize = trainer.minimize(loss)
+
+#batch normalizer?
+update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+with tf.control_dependencies(update_ops):
+    optimize = trainer.minimize(loss)
+
 
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
@@ -106,9 +111,15 @@ for epoch in range(max_epochs):
         label_feed = targets[idx:idx+batch_size]
         idx = idx+batch_size
         _,loss_out = sess.run([optimize, loss_op], feed_dict={x:input_feed, y_true:label_feed, learning_rate:lr, keep_prob:0.0})
+        
         loss_data.append(loss_out)
-       
-        plt.pause(1e-45)
+        if epoch < 2:     
+            print(loss_out)
+            loss_ax.cla()
+            loss_ax.set_ylabel("loss")
+            loss_ax.set_xlabel("iterations")
+            loss_ax.plot(loss_data, 'r-')
+            plt.pause(1e-45)
     save_path = saver.save(sess, os.path.join(file_path, 'weights', 'epoch'+str(epoch)+'model.ckpt'))
 
     #Shuffle Features  and Targets

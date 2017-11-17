@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 cfg = {
-    'batch_size' : 12,       
+    'batch_size' : 6,       
     'decay_rate' : 0,
     'reg' : 0.001,
     'momentum' : 0.9,
@@ -14,7 +14,7 @@ cfg = {
     'lr':[0.002, 0.0002]
 }
 
-initializer = tf.contrib.layers.variance_scaling_initializer(factor=0.1, mode='FAN_IN', uniform=False)
+initializer = None
 
 def printLayer(layer):
     print("Output Shape : ", layer.shape)
