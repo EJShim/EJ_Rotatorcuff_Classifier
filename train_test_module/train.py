@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 #Add Root Dir
 file_path = os.path.dirname(os.path.realpath(__file__))
-root_path = os.path.abspath(os.path.join(file_path, os.pardir))
+root_path = os.path.abspath(os.path.join(file_path, os.pard))
 sys.path.insert(0, root_path)
 # sys.setrecursionlimit(2000)
 
@@ -60,6 +60,8 @@ pred_classes = tf.argmax(y_deter, axis=1)
 pred_probs = tf.nn.softmax(y_deter)
 gr = tf.get_default_graph()
 last_weight = gr.get_tensor_by_name('fc/kernel:0')
+last_conv = last_conv[0]
+last_weight = last_weight[:,:,:,:,1]
 class_activation_map =tf.nn.relu( tf.reduce_sum(tf.multiply(last_weight, last_conv), axis=3))
 cam_data = []
 
