@@ -14,7 +14,7 @@ cfg = {
     'lr':[0.002, 0.0002]
 }
 
-renorm = True
+renorm = False
 initializer = None
 
 def printLayer(layer):

@@ -18,7 +18,7 @@ import network.VRN_64_TF as config_module
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "epoch49model.ckpt")
+weight_path = os.path.join(root_path, "weights", "epoch78model.ckpt")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 
@@ -315,7 +315,7 @@ class E_Manager:
         activation_map = predict_result[2]          
         activation_map = scipy.ndimage.zoom(activation_map, 16)
 
-        activation_map = activation_map / 15
+        activation_map = activation_map / 10
         log = "min : " + str(np.amin(activation_map)) + ", max : " + str(np.amax(activation_map))
         self.SetLog(log)
         activation_map *= 255.0
