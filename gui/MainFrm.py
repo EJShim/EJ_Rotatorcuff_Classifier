@@ -274,8 +274,9 @@ class E_MainWindow(QMainWindow):
         networkToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         mainTab.addTab(networkToolbar, "VRN")
 
-        self.trainAction = QAction(QIcon(icon_path + "/051-pantone-2.png"), "Initialize Network", self)
-        self.trainAction.triggered.connect(self.onInitNetwork)
+        self.trainAction = QAction(QIcon(icon_path + "/051-pantone-2.png"), "Predict Off", self)
+        self.trainAction.setCheckable(True)
+        self.trainAction.toggled.connect(self.TogglePrediction)
         networkToolbar.addAction(self.trainAction)
 
         predAction = QAction(QIcon(icon_path + "/051-programming.png"), "Predict Random", self)
@@ -488,15 +489,16 @@ class E_MainWindow(QMainWindow):
             self.Mgr.SetLog(exc_tb.tb_lineno, error=True)
             self.Mgr.SetLog(str(e), error=True)
 
-    def onInitNetwork(self):        
-        self.Mgr.InitNetwork()
-        self.trainAction.setEnabled(False)
-        self.listAnimation.setEnabled(False)
-        # self.trainAction.setText("initializing...")
-        # self.th_network_initializer.start()
-    
-
+    def TogglePrediction(self, pred):        
+        self.Mgr.m_bPred = pred
         
+        if pred:
+            self.trainAction.setText("Predict On")
+        else:
+            self.trainAction.setText("Predict Off")
+        # self.Mgr.InitNetwork()
+        # self.trainAction.setEnabled(False)
+        # self.listAnimation.setEnabled(False)
 
 
     def onRandomPred(self):        

@@ -24,14 +24,11 @@ v_res = 1
 class E_Manager:
     def __init__(self, mainFrm):
         self.mainFrm = mainFrm
-
-        #Initialize Managers
         self.VolumeMgr = E_VolumeManager(self)
         self.renderer = [0, 0]
-        #Ax, Cor, SAg
         self.m_sliceRenderer = [0, 0, 0]
 
-        self.bInitNetowrk = False
+        self.m_bPred = False
 
         #Get Features and Target Data
         try:
@@ -71,12 +68,11 @@ class E_Manager:
             interactor.AddRenderer(self.m_sliceRenderer[rendererIdx])
             
 
-
-
         #Initialize
         self.InitObject()
         self.InitTextActor()
         self.InitData()
+        self.InitNetwork()
 
 
     def InitObject(self):
@@ -234,19 +230,10 @@ class E_Manager:
 
         else:
             self.SetLog('File Extension Not Supported')
-
-    def SetFunctions(self, pred, color, param):
-        self.predFunc = pred
-        self.colorMap = color
-        self.param_dict = param
-        self.bInitNetowrk = True;
-
-    def InitNetwork(self):        
-        self.SetLog("Load config and model files..")
         
-        model = config_module.get_model()
 
-        self.bInitNetowrk = True;
+    def InitNetwork(self):
+        model = config_module.get_model()
 
     def InitData(self):
         for i in range(len(self.yt)):
@@ -274,73 +261,60 @@ class E_Manager:
     def RenderPreProcessedObject(self, idx, predict=True):
         arr = self.xt[idx][0]
         self.VolumeMgr.AddVolume(arr)
-
-
-        if self.bInitNetowrk and predict:
-            #Predict
-            # self.yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
+        
+        if predict:
             log = labels.rt[int(self.yt[idx])]
-
-            #Predict 3D object
             self.PredictObject(self.xt[idx], log)
-
-        # self.Redraw()
-        # self.Redraw2D()
 
 
 
     def PredictObject(self, inputData, groundTruth = "unknown"):
+        if not self.m_bPred: return
 
-        #Predict Object
-        if self.bInitNetowrk:
-            resolution = self.VolumeMgr.resolution
-            inputData = np.asarray(inputData.reshape(1, 1, resolution, resolution, resolution), dtype=np.float32)
-            #inputData = 4.0 * inputData - 1.0
+        resolution = self.VolumeMgr.resolution
+        inputData = np.asarray(inputData.reshape(1, 1, resolution, resolution, resolution), dtype=np.float32)
+        #inputData = 4.0 * inputData - 1.0
 
-            
-            colorMap = self.colorMap(inputData)
-            pred = self.predFunc(inputData)
+        
+        colorMap = self.colorMap(inputData)
+        pred = self.predFunc(inputData)
 
-            predIdx = np.argmax(pred)
-            predRate = np.amax(pred)*100.0
-            #Show Log
-            gtlog = "Label : " + groundTruth
-            self.groundTruthLog.SetInput(gtlog)
-            log = "Predicted : " + labels.rt[predIdx] + " -> " + str(predRate) + "%"
-            self.predLog.SetInput(log)
-
-
-            #Draw only RCT
-            predIdx = 1
-            # #Compute Class Activation Map            
-            fc1_weight = self.param_dict['fc.W']
-            predWeights = fc1_weight[:,predIdx:predIdx+1]
-            camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
-            for i in range(colorMap.shape[1]):
-                camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
-            camsum = scipy.ndimage.zoom(camsum, 16)
-
-            log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
-            self.SetLog(log)
-            
-
-            cam_min = np.amin(camsum)
-            cam_max = np.amax(camsum)
+        predIdx = np.argmax(pred)
+        predRate = np.amax(pred)*100.0
+        #Show Log
+        gtlog = "Label : " + groundTruth
+        self.groundTruthLog.SetInput(gtlog)
+        log = "Predicted : " + labels.rt[predIdx] + " -> " + str(predRate) + "%"
+        self.predLog.SetInput(log)
 
 
-            #Normalize To 0-255
-            tmp = camsum - cam_min
-            camsum = tmp / cam_max               
-            camsum *= 255.0
-            camsum = camsum.astype(int)
+        #Draw only RCT
+        predIdx = 1
+        # #Compute Class Activation Map            
+        fc1_weight = self.param_dict['fc.W']
+        predWeights = fc1_weight[:,predIdx:predIdx+1]
+        camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
+        for i in range(colorMap.shape[1]):
+            camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
+        camsum = scipy.ndimage.zoom(camsum, 16)
 
-            self.VolumeMgr.AddClassActivationMap(camsum)
+        log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
+        self.SetLog(log)
+        
 
-            # self.Redraw()
+        cam_min = np.amin(camsum)
+        cam_max = np.amax(camsum)
 
-        else:
-            #$self.SetLog('Network Need to be Initialized')
-            return
+
+        #Normalize To 0-255
+        tmp = camsum - cam_min
+        camsum = tmp / cam_max               
+        camsum *= 255.0
+        camsum = camsum.astype(int)
+
+        self.VolumeMgr.AddClassActivationMap(camsum)
+
+        
 
 
     def MakeDataMatrix(self, x, intensity):
