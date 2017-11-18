@@ -12,12 +12,13 @@ from manager.VolumeMgr import E_VolumeManager
 from manager.E_SliceRenderer import *
 import matplotlib.pyplot as plt
 from data import labels
+import tensorflow as tf
 import network.VRN_64_TF as config_module
 
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-# weight_path = os.path.join(root_path, "weights", "10-23 09:43:11gpuarray_oct_20_epoch_94.npz")
+weight_path = os.path.join(root_path, "weights", "epoch78model.ckpt")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 
@@ -28,6 +29,7 @@ class E_Manager:
         self.renderer = [0, 0]
         self.m_sliceRenderer = [0, 0, 0]
 
+        self.sess = tf.InteractiveSession()
         self.m_bPred = False
 
         #Get Features and Target Data
@@ -233,7 +235,24 @@ class E_Manager:
         
 
     def InitNetwork(self):
-        model = config_module.get_model()
+        self.tensor_in, y, self.keep_prob = config_module.get_model()
+
+        #Restore Graph
+        try:
+            saver = tf.train.Saver()
+            saver.restore(self.sess, weight_path)            
+        except Exception as e:
+            self.SetLog("trained graph not found" + str(e))
+            self.sess.run(tf.global_variables_initializer())
+
+        y = tf.contrib.layers.flatten(y)
+        self.pred_classes = tf.argmax(y, axis=1)
+        self.pred_probs = tf.nn.softmax(y)
+
+
+    def predict_tensor(self, input):
+        return self.sess.run([self.pred_classes, self.pred_probs], feed_dict={self.tensor_in:input, self.keep_prob:1.0})
+        
 
     def InitData(self):
         for i in range(len(self.yt)):
@@ -261,7 +280,7 @@ class E_Manager:
     def RenderPreProcessedObject(self, idx, predict=True):
         arr = self.xt[idx][0]
         self.VolumeMgr.AddVolume(arr)
-        
+
         if predict:
             log = labels.rt[int(self.yt[idx])]
             self.PredictObject(self.xt[idx], log)
@@ -272,50 +291,38 @@ class E_Manager:
         if not self.m_bPred: return
 
         resolution = self.VolumeMgr.resolution
-        inputData = np.asarray(inputData.reshape(1, 1, resolution, resolution, resolution), dtype=np.float32)
-        #inputData = 4.0 * inputData - 1.0
+        inputData = np.asarray(inputData.reshape(1, resolution, resolution, resolution, 1), dtype=np.float32)        
 
+        pred_class, pred_prob = self.predict_tensor(inputData)
+        pred_prob = np.amax(pred_prob)*100.0
         
-        colorMap = self.colorMap(inputData)
-        pred = self.predFunc(inputData)
-
-        predIdx = np.argmax(pred)
-        predRate = np.amax(pred)*100.0
         #Show Log
         gtlog = "Label : " + groundTruth
         self.groundTruthLog.SetInput(gtlog)
-        log = "Predicted : " + labels.rt[predIdx] + " -> " + str(predRate) + "%"
+        log = "Predicted : " + labels.rt[int(pred_class[0])] + " -> " + str(pred_prob) + "%"
         self.predLog.SetInput(log)
 
-
+        #Class Activation Map 
         #Draw only RCT
-        predIdx = 1
-        # #Compute Class Activation Map            
-        fc1_weight = self.param_dict['fc.W']
-        predWeights = fc1_weight[:,predIdx:predIdx+1]
-        camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
-        for i in range(colorMap.shape[1]):
-            camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
-        camsum = scipy.ndimage.zoom(camsum, 16)
+        # predIdx = 1
+        # # #Compute Class Activation Map            
+        # fc1_weight = self.param_dict['fc.W']
+        # predWeights = fc1_weight[:,predIdx:predIdx+1]
+        # camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
+        # for i in range(colorMap.shape[1]):
+        #     camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
+        # camsum = scipy.ndimage.zoom(camsum, 16)
 
-        log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
-        self.SetLog(log)
-        
-
-        cam_min = np.amin(camsum)
-        cam_max = np.amax(camsum)
-
-
-        #Normalize To 0-255
-        tmp = camsum - cam_min
-        camsum = tmp / cam_max               
-        camsum *= 255.0
-        camsum = camsum.astype(int)
-
-        self.VolumeMgr.AddClassActivationMap(camsum)
-
-        
-
+        # log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
+        # self.SetLog(log)
+        # cam_min = np.amin(camsum)
+        # cam_max = np.amax(camsum)
+        # #Normalize To 0-255
+        # tmp = camsum - cam_min
+        # camsum = tmp / cam_max               
+        # camsum *= 255.0
+        # camsum = camsum.astype(int)
+        # self.VolumeMgr.AddClassActivationMap(camsum)
 
     def MakeDataMatrix(self, x, intensity):
         return intensity*np.repeat(np.repeat(np.repeat(x[0][0], v_res, axis=0), v_res, axis=1), v_res, axis=2)    
