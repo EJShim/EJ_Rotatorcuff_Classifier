@@ -220,19 +220,19 @@ class E_SliceRenderer(vtk.vtkRenderer):
     
 
     def AddViewProp(self, prop):
-        rotateProp = vtk.vtkImageSlice()
-        rotateProp.SetMapper(prop.GetMapper())
-        rotateProp.SetProperty(prop.GetProperty())
+        # rotateProp = vtk.vtkImageSlice()
+        # rotateProp.SetMapper(prop.GetMapper())
+        # rotateProp.SetProperty(prop.GetProperty())
 
-        if self.viewType == 'AXL':
-            rotateProp.RotateX(-90)        
-        elif self.viewType == 'SAG':
-            rotateProp.RotateY(90)
+        # if self.viewType == 'AXL':
+        #     prop.RotateX(-90)        
+        # elif self.viewType == 'SAG':
+        #     prop.RotateY(90)
 
-        bounds = [rotateProp.GetMaxXBound(), rotateProp.GetMaxYBound(), rotateProp.GetMaxZBound()]        
+        bounds = [prop.GetMaxXBound(), prop.GetMaxYBound(), prop.GetMaxZBound()]        
         
 
-        super(E_SliceRenderer, self).AddViewProp(rotateProp)
+        super(E_SliceRenderer, self).AddViewProp(prop)
         self.AddGuide(bounds)
         
         

@@ -53,6 +53,14 @@ class E_VolumeManager:
             self.m_colorMapResliceMapper[i] = vtk.vtkImageSliceMapper()
             self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()
 
+        
+
+        self.m_resliceActor[0].RotateY(90)
+        self.m_resliceActor[1].RotateX(-90)
+        self.m_colorMapResliceActor[0] .RotateY(90) 
+        self.m_colorMapResliceActor[1] .RotateX(-90)
+
+
 
 
         #Initialize
