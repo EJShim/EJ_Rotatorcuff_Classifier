@@ -235,7 +235,9 @@ class E_Manager:
         
 
     def InitNetwork(self):
-        self.tensor_in, y, self.keep_prob = config_module.get_model()
+        self.tensor_in, y, self.keep_prob, last_conv = config_module.get_model()
+        gr = tf.get_default_graph()
+        last_weight = gr.get_tensor_by_name('fc/kernel:0')
 
         #Restore Graph
         try:
@@ -249,9 +251,17 @@ class E_Manager:
         self.pred_classes = tf.argmax(y, axis=1)
         self.pred_probs = tf.nn.softmax(y)
 
+        last_conv = last_conv[0]
+        last_weight = last_weight[:,:,:,:,1]
+        
+
+        last_conv = tf.reshape(last_conv, [512, 4, 4, 4])
+        last_weight = tf.reshape(last_weight, [512, 1, 1, 1])
+        self.class_activation_map = tf.reduce_sum(tf.multiply(last_weight, last_conv), axis=0)
+
 
     def predict_tensor(self, input):
-        return self.sess.run([self.pred_classes, self.pred_probs], feed_dict={self.tensor_in:input, self.keep_prob:1.0})
+        return self.sess.run([self.pred_classes, self.pred_probs, self.class_activation_map], feed_dict={self.tensor_in:input, self.keep_prob:1.0})
         
 
     def InitData(self):
@@ -293,7 +303,9 @@ class E_Manager:
         resolution = self.VolumeMgr.resolution
         inputData = np.asarray(inputData.reshape(1, resolution, resolution, resolution, 1), dtype=np.float32)        
 
-        pred_class, pred_prob = self.predict_tensor(inputData)
+        predict_result = self.predict_tensor(inputData)
+        pred_class = predict_result[0]
+        pred_prob = predict_result[1]
         pred_prob = np.amax(pred_prob)*100.0
         
         #Show Log
@@ -302,27 +314,21 @@ class E_Manager:
         log = "Predicted : " + labels.rt[int(pred_class[0])] + " -> " + str(pred_prob) + "%"
         self.predLog.SetInput(log)
 
-        #Class Activation Map 
-        #Draw only RCT
-        # predIdx = 1
-        # # #Compute Class Activation Map            
-        # fc1_weight = self.param_dict['fc.W']
-        # predWeights = fc1_weight[:,predIdx:predIdx+1]
-        # camsum = np.zeros((colorMap.shape[2], colorMap.shape[3], colorMap.shape[4]))
-        # for i in range(colorMap.shape[1]):
-        #     camsum = camsum + predWeights[i] * colorMap[0,i,:,:,:]            
-        # camsum = scipy.ndimage.zoom(camsum, 16)
+        #Class Activation Map         
+        activation_map = predict_result[2]          
+        activation_map = scipy.ndimage.zoom(activation_map, 16)
 
         # log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
         # self.SetLog(log)
-        # cam_min = np.amin(camsum)
-        # cam_max = np.amax(camsum)
+        
         # #Normalize To 0-255
-        # tmp = camsum - cam_min
-        # camsum = tmp / cam_max               
-        # camsum *= 255.0
-        # camsum = camsum.astype(int)
-        # self.VolumeMgr.AddClassActivationMap(camsum)
+        cam_min = np.amin(activation_map)
+        cam_max = np.amax(activation_map)
+        tmp = activation_map - cam_min
+        activation_map = tmp / cam_max               
+        activation_map *= 255.0
+        activation_map = activation_map.astype(int)
+        self.VolumeMgr.AddClassActivationMap(activation_map)
 
     def MakeDataMatrix(self, x, intensity):
         return intensity*np.repeat(np.repeat(np.repeat(x[0][0], v_res, axis=0), v_res, axis=1), v_res, axis=2)    

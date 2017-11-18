@@ -634,12 +634,7 @@ def get_model():
         kernel_initializer=initializer,
         name = 'l_conv17'),training=b_training,renorm=renorm,  name='bn_conv17'),0.5)
 
-    # print("conv17 shape : ", l_conv17.shape)
-
-
-    #Global Average Pooling : Pool_size = Input Volume Dimensions    
-    l_pool = tf.layers.batch_normalization(tf.layers.average_pooling3d(
-        inputs = l_conv17, pool_size=(4,4,4), strides=(1,1,1)),training=b_training,renorm=renorm, name='l_pool')
+    l_pool = tf.layers.batch_normalization(inputs=tf.layers.average_pooling3d(inputs = l_conv17, pool_size=(4,4,4), strides=(1,1,1)),training=b_training,renorm=renorm, name='l_pool')
 
     l_fc = tf.layers.conv3d(
         inputs=l_pool,
@@ -648,6 +643,4 @@ def get_model():
         name='fc'
     )
 
-    
-    return l_in, l_fc, keep_prob
-
+    return l_in, l_fc, keep_prob, l_conv17
