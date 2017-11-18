@@ -18,7 +18,7 @@ import network.VRN_64_TF as config_module
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "epoch78model.ckpt")
+weight_path = os.path.join(root_path, "weights", "epoch49model.ckpt")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 
