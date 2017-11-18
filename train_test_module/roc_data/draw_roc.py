@@ -7,16 +7,13 @@ from sklearn.metrics import auc, roc_curve
 file_path = os.path.dirname(os.path.abspath(__file__))
 
 
-
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Rotator Cuff Classification')
-
-plt.xlim([-0.05, 1.0])
-plt.ylim([0.0, 1.05])
-plt.plot([0,1],[0,1], color='navy', linestyle='--', linewidth=0.5)
-
-
+figure = plt.figure(1)
+ax = figure.add_subplot(111)
+ax.set_xlabel('False Positive Rate')
+ax.set_ylabel('True Positive Rate')
+ax.set_xlim([-0.05, 1.0])
+ax.set_ylim([0.0, 1.05])
+ax.plot([0,1],[0,1], color='navy', linestyle='--', linewidth=0.5)
 
 def get_roc(y, score):#Deprecated
     roc_x = []
@@ -54,6 +51,7 @@ def get_roc(y, score):#Deprecated
 file_list = list(glob.iglob(file_path + '/*.npz'))
 file_list.sort()
 
+auc_data = []
 for data_path in file_list:
     data = np.load(data_path)
 
@@ -64,9 +62,24 @@ for data_path in file_list:
 
     auc_value = auc(fpr, tpr)
     data_name = os.path.basename(data_path)
+    auc_data.append(auc_value)
 
 
     plt.plot(fpr, tpr, '-', label='%s  (AUC = %0.3f)'%(data_name[:-4], auc_value))
-    
-plt.legend(loc='best')
+ax.legend(loc='best')
+
+
+figure = plt.figure(2)
+ax = figure.add_subplot(111)
+ax.set_xlabel("epoch")
+ax.set_xlim([0, 50])
+ax.set_ylabel("AUC")
+ax.grid(True)
+ax.plot(auc_data, 'bo-', markersize=3)
+
+
+print(np.argmax(auc_data[13:]), max(auc_data[13:]))
+
+
+
 plt.show()
