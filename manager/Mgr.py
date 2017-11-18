@@ -236,8 +236,7 @@ class E_Manager:
 
     def InitNetwork(self):
         self.tensor_in, y, self.keep_prob, last_conv = config_module.get_model()
-        gr = tf.get_default_graph()
-        last_weight = gr.get_tensor_by_name('fc/kernel:0')
+        
 
         #Restore Graph
         try:
@@ -251,9 +250,12 @@ class E_Manager:
         self.pred_classes = tf.argmax(y, axis=1)
         self.pred_probs = tf.nn.softmax(y)
 
+
+
+        gr = tf.get_default_graph()
+        last_weight = gr.get_tensor_by_name('fc/kernel:0')
         last_conv = last_conv[0]
         last_weight = last_weight[:,:,:,:,1]
-
         self.class_activation_map =tf.nn.relu( tf.reduce_sum(tf.multiply(last_weight, last_conv), axis=3))
 
 
