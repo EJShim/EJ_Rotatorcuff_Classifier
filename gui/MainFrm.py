@@ -57,12 +57,6 @@ class E_MainWindow(QMainWindow):
         self.th_camHistory.finished.connect(self.onFinishedCamHistory)
 
 
-        #Network Initializer
-        self.th_network_initializer = NetworkInitializationThread(self)
-        self.th_network_initializer.onmessage.connect(self.onMessage)
-        self.th_network_initializer.onprogress.connect(self.onProgress)
-        self.th_network_initializer.oncompiled.connect(self.onCompiled)
-
         
 
         
@@ -110,12 +104,12 @@ class E_MainWindow(QMainWindow):
         mainTab.addTab(objectToolbar, "3D Objects")
 
         #Import Object Action
-        importAction = QAction(QIcon(iconPath + "/051-cmyk.png"), "Import Object", self)
+        importAction = QAction(QIcon(icon_path + "/051-cmyk.png"), "Import Object", self)
         importAction.triggered.connect(self.onImportObject)
         objectToolbar.addAction(importAction)
 
         #Import Volume addAction
-        volumeAction = QAction(QIcon(iconPath + "/051-document.png"), "Import Volume", self)
+        volumeAction = QAction(QIcon(icon_path + "/051-document.png"), "Import Volume", self)
         volumeAction.triggered.connect(self.onImportVolume)
         objectToolbar.addAction(volumeAction)
         objectToolbar.addSeparator()
@@ -269,7 +263,7 @@ class E_MainWindow(QMainWindow):
         objectToolbar.addSeparator()        
 
         #Save Object Action
-        SaveAction = QAction(QIcon(iconPath + "/051-business-card.png"), "Save Processed Data", self)
+        SaveAction = QAction(QIcon(icon_path + "/051-business-card.png"), "Save Processed Data", self)
         SaveAction.triggered.connect(self.onSaveData)
         objectToolbar.addAction(SaveAction)
 
@@ -280,32 +274,32 @@ class E_MainWindow(QMainWindow):
         networkToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         mainTab.addTab(networkToolbar, "VRN")
 
-        self.trainAction = QAction(QIcon(iconPath + "/051-pantone-2.png"), "Initialize Network", self)
+        self.trainAction = QAction(QIcon(icon_path + "/051-pantone-2.png"), "Initialize Network", self)
         self.trainAction.triggered.connect(self.onInitNetwork)
         networkToolbar.addAction(self.trainAction)
 
-        predAction = QAction(QIcon(iconPath + "/051-programming.png"), "Predict Random", self)
+        predAction = QAction(QIcon(icon_path + "/051-programming.png"), "Predict Random", self)
         predAction.triggered.connect(self.onRandomPred)
         networkToolbar.addAction(predAction)
 
         networkToolbar.addSeparator()
 
-        self.listAnimation = QAction(QIcon(iconPath + "/051-pantone-1.png"), "List Animation", self)
+        self.listAnimation = QAction(QIcon(icon_path + "/051-pantone-1.png"), "List Animation", self)
         self.listAnimation.setCheckable(True)
         self.listAnimation.triggered.connect(self.onListAnimation)
         networkToolbar.addAction(self.listAnimation)
 
-        self.camAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "CAM Animation", self)        
+        self.camAnimation = QAction(QIcon(icon_path + "/051-cmyk.png"), "CAM Animation", self)        
         self.camAnimation.triggered.connect(self.onCAMAnimation)
         networkToolbar.addAction(self.camAnimation)
 
 
-        self.roiAnimation = QAction(QIcon(iconPath + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
+        self.roiAnimation = QAction(QIcon(icon_path + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
         self.roiAnimation.triggered.connect(self.PredictROI)
         networkToolbar.addAction(self.roiAnimation)
 
 
-        self.saveSlice = QAction(QIcon(iconPath + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
+        self.saveSlice = QAction(QIcon(icon_path + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
         self.saveSlice.triggered.connect(self.onSaveSliceImage)
         networkToolbar.addAction(self.saveSlice)
 
@@ -379,8 +373,6 @@ class E_MainWindow(QMainWindow):
 
     def InitManager(self):
         self.Mgr = E_Manager(self)
-
-
         self.volumeWidget.SetManager(self.Mgr)
 
 
@@ -502,13 +494,6 @@ class E_MainWindow(QMainWindow):
         self.listAnimation.setEnabled(False)
         # self.trainAction.setText("initializing...")
         # self.th_network_initializer.start()
-
-    def onCompiled(self, function):
-        self.trainAction.setText("initialize complete")
-        self.Mgr.SetFunctions(function[0], function[1], function[2])        
-        self.listAnimation.setEnabled(False)
-        # self.camAnimation.setEnabled(False)
-
     
 
         

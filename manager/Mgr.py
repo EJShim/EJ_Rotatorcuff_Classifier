@@ -12,13 +12,14 @@ from manager.VolumeMgr import E_VolumeManager
 from manager.E_SliceRenderer import *
 import matplotlib.pyplot as plt
 from data import labels
+import network.VRN_64_TF as config_module
 
-v_res = 1
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "10-23 09:43:11gpuarray_oct_20_epoch_94.npz")
-modelPath = root_path + "/data/TestData.npz"
+# weight_path = os.path.join(root_path, "weights", "10-23 09:43:11gpuarray_oct_20_epoch_94.npz")
+model_path = os.path.join(root_path, "data", "TestData.npz")
+v_res = 1
 
 class E_Manager:
     def __init__(self, mainFrm):
@@ -32,16 +33,11 @@ class E_Manager:
 
         self.bInitNetowrk = False
 
-        #Test function
-        self.predFunc = None        
-        self.scoreFunc = None
-
-
-
         #Get Features and Target Data
         try:
-            self.xt = np.asarray(np.load(modelPath)['features'], dtype=np.float32)
-            self.yt = np.asarray(np.load(modelPath)['targets'], dtype=np.float32)
+            data_load = np.load(model_path)
+            self.xt = np.asarray(data_load['features'], dtype=np.float32)
+            self.yt = np.asarray(data_load['targets'], dtype=np.float32)
         except Exception as e:
             self.SetLog(str(e))
             self.xt = []
@@ -249,39 +245,15 @@ class E_Manager:
         self.SetLog("Load config and model files..")
         
         model = config_module.get_model()
-        scoreModel = score_module.get_model()
-
-
-        #Compile Functions
-        self.SetLog('Compiling Theano Functions..')
-        self.predFunc, self.colorMap = function_compiler.make_functions(model)
-        self.scoreFunc = function_compiler.make_score_functions(scoreModel)
-        print(self.scoreFunc)
-
-        #Load Weights
-        metadata, self.param_dict = checkpoints.load_weights(weight_path, model['l_out'])
-        metadata2, param_dict2 = checkpoints.load_weights(weight_path, scoreModel['l_out'])
-
-        log = 'Import Completed'
-        self.SetLog(log) 
 
         self.bInitNetowrk = True;
 
     def InitData(self):
-
-        try:
-            zt = np.asarray(np.load(modelPath)['targets'])
-
-            for i in range(len(zt)):
-
-                self.mainFrm.m_listWidget.insertItem(i, str(i) + str(".") + str(labels.rt[int(zt[i])]))
-        except Exception as e:
-            self.SetLog("Model Path not defined or wrong")
-            self.SetLog(str(e))
+        for i in range(len(self.yt)):
+            self.mainFrm.m_listWidget.insertItem(i, str(i) + str(".") + str(labels.rt[int(self.yt[i])]))
+        
 
     def RandomPrediction(self):
-
-
         #Get Random
         randIdx = random.randint(0, len(self.xt)-1)
 
@@ -469,37 +441,35 @@ class E_Manager:
         shape = selectedVolume.shape
         self.SetLog(str(shape))
         inputData = np.asarray(selectedVolume.reshape(1, 1, shape[0], shape[1], shape[2]), dtype=np.float32)
-
         
-        try:            
-            scoreVol = self.scoreFunc(inputData)[0][1]
-            self.SetLog(str(scoreVol.shape))
-        except Exception as e:
-            self.SetLog(e)
+        # try:            
+        #     scoreVol = self.scoreFunc(inputData)[0][1]
+        #     self.SetLog(str(scoreVol.shape))
+        # except Exception as e:
+        #     self.SetLog(e)
 
-        camsum = scoreVol
-        camsum = scipy.ndimage.zoom(camsum, 16)
+        # camsum = scoreVol
+        # camsum = scipy.ndimage.zoom(camsum, 16)
 
-        log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
-        self.SetLog(log)
+        # log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
+        # self.SetLog(log)
         
 
-        cam_min = np.amin(camsum)
-        cam_max = np.amax(camsum)
+        # cam_min = np.amin(camsum)
+        # cam_max = np.amax(camsum)
 
 
-        #Normalize To 0-255
-        tmp = camsum - cam_min
-        camsum = tmp / cam_max               
-        camsum *= 255.0
-        camsum = camsum.astype(int)
+        # #Normalize To 0-255
+        # tmp = camsum - cam_min
+        # camsum = tmp / cam_max               
+        # camsum *= 255.0
+        # camsum = camsum.astype(int)
 
-        self.VolumeMgr.AddClassActivationMap(camsum)
+        # self.VolumeMgr.AddClassActivationMap(camsum)
 
         self.SetLog("ROI Prediction")
 
     def SaveSliceImage(self):
-
         if self.VolumeMgr.m_resampledVolumeData.any() == None:
             self.SetLog("No Resampled Volume Data is being rendered")
             return
