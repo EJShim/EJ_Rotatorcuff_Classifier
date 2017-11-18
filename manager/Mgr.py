@@ -253,11 +253,8 @@ class E_Manager:
 
         last_conv = last_conv[0]
         last_weight = last_weight[:,:,:,:,1]
-        
 
-        last_conv = tf.reshape(last_conv, [512, 4, 4, 4])
-        last_weight = tf.reshape(last_weight, [512, 1, 1, 1])
-        self.class_activation_map = tf.reduce_sum(tf.multiply(last_weight, last_conv), axis=0)
+        self.class_activation_map =tf.nn.relu( tf.reduce_sum(tf.multiply(last_weight, last_conv), axis=3))
 
 
     def predict_tensor(self, input):
@@ -318,17 +315,13 @@ class E_Manager:
         activation_map = predict_result[2]          
         activation_map = scipy.ndimage.zoom(activation_map, 16)
 
-        # log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
-        # self.SetLog(log)
-        
-        # #Normalize To 0-255
-        cam_min = np.amin(activation_map)
-        cam_max = np.amax(activation_map)
-        tmp = activation_map - cam_min
-        activation_map = tmp / cam_max               
+        activation_map = activation_map / 15
+        log = "min : " + str(np.amin(activation_map)) + ", max : " + str(np.amax(activation_map))
+        self.SetLog(log)
         activation_map *= 255.0
         activation_map = activation_map.astype(int)
         self.VolumeMgr.AddClassActivationMap(activation_map)
+
 
     def MakeDataMatrix(self, x, intensity):
         return intensity*np.repeat(np.repeat(np.repeat(x[0][0], v_res, axis=0), v_res, axis=1), v_res, axis=2)    

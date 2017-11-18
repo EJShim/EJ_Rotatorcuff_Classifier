@@ -351,7 +351,7 @@ class E_VolumeManager:
         #set Class Activation Map
         colorFunction = vtk.vtkColorTransferFunction()
         opacityFunction = vtk.vtkPiecewiseFunction()
-        scalarRange = imgData.GetScalarRange()
+        scalarRange = [0.0, 255.0]
         # print("Scalar Range:",scalarRange)
         volumeProperty = vtk.vtkVolumeProperty()
 
