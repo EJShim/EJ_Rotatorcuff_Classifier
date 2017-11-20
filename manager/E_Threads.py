@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import os, sys
 import numpy as np
+import scipy.ndimage
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
@@ -15,7 +16,12 @@ class CamHistoryThread(QThread):
 
     def __init__(self, parent=None):
         super().__init__()
-        self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
+
+        data_load = np.load(os.path.join(root_path, "train_test_module", "batch_6_4block.npz"))
+        self.cam_history_data = data_load['cam']
+        self.cam_history_data[:] = scipy.ndimage.zoom(self.cam_history_data[:], 16, mode='nearest')
+
+        # self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
         self.selectedIdx = self.cam_history_data['index']
         self.updating = False
 

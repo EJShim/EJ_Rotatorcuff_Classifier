@@ -3,11 +3,11 @@ import os,sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-file_path = os.path.abspath(__file__)
-root_path = os.path.abspath(os.path.join(file_path, os.pardir, os.pardir))
+file_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath(os.path.join(file_path, os.pardir))
 
 
-data_load = np.load(os.path.join(root_path, "train_test_module", "use_tensorflow", "train_record_batch_renorm.npz"))
+data_load = np.load(os.path.join(file_path, "batch_6_4block.npz"))
 
 accuracy = data_load['accuracy']
 # print(len(loss))
