@@ -50,7 +50,7 @@ acc_ax = figure.add_subplot(212)
 acc_data = []
 
 #Get TF Functions
-x, y, keep_prob, last_conv = config_module.get_model()
+x, y, keep_prob, last_conv = config_module.get_shallow_model()
 y_true = tf.placeholder(tf.int32)
 sess = tf.InteractiveSession()
 
@@ -93,7 +93,7 @@ for epoch in range(max_epochs):
             pred, soft= sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[idx]], keep_prob:1.0})
         else:
             pred, soft, cam = sess.run([pred_classes, pred_probs, class_activation_map], feed_dict={x:[test_features[idx]], keep_prob:1.0})
-            cam_data = cam
+            cam_data.append (cam)
         
         
         if pred[0] == t_target:

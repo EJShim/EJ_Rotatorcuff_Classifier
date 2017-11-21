@@ -7,9 +7,11 @@ file_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
 
 
-data_load = np.load(os.path.join(file_path, "batch_6_4block.npz"))
+data_load = np.load(os.path.join(file_path, "train_record.npz"))
 
 accuracy = data_load['accuracy']
+cam = data_load['cam']
+print(cam.shape)
 # print(len(loss))
 print(list(accuracy))
 print(np.argmax(accuracy), max(accuracy))
