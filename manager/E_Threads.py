@@ -17,11 +17,13 @@ class CamHistoryThread(QThread):
     def __init__(self, parent=None):
         super().__init__()
 
-        data_load = np.load(os.path.join(root_path, "train_test_module", "batch_6_4block.npz"))
-        self.cam_history_data = data_load['cam']
-        self.cam_history_data[:] = scipy.ndimage.zoom(self.cam_history_data[:], 16, mode='nearest')
+        # data_load = np.load(os.path.join(root_path, "train_test_module",  "train_record_3block.npz"))
+        # self.cam_history_data = data_load['cam']
+        # deconv_rate = 64 / self.cam_history_data.shape[1]
+        # self.cam_history_data[:] = scipy.ndimage.zoom(self.cam_history_data[:], deconv_rate, mode='nearest')
+        
 
-        # self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
+        self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
         self.selectedIdx = self.cam_history_data['index']
         self.updating = False
 

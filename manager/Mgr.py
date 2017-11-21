@@ -18,7 +18,7 @@ import network.VRN_64_TF as config_module
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "epoch78model.ckpt")
+weight_path = os.path.join(root_path, "train_test_module", "weights", "epoch49model.ckpt")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 
@@ -235,7 +235,7 @@ class E_Manager:
         
 
     def InitNetwork(self):
-        self.tensor_in, y, self.keep_prob, last_conv = config_module.get_model()
+        self.tensor_in, y, self.keep_prob, last_conv = config_module.get_shallow_model()
         
 
         #Restore Graph
@@ -314,10 +314,12 @@ class E_Manager:
         self.predLog.SetInput(log)
 
         #Class Activation Map         
-        activation_map = predict_result[2]          
-        activation_map = scipy.ndimage.zoom(activation_map, 16)
+        activation_map = predict_result[2]
+        deconv_rate =  64 / activation_map.shape[0]
 
-        activation_map = activation_map / 10
+        activation_map = scipy.ndimage.zoom(activation_map, deconv_rate)
+
+        activation_map = activation_map / 8
         log = "min : " + str(np.amin(activation_map)) + ", max : " + str(np.amax(activation_map))
         self.SetLog(log)
         activation_map *= 255.0
