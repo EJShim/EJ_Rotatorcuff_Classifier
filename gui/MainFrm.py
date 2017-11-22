@@ -57,9 +57,6 @@ class E_MainWindow(QMainWindow):
         self.th_camHistory.finished.connect(self.onFinishedCamHistory)
 
 
-        
-
-        
 
         #Bone Color, RCT
         self.m_bBoneColorBlack = "Black"
@@ -267,8 +264,6 @@ class E_MainWindow(QMainWindow):
         SaveAction.triggered.connect(self.onSaveData)
         objectToolbar.addAction(SaveAction)
 
-
-
         networkToolbar = QToolBar();
         networkToolbar.setIconSize(QSize(50, 50))
         networkToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
@@ -295,14 +290,32 @@ class E_MainWindow(QMainWindow):
         networkToolbar.addAction(self.camAnimation)
 
 
-        self.roiAnimation = QAction(QIcon(icon_path + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
-        self.roiAnimation.triggered.connect(self.PredictROI)
-        networkToolbar.addAction(self.roiAnimation)
+        # self.roiAnimation = QAction(QIcon(icon_path + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
+        # self.roiAnimation.triggered.connect(self.PredictROI)
+        # networkToolbar.addAction(self.roiAnimation)
 
 
-        self.saveSlice = QAction(QIcon(icon_path + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
-        self.saveSlice.triggered.connect(self.onSaveSliceImage)
-        networkToolbar.addAction(self.saveSlice)
+        # self.saveSlice = QAction(QIcon(icon_path + "/051-cmyk.png"), "Save Slice", self)        
+        # self.saveSlice.triggered.connect(self.onSaveSliceImage)
+        # networkToolbar.addAction(self.saveSlice)
+
+        #Add Score Progress bar
+        nonrctpro = QProgressBar()
+        nonrctpro.setRange(0, 10000)
+        nonrctpro.setValue(5000)        
+        rctpro = QProgressBar()
+        rctpro.setRange(0, 10000)
+        self.score_group = QVBoxLayout()
+        self.rctGroup.setSpacing(0)
+        self.rctGroup.setContentsMargins(0, 0, 0, 0)                
+        self.score_group.addWidget(nonrctpro)
+        self.score_group.addWidget(rctpro)
+        groupbox_score = QGroupBox("Prediction")
+        groupbox_score.setLayout(self.score_group)
+        networkToolbar.addWidget(groupbox_score)
+
+        #Test
+        self.SetProgressScore([30, 30.5])
 
 
         
@@ -637,3 +650,8 @@ class E_MainWindow(QMainWindow):
 
     def onSaveSliceImage(self):
         self.Mgr.SaveSliceImage()
+
+    def SetProgressScore(self, score, label='unknown'):        
+        self.score_group.parentWidget().setTitle("label : " + label)
+        self.score_group.itemAt(0).widget().setValue(score[0] * 10000.0)
+        self.score_group.itemAt(1).widget().setValue(score[1] * 10000.0)

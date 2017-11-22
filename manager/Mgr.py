@@ -18,7 +18,7 @@ import network.VRN_64_TF as config_module
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "train_test_module", "weights", "epoch49model.ckpt")
+weight_path = os.path.join(root_path, "weights", "3-blocks", "epoch49model.ckpt")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 
@@ -294,6 +294,17 @@ class E_Manager:
             log = labels.rt[int(self.yt[idx])]
             self.PredictObject(self.xt[idx], log)
 
+    def ShowScore(self, label, softmax):
+        gtlog = "Label : " + label
+        self.groundTruthLog.SetInput(gtlog)
+        pred_class = np.argmax(softmax)
+        pred_prob = np.amax(softmax) * 100.0
+        log = "Predicted : " + labels.rt[int(pred_class)] + " -> " + str(pred_prob) + "%"
+        self.predLog.SetInput(log)
+
+        self.mainFrm.SetProgressScore(softmax[0], label)
+        
+
 
 
     def PredictObject(self, inputData, groundTruth = "unknown"):
@@ -304,14 +315,9 @@ class E_Manager:
 
         predict_result = self.predict_tensor(inputData)
         pred_class = predict_result[0]
-        pred_prob = predict_result[1]
-        pred_prob = np.amax(pred_prob)*100.0
         
-        #Show Log
-        gtlog = "Label : " + groundTruth
-        self.groundTruthLog.SetInput(gtlog)
-        log = "Predicted : " + labels.rt[int(pred_class[0])] + " -> " + str(pred_prob) + "%"
-        self.predLog.SetInput(log)
+        softmax = predict_result[1]
+        self.ShowScore(groundTruth, softmax)
 
         #Class Activation Map         
         activation_map = predict_result[2]
