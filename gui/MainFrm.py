@@ -643,7 +643,17 @@ class E_MainWindow(QMainWindow):
             "RCT " + '{:.2f}'.format(score[1]*100.0) + "%"
         ]
 
+        
+
+
         if not label == -1:
+
+            pred_class = np.argmax(score)
+            if int(label) == pred_class:
+                msg[label] = "(correct) " + msg[label]
+            else:
+                msg[label] = "(wrong) " + msg[label]
+
             not_idx = not label
             self.score_group.itemAt(label).widget().setStyleSheet("QProgressBar::chunk{ background-color: green; }")
             self.score_group.itemAt(not_idx).widget().setStyleSheet("QProgressBar::chunk{ background-color: red; }")
