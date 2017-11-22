@@ -85,20 +85,12 @@ class E_MainWindow(QMainWindow):
 
 
     def InitToolbar(self):
-        #ToolBar
-        toolbar = QToolBar()
-
-        self.addToolBar(toolbar)
-
-
-        mainTab = QTabWidget()
-        toolbar.addWidget(mainTab)
-
-
         objectToolbar = QToolBar();
         objectToolbar.setIconSize(QSize(50, 50))        
         objectToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        mainTab.addTab(objectToolbar, "3D Objects")
+        objectToolbar.setMovable(False)
+        self.addToolBar(Qt.RightToolBarArea, objectToolbar)
+        # mainTab.addTab(objectToolbar, "3D Objects")
 
         #Import Object Action
         importAction = QAction(QIcon(icon_path + "/051-cmyk.png"), "Import Object", self)
@@ -205,8 +197,7 @@ class E_MainWindow(QMainWindow):
 
         #RCT Group
         self.rctGroup = QVBoxLayout()
-        self.rctGroup.setSpacing(0)
-        self.rctGroup.setContentsMargins(0, 0, 0, 0)        
+        self.rctGroup.setSpacing(0)        
         groupBoxRCT = QGroupBox("RCT")
         groupBoxRCT.setLayout(self.rctGroup)                        
         self.rctGroup.addWidget(QRadioButton("None"))
@@ -267,16 +258,14 @@ class E_MainWindow(QMainWindow):
         networkToolbar = QToolBar();
         networkToolbar.setIconSize(QSize(50, 50))
         networkToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        mainTab.addTab(networkToolbar, "VRN")
+        networkToolbar.setMovable(False)
+        self.addToolBar(networkToolbar)
+        # mainTab.addTab(networkToolbar, "VRN")
 
         self.trainAction = QAction(QIcon(icon_path + "/051-pantone-2.png"), "Predict Off", self)
         self.trainAction.setCheckable(True)
         self.trainAction.toggled.connect(self.TogglePrediction)
         networkToolbar.addAction(self.trainAction)
-
-        predAction = QAction(QIcon(icon_path + "/051-programming.png"), "Predict Random", self)
-        predAction.triggered.connect(self.onRandomPred)
-        networkToolbar.addAction(predAction)
 
         networkToolbar.addSeparator()
 
@@ -306,20 +295,15 @@ class E_MainWindow(QMainWindow):
         rctpro = QProgressBar()
         rctpro.setRange(0, 10000)
         self.score_group = QVBoxLayout()
-        self.rctGroup.setSpacing(0)
-        self.rctGroup.setContentsMargins(0, 0, 0, 0)                
+        self.rctGroup.setSpacing(0)        
         self.score_group.addWidget(nonrctpro)
         self.score_group.addWidget(rctpro)
-        groupbox_score = QGroupBox("Prediction")
+        groupbox_score = QGroupBox()
         groupbox_score.setLayout(self.score_group)
         networkToolbar.addWidget(groupbox_score)
 
         #Test
-        self.SetProgressScore([30, 30.5])
-
-
-        
-        toolbar.setFixedHeight(140)
+        self.SetProgressScore([30, 30.5])        
 
 
     def InitRendererView(self, layout):
@@ -383,7 +367,7 @@ class E_MainWindow(QMainWindow):
 
         MainLayout.setStretch(0, 1)
         MainLayout.setStretch(1, 1)
-        MainLayout.setStretch(2, 4)          
+        MainLayout.setStretch(2, 5)   
 
     def InitManager(self):
         self.Mgr = E_Manager(self)
@@ -544,10 +528,11 @@ class E_MainWindow(QMainWindow):
 
 
     def onSliceViewState(self, state):
-        if state==2:
-            self.m_sliceViewWidget.show()
-        else:
-            self.m_sliceViewWidget.hide()
+        print("WTF")
+        # if state==2:
+        #     self.m_sliceViewWidget.show()
+        # else:
+        #     self.m_sliceViewWidget.hide()
 
     def onClassActivationMapState(self, state):
         self.Mgr.VolumeMgr.ToggleClassActivationMap(state)
@@ -651,7 +636,22 @@ class E_MainWindow(QMainWindow):
     def onSaveSliceImage(self):
         self.Mgr.SaveSliceImage()
 
-    def SetProgressScore(self, score, label='unknown'):        
-        self.score_group.parentWidget().setTitle("label : " + label)
+    def SetProgressScore(self, score, label=-1):
+
+        msg = [
+            "None RCT " + '{:.2f}'.format(score[0]*100.0) + "%",
+            "RCT " + '{:.2f}'.format(score[1]*100.0) + "%"
+        ]
+
+        if not label == -1:
+            not_idx = not label
+            self.score_group.itemAt(label).widget().setStyleSheet("QProgressBar::chunk{ background-color: green; }")
+            self.score_group.itemAt(not_idx).widget().setStyleSheet("QProgressBar::chunk{ background-color: red; }")
+        else:
+            self.score_group.itemAt(0).widget().setStyleSheet("QProgressBar::chunk{ background-color: #1a80d7; }")
+            self.score_group.itemAt(1).widget().setStyleSheet("QProgressBar::chunk{ background-color: #1a80d7; }")
+
         self.score_group.itemAt(0).widget().setValue(score[0] * 10000.0)
+        self.score_group.itemAt(0).widget().setFormat(msg[0])
         self.score_group.itemAt(1).widget().setValue(score[1] * 10000.0)
+        self.score_group.itemAt(1).widget().setFormat(msg[1])

@@ -71,8 +71,7 @@ class E_Manager:
             
 
         #Initialize
-        self.InitObject()
-        self.InitTextActor()
+        self.InitObject()        
         self.InitData()
         self.InitNetwork()
 
@@ -89,25 +88,7 @@ class E_Manager:
             self.orWidget[i].SetViewport(0.0, 0.0, 0.3, 0.3)
 
         self.Redraw()
-        self.Redraw2D()
-
-    def InitTextActor(self):
-        self.groundTruthLog = vtk.vtkTextActor()
-        self.groundTruthLog.SetInput("Label")
-        self.groundTruthLog.SetPosition(10, 60)
-        self.groundTruthLog.GetTextProperty().SetFontSize(24)
-        self.groundTruthLog.GetTextProperty().SetColor(1.0, 0.0, 0.0)
-
-
-        self.predLog = vtk.vtkTextActor()
-        self.predLog.SetInput("Predicted")
-        self.predLog.SetPosition(10, 30)
-        self.predLog.GetTextProperty().SetFontSize(24)
-        self.predLog.GetTextProperty().SetColor(0.0, 1.0, 0.0)
-
-
-        self.renderer[1].AddActor2D(self.groundTruthLog)
-        self.renderer[1].AddActor2D(self.predLog)
+        self.Redraw2D()    
  
                 
     def VoxelizeObject(self, source):
@@ -290,24 +271,16 @@ class E_Manager:
         arr = self.xt[idx][0]
         self.VolumeMgr.AddVolume(arr)
 
-        if predict:
-            log = labels.rt[int(self.yt[idx])]
-            self.PredictObject(self.xt[idx], log)
+        if predict:            
+            self.PredictObject(self.xt[idx], int(self.yt[idx]))
 
-    def ShowScore(self, label, softmax):
-        gtlog = "Label : " + label
-        self.groundTruthLog.SetInput(gtlog)
-        pred_class = np.argmax(softmax)
-        pred_prob = np.amax(softmax) * 100.0
-        log = "Predicted : " + labels.rt[int(pred_class)] + " -> " + str(pred_prob) + "%"
-        self.predLog.SetInput(log)
-
+    def ShowScore(self, label, softmax):        
         self.mainFrm.SetProgressScore(softmax[0], label)
         
 
 
 
-    def PredictObject(self, inputData, groundTruth = "unknown"):
+    def PredictObject(self, inputData, label = "unknown"):
         if not self.m_bPred: return
 
         resolution = self.VolumeMgr.resolution
@@ -317,7 +290,7 @@ class E_Manager:
         pred_class = predict_result[0]
         
         softmax = predict_result[1]
-        self.ShowScore(groundTruth, softmax)
+        self.ShowScore(label, softmax)
 
         #Class Activation Map         
         activation_map = predict_result[2]
@@ -393,11 +366,6 @@ class E_Manager:
     def ClearScene(self):
         for i in range(2):
             self.renderer[i].RemoveAllViewProps()
-
-            #Add Log Actors
-            self.renderer[1].AddActor2D(self.groundTruthLog)
-            self.renderer[1].AddActor2D(self.predLog)
-
         for i in range(3):
             self.m_sliceRenderer[i].RemoveAllViewProps()
 

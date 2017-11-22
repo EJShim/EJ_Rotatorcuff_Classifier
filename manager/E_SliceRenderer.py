@@ -37,18 +37,6 @@ class E_SliceRenderer(vtk.vtkRenderer):
         self.bounds = bounds
 
         selectedOrienation = self.Mgr.VolumeMgr.m_orientation
-        
-        #ADD TEXT
-        txt = vtk.vtkTextActor()
-        txt.SetInput(self.viewType)        
-        txt.SetPosition(10, 10)
-        txt.GetTextProperty().SetFontSize(24)
-
-        if selectedOrienation == self.viewType:
-            txt.GetTextProperty().SetColor([0.8, 0.2, 0.8])
-        else:
-            txt.GetTextProperty().SetColor(self.lineColor)
-        self.AddActor2D(txt)
 
         #ADD Outer Line   
         points = vtk.vtkPoints()

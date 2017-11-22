@@ -1,12 +1,14 @@
 styleData="""
+
 QWidget
 {
     color: #b1b1b1;
     background-color: #323232;
 }
-QListView { 
+QListView {    
     alternate-background-color: #434343;
 }
+
 QTreeView { 
     alternate-background-color: #434343;
 }
@@ -27,12 +29,21 @@ QTabWidget::tab-bar {
     left: 5px;
 }
 
-
 QTabBar::tab {
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    border-top-left-radius: 1px;
+    border-top-right-radius: 1px;
     min-width: 8ex;
-    padding: 2px;
+    padding: 1px;
+}
+
+QTabBar::tab:top:selected
+{
+    color:#EEEEEE;
+    background-color: #1a80d7;
+}
+
+QTabBar::tab:top:!selected:hover {
+    background-color: #2a90e7;
 }
 
 QHeaderView::section
@@ -44,9 +55,6 @@ QHeaderView::section
 }
 
 QToolBar {
-    border: 1px transparent #FF0000;
-    background: 1px solid #323232;
-    font-weight: bold;
+    border: 0px transparent;
 }
-
 """
