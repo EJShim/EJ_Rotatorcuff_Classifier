@@ -50,7 +50,7 @@ acc_ax = figure.add_subplot(212)
 acc_data = []
 
 #Get TF Functions
-x, y, keep_prob, last_conv = config_module.get_shallow_model()
+x, y, keep_prob, last_conv = config_module.get_very_shallow_model()
 y_true = tf.placeholder(tf.int32)
 sess = tf.InteractiveSession()
 
@@ -89,7 +89,7 @@ for epoch in range(max_epochs):
     n_true = 0
     for idx, t_target in enumerate(test_targets):
 
-        if not idx == 115:
+        if not idx == 116:
             pred, soft= sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[idx]], keep_prob:1.0})
         else:
             pred, soft, cam = sess.run([pred_classes, pred_probs, class_activation_map], feed_dict={x:[test_features[idx]], keep_prob:1.0})

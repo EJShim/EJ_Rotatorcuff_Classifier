@@ -18,7 +18,7 @@ import network.VRN_64_TF as config_module
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "3-blocks", "epoch49model.ckpt")
+weight_path = os.path.join(root_path, "weights", "2block", "epoch49model.ckpt")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 
@@ -216,7 +216,7 @@ class E_Manager:
         
 
     def InitNetwork(self):
-        self.tensor_in, y, self.keep_prob, last_conv = config_module.get_shallow_model()
+        self.tensor_in, y, self.keep_prob, last_conv = config_module.get_very_shallow_model()
         
 
         #Restore Graph
@@ -386,12 +386,7 @@ class E_Manager:
         camera.SetViewUp(0.0, 1.0, 0.0)
 
     def SetLog(self, text, error=False):
-        QApplication.processEvents()
-
-        if error:
-            self.mainFrm.m_logWidget.setStyleSheet("color: rgb(255, 0, 255);")
-        else:
-            self.mainFrm.m_logWidget.setStyleSheet("color: rgb(0, 0, 0);")            
+        QApplication.processEvents() 
         self.mainFrm.m_logWidget.appendPlainText(text)
 
     def PredictROI(self):

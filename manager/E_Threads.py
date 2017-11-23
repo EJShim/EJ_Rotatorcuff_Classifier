@@ -17,14 +17,21 @@ class CamHistoryThread(QThread):
     def __init__(self, parent=None):
         super().__init__()
 
-        # data_load = np.load(os.path.join(root_path, "train_test_module",  "train_record_3block.npz"))
-        # self.cam_history_data = data_load['cam']
-        # deconv_rate = 64 / self.cam_history_data.shape[1]
-        # self.cam_history_data[:] = scipy.ndimage.zoom(self.cam_history_data[:], deconv_rate, mode='nearest')
+        data_load = np.load(os.path.join(root_path, "train_test_module",  "train_record_3block.npz"))
+        cam_data = data_load['cam']
+        deconv_rate =  64 /cam_data.shape[1] 
+
+        self.cam_history_data = []
+        for data in cam_data:
+            data = scipy.ndimage.zoom(data, deconv_rate)
+            data = data / 8
+            data *= 255.0
+            data = data.astype(int)
+            self.cam_history_data.append(data)
         
 
-        self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
-        self.selectedIdx = self.cam_history_data['index']
+        # self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
+        self.selectedIdx = 116
         self.updating = False
 
     def __del__(self):
@@ -33,8 +40,8 @@ class CamHistoryThread(QThread):
     def run(self):
         if self.isRunning(): self.quit()
 
-        total = len(self.cam_history_data['data'])
-        for idx, data in enumerate(self.cam_history_data['data']):
+        total = len(self.cam_history_data)
+        for idx, data in enumerate(self.cam_history_data):
             
             progress = int((idx/total) * 100.0)
 
