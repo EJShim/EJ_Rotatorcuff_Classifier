@@ -7,7 +7,7 @@ from sklearn.metrics import auc, roc_curve
 file_path = os.path.dirname(os.path.abspath(__file__))
 
 
-file_list = list(glob.iglob(file_path + '/2block/*.npz'))
+file_list = list(glob.iglob(file_path + '/4block/*.npz'))
 file_list.sort()
 
 auc_data = []

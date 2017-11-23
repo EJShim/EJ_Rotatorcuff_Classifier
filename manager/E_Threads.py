@@ -11,16 +11,14 @@ sys.path.append(root_path)
 
 
 class CamHistoryThread(QThread):
-    cam_data = pyqtSignal(object)
-    onprogress = pyqtSignal(int)
+    cam_data = pyqtSignal(object, int)    
 
     def __init__(self, parent=None):
         super().__init__()
 
-        data_load = np.load(os.path.join(root_path, "train_test_module",  "train_record_2block.npz"))
+        data_load = np.load(os.path.join(root_path, "train_test_module",  "train_record_tmp.npz"))
         cam_data = data_load['cam']
-        deconv_rate =  64 /cam_data.shape[1] 
-
+        deconv_rate =  64 /cam_data.shape[1]
         self.cam_history_data = []
         for data in cam_data:
             data = scipy.ndimage.zoom(data, deconv_rate)
@@ -28,30 +26,34 @@ class CamHistoryThread(QThread):
             data *= 255.0
             data = data.astype(int)
             self.cam_history_data.append(data)
-        
-
-        # self.cam_history_data = np.load(os.path.join(root_path, "cam_history", "cam_history_data.npz"))
+            
         self.selectedIdx = 116
-        self.updating = False
+
+        self.total_memory = len(self.cam_history_data)
+        self.current_idx = 0
+
+        #SIGNAL RECEIVE
+        parent.update_cam.connect(self.on_signal)
 
     def __del__(self):
         self.wait()       
 
     def run(self):
-        if self.isRunning(): self.quit()
-
-        total = len(self.cam_history_data)
-        for idx, data in enumerate(self.cam_history_data):
-            
-            progress = int((idx/total) * 100.0)
-
-            if not self.updating:
-                self.cam_data.emit(data)
-                self.onprogress.emit(progress)
-
-            self.msleep(20/1000)
-
+        self.current_idx = 0
+        #Emit First Siganl
+        self.cam_data.emit(self.cam_history_data[0], 0)
         self.quit()
+    
+    def on_signal(self):
+        self.current_idx += 1
+        if self.current_idx >= self.total_memory:             
+            return        
+        progress = int((self.current_idx/(self.total_memory-1)) * 100.0)
+        self.cam_data.emit(self.cam_history_data[self.current_idx], progress)        
+        
+
+    
+    
 
 #Multi-Thread Codes
 class ListAnimationThread(QThread):

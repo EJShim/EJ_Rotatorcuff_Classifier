@@ -21,7 +21,7 @@ root_path = os.path.abspath(os.path.join(file_path, os.pardir))
 icon_path = os.path.join(root_path, "icons")
 
 class E_MainWindow(QMainWindow):
-    update_cam = pyqtSignal(bool)
+    update_cam = pyqtSignal()
 
 
     def __init__(self, parent = None):
@@ -51,10 +51,7 @@ class E_MainWindow(QMainWindow):
 
 
         #Cam History Animation thread        
-        self.th_camHistory = CamHistoryThread(self)
-        self.th_camHistory.cam_data.connect(self.updateCAM)
-        self.th_camHistory.onprogress.connect(self.onProgress)
-        self.th_camHistory.finished.connect(self.onFinishedCamHistory)
+        self.th_camHistory = CamHistoryThread(self)        
 
 
 
@@ -589,33 +586,20 @@ class E_MainWindow(QMainWindow):
 
 
     def onCAMAnimation(self, e):
-        
-        self.th_camHistory.start()
-        # self.timer.start(30/1000)
         self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
-        self.Mgr.Redraw()
-        self.Mgr.Redraw2D()
-
-        self.statusBar().showMessage('Class Animation History among epochs')
-
-    def updateCAM(self, array):        
-        self.Mgr.SetLog("Update Cam")
-        self.Mgr.ClearScene()
-        self.Mgr.RotateCamera()
-        self.Mgr.RenderPreProcessedObject(self.th_camHistory.selectedIdx, predict=False)
-
         
-        # self.Mgr.ClearCAM()
-        self.Mgr.VolumeMgr.AddClassActivationMap(array)        
-        self.Mgr.Redraw()
-        self.Mgr.Redraw2D()
+        
+        for idx, data in enumerate(self.th_camHistory.cam_history_data):
+            self.Mgr.RotateCamera()
+            self.Mgr.VolumeMgr.RemoveClassActivationMap()
+            self.Mgr.VolumeMgr.AddClassActivationMap(data)        
+            self.Mgr.Redraw()
+            self.Mgr.Redraw2D()
 
-        # self.update_cam.emit()
+            progress = int((idx/(self.th_camHistory.total_memory-1)) * 100.0)
 
-    def onFinishedCamHistory(self):        
-        self.statusBar().showMessage('Finished CAM')        
-        self.progressBar.setValue(0)
-        # self.timer.stop()
+            QApplication.processEvents()
+            self.progressBar.setValue(progress)
 
     def onProgress(self, progress):
         self.progressBar.setValue(progress)

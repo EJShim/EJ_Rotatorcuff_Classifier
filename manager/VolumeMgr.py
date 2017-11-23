@@ -328,18 +328,20 @@ class E_VolumeManager:
             self.Mgr.renderer[1].ResetCamera()
         else:
             self.m_bShowCAM = False
-
-            #Remove From Renderer
-            for i in range(3):                
-                self.Mgr.m_sliceRenderer[i].RemoveViewProp(self.m_colorMapResliceActor[i])
-
-            #Add Actor
-            self.Mgr.renderer[1].RemoveVolume(self.m_colorMapVolume)
+            self.RemoveClassActivationMap()
             
 
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
         self.Mgr.SetLog(str(self.m_bShowCAM))
+    def RemoveClassActivationMap(self):
+        #Remove From Renderer
+        for i in range(3):                
+            self.Mgr.m_sliceRenderer[i].RemoveViewProp(self.m_colorMapResliceActor[i])
+
+        #Add Actor
+        self.Mgr.renderer[1].RemoveVolume(self.m_colorMapVolume)
+        
 
     def AddClassActivationMap(self, camArray):        
         ata_string = camArray.tostring()
