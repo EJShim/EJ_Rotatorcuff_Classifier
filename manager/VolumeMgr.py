@@ -395,6 +395,9 @@ class E_VolumeManager:
             
             
         
+    def UpdateClassActivationMap(self, camArray):
+        #This Function
+        self.cam_data.GetPointData().SetScalars(numpy_support.numpy_to_vtk(num_array=camArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT))
         
 
     def AddClassActivationMap(self, camArray):        

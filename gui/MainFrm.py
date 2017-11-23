@@ -592,9 +592,13 @@ class E_MainWindow(QMainWindow):
         
         
         for idx, data in enumerate(self.th_camHistory.cam_history_data):
+            
             self.Mgr.RotateCamera()
-            self.Mgr.VolumeMgr.RemoveClassActivationMap()
-            self.Mgr.VolumeMgr.AddClassActivationMap(data)        
+
+            if idx == 0:
+                self.Mgr.VolumeMgr.AddClassActivationMap(data)
+            else:
+                self.Mgr.VolumeMgr.UpdateClassActivationMap(data)        
             self.Mgr.Redraw()
             self.Mgr.Redraw2D()
 
