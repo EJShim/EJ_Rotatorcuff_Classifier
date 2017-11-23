@@ -17,7 +17,7 @@ class CamHistoryThread(QThread):
     def __init__(self, parent=None):
         super().__init__()
 
-        data_load = np.load(os.path.join(root_path, "train_test_module",  "train_record_3block.npz"))
+        data_load = np.load(os.path.join(root_path, "train_test_module",  "train_record_2block.npz"))
         cam_data = data_load['cam']
         deconv_rate =  64 /cam_data.shape[1] 
 
