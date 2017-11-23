@@ -34,11 +34,14 @@ targets = data_load['targets']
 test_data_load = np.load(TEST_DATA_PATH)
 test_features = test_data_load['features']
 test_features = np.reshape(test_features, (test_features.shape[0], test_features.shape[2], test_features.shape[3], test_features.shape[4], test_features.shape[1]))
+cam_features = test_features[116]
+cam_features = np.reshape(cam_features, (1, cam_features.shape[0], cam_features.shape[1], cam_features.shape[2], cam_features.shape[3]))
 test_targets = test_data_load['targets']
+
 
 #Get Configuration
 cfg = config_module.cfg
-max_epochs = cfg['max_epochs']
+max_epochs = 5
 batch_size = cfg['batch_size']
 
 #Initialize Figure
@@ -88,14 +91,7 @@ for epoch in range(max_epochs):
     score = []
     n_true = 0
     for idx, t_target in enumerate(test_targets):
-
-        if not idx == 116:
-            pred, soft= sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[idx]], keep_prob:1.0})
-        else:
-            pred, soft, cam = sess.run([pred_classes, pred_probs, class_activation_map], feed_dict={x:[test_features[idx]], keep_prob:1.0})
-            cam_data.append (cam)
-        
-        
+        pred, soft= sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[idx]], keep_prob:1.0})
         if pred[0] == t_target:
             n_true += 1
         score.append(soft[0][1])
@@ -122,7 +118,13 @@ for epoch in range(max_epochs):
         input_feed = features[idx:idx+batch_size]
         label_feed = targets[idx:idx+batch_size]
         idx = idx+batch_size
+
+
         _,loss_out = sess.run([optimize, loss_op], feed_dict={x:input_feed, y_true:label_feed, learning_rate:lr, keep_prob:0.0})
+        
+        #Class Activation Map Every Batch!
+        cam = sess.run(class_activation_map, feed_dict={x:cam_features, keep_prob:1.0})
+        cam_data.append(cam)
         
         loss_data.append(loss_out)
         if epoch < 2:     
