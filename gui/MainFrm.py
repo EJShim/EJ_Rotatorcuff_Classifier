@@ -285,12 +285,17 @@ class E_MainWindow(QMainWindow):
         # self.saveSlice.triggered.connect(self.onSaveSliceImage)
         # networkToolbar.addAction(self.saveSlice)
 
-        #Add Score Progress bar
+        #Add Score Progress bar        
+        style2 = "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #F10350,stop: 0.4999 #FF3320,stop: 0.5 #FF0019,stop: 1 #F0F150 );}"
+        style3 = "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #F10350,stop: 0.4999 #FF3320,stop: 0.5 #FF0019,stop: 1 #05F150 );}"
         nonrctpro = QProgressBar()
         nonrctpro.setRange(0, 10000)
-        nonrctpro.setValue(5000)        
+        nonrctpro.setValue(10000)        
+        nonrctpro.setStyleSheet(style2)
         rctpro = QProgressBar()
         rctpro.setRange(0, 10000)
+        rctpro.setValue(10000)
+        rctpro.setStyleSheet(style3)
         self.score_group = QVBoxLayout()
         self.rctGroup.setSpacing(0)        
         self.score_group.addWidget(nonrctpro)
@@ -298,9 +303,6 @@ class E_MainWindow(QMainWindow):
         groupbox_score = QGroupBox()
         groupbox_score.setLayout(self.score_group)
         networkToolbar.addWidget(groupbox_score)
-
-        #Test
-        self.SetProgressScore([30, 30.5])        
 
 
     def InitRendererView(self, layout):

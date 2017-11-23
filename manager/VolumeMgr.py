@@ -39,7 +39,7 @@ class E_VolumeManager:
         #Color MAp Volume
         self.m_bShowCAM = True
         self.m_colorMapMapper = vtk.vtkSmartVolumeMapper()
-        self.m_colorMapVolume = vtk.vtkActor()
+        self.m_colorMapVolume = vtk.vtkVolume()
         self.m_colorMapResliceMapper = [None, None, None]
         self.m_colorMapResliceActor = [None, None, None]
 
@@ -65,6 +65,7 @@ class E_VolumeManager:
 
         #Initialize
         self.SetPresetFunctions(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex())
+        self.InitializeClassActivationMap()
         # self.InitializeRenderFunctions()
 
     def SetPresetFunctions(self, idx, update = False):
@@ -341,49 +342,38 @@ class E_VolumeManager:
 
         #Add Actor
         self.Mgr.renderer[1].RemoveVolume(self.m_colorMapVolume)
-        
 
-    def AddClassActivationMap(self, camArray):        
-        ata_string = camArray.tostring()
-        dim = camArray.shape
-
-        imgData = vtk.vtkImageData()
-        imgData.SetOrigin([0, 0, 0])
-        imgData.SetDimensions(dim[1], dim[2], dim[0])
-        imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
-        imgData.SetSpacing([1.0, 1.0, 1.0])
-
-
-        floatArray = numpy_support.numpy_to_vtk(num_array=camArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
-        imgData.GetPointData().SetScalars(floatArray)
-
+    def InitializeClassActivationMap(self):        
+        self.cam_data = vtk.vtkImageData()
+        self.cam_data.SetOrigin([0, 0, 0])
+        self.cam_data.SetDimensions(64,64,64,)
+        self.cam_data.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
+        self.cam_data.SetSpacing([1.0, 1.0, 1.0])
 
         #set Class Activation Map
-        colorFunction = vtk.vtkColorTransferFunction()
-        opacityFunction = vtk.vtkPiecewiseFunction()
-        scalarRange = [0.0, 255.0]
-        # print("Scalar Range:",scalarRange)
-        volumeProperty = vtk.vtkVolumeProperty()
+        cam_color_function = vtk.vtkColorTransferFunction()
+        cam_opacity_function = vtk.vtkPiecewiseFunction()
+        scalarRange = [0.0, 255.0]        
+        cam_volume_property = vtk.vtkVolumeProperty()
 
-        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.0, 0.0, 0.0, 1.0)
-        colorFunction.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.5, 0.0, 1.0, 0.0)
-        colorFunction.AddRGBPoint(scalarRange[1], 1.0, 0.0, 0.0)
+        cam_color_function.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.0, 0.0, 0.0, 1.0)
+        cam_color_function.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.5, 0.0, 1.0, 0.0)
+        cam_color_function.AddRGBPoint(scalarRange[1], 1.0, 0.0, 0.0)
 
-        opacityFunction.AddPoint((scalarRange[0] + scalarRange[1])*0.0, 0.3)
-        opacityFunction.AddPoint(scalarRange[1], 0.3)
+        cam_opacity_function.AddPoint((scalarRange[0] + scalarRange[1])*0.0, 0.3)
+        cam_opacity_function.AddPoint(scalarRange[1], 0.3)
 
-        volumeProperty.SetColor(colorFunction)
-        volumeProperty.SetScalarOpacity(opacityFunction)
-        volumeProperty.ShadeOff()
-        volumeProperty.SetInterpolationTypeToLinear()
+        cam_volume_property.SetColor(cam_color_function)
+        cam_volume_property.SetScalarOpacity(cam_opacity_function)
+        cam_volume_property.ShadeOff()
+        cam_volume_property.SetInterpolationTypeToLinear()
 
-        self.m_colorMapMapper.SetInputData(imgData)
+        self.m_colorMapMapper.SetInputData(self.cam_data)
         self.m_colorMapMapper.SetBlendModeToMaximumIntensity()
 
-        #Actor
-        self.m_colorMapVolume = vtk.vtkVolume()
+        #Actor        
         self.m_colorMapVolume.SetMapper(self.m_colorMapMapper)
-        self.m_colorMapVolume.SetProperty(volumeProperty)
+        self.m_colorMapVolume.SetProperty(cam_volume_property)
         self.m_colorMapVolume.SetPosition([0, 0, 0])
 
         lookupTable = vtk.vtkLookupTable()
@@ -398,32 +388,33 @@ class E_VolumeManager:
 
         #Slice
         for i in range(3):
-            self.m_colorMapResliceMapper[i].SetInputData(imgData)
+            self.m_colorMapResliceMapper[i].SetInputData(self.cam_data)
             self.m_colorMapResliceMapper[i].SetOrientation(i)
             self.m_colorMapResliceActor[i].SetMapper(self.m_colorMapResliceMapper[i])
             self.m_colorMapResliceActor[i].SetProperty(imageProperty)
+            
+            
+        
+        
 
+    def AddClassActivationMap(self, camArray):        
+        
+        #This Function
+        self.cam_data.GetPointData().SetScalars(numpy_support.numpy_to_vtk(num_array=camArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT))
+
+        #Add Actor
+        for i in range(3):            
             #Add SLice
-        if not self.m_bShowCAM:
-            return
-
-
-        #Add To Renderer
-        for i in range(3):
             rendererIdx = i
             self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_colorMapResliceActor[i])
             self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
             self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)
 
-
-        #Add Actor
         self.Mgr.renderer[1].AddVolume(self.m_colorMapVolume)
         self.Mgr.renderer[1].ResetCamera()
 
         self.Mgr.mainFrm.classCheck.setEnabled(True)
 
-        #Set preset
-        # self.Mgr.mainFrm.volumeWidget.onChangeIndex(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex())
 
 
     def AddVolume(self, volumeArray, spacing = [1.0, 1.0, 1.0], origin = [0, 0, 0]):
