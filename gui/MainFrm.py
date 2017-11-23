@@ -304,6 +304,10 @@ class E_MainWindow(QMainWindow):
         groupbox_score.setLayout(self.score_group)
         networkToolbar.addWidget(groupbox_score)
 
+        networkToolbar.addSeparator()
+        self.save_screen = QAction(QIcon(icon_path + "/051-printer-1.png"), "Capture", self)        
+        self.save_screen.triggered.connect(self.GetScreenShot)
+        networkToolbar.addAction(self.save_screen)
 
     def InitRendererView(self, layout):
 
@@ -655,3 +659,26 @@ class E_MainWindow(QMainWindow):
         self.score_group.itemAt(0).widget().setFormat(msg[0])
         self.score_group.itemAt(1).widget().setValue(score[1] * 10000.0)
         self.score_group.itemAt(1).widget().setFormat(msg[1])
+
+    def GetScreenShot(self):        
+    
+        savers = [self.m_vtkWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[0].GetRenderWindow(), self.m_vtkSliceWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[2].GetRenderWindow()]
+        original_size = []
+
+        png_writer = vtk.vtkPNGWriter()
+        image_filter = vtk.vtkWindowToImageFilter()
+        image_filter.SetInputBufferTypeToRGB()
+
+        for idx, ren_win in enumerate(savers):
+            original_size.append(ren_win.GetSize())
+            ren_win.SetSize(500,500)
+            ren_win.Render()
+            image_filter.SetInput(ren_win)
+            image_filter.Update()
+
+            png_writer.SetFileName("./Screen"+str(idx)+".png")
+            png_writer.SetInputConnection(image_filter.GetOutputPort())
+            png_writer.Write()
+
+
+
