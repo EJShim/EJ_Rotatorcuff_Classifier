@@ -308,6 +308,7 @@ class E_MainWindow(QMainWindow):
         self.save_screen = QAction(QIcon(icon_path + "/051-printer-1.png"), "Capture", self)        
         self.save_screen.triggered.connect(self.GetScreenShot)
         networkToolbar.addAction(self.save_screen)
+        networkToolbar.addSeparator()
 
     def InitRendererView(self, layout):
 
@@ -663,20 +664,24 @@ class E_MainWindow(QMainWindow):
     def GetScreenShot(self):        
     
         savers = [self.m_vtkWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[0].GetRenderWindow(), self.m_vtkSliceWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[2].GetRenderWindow()]
+        save_name = ["capture_main.png", "capture_axl.png", "capture_cor.png", "capture_sag.png"]
         original_size = []
 
         png_writer = vtk.vtkPNGWriter()
         image_filter = vtk.vtkWindowToImageFilter()
         image_filter.SetInputBufferTypeToRGB()
 
+
+        dir_path = QFileDialog.getExistingDirectory(self, "Save Captured Image Directory", "~/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        self.Mgr.SetLog(str(dir_path))
+
         for idx, ren_win in enumerate(savers):
             original_size.append(ren_win.GetSize())
-            ren_win.SetSize(500,500)
-            ren_win.Render()
+
             image_filter.SetInput(ren_win)
             image_filter.Update()
 
-            png_writer.SetFileName("./Screen"+str(idx)+".png")
+            png_writer.SetFileName(os.path.join(dir_path, save_name[idx]))
             png_writer.SetInputConnection(image_filter.GetOutputPort())
             png_writer.Write()
 
