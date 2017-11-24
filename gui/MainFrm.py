@@ -671,7 +671,8 @@ class E_MainWindow(QMainWindow):
 
 
         dir_path = QFileDialog.getExistingDirectory(self, "Save Captured Image Directory", "~/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        self.Mgr.SetLog(str(dir_path))
+        if dir_path == "": 
+            return
 
         for idx, ren_win in enumerate(savers):
             original_size.append(ren_win.GetSize())
