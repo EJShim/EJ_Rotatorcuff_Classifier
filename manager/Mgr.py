@@ -344,7 +344,7 @@ class E_Manager:
 
     def SetLog(self, text, error=False):
         QApplication.processEvents() 
-        self.mainFrm.statusBar().showMessage(msg)(text)
+        self.mainFrm.statusBar().showMessage(text)
 
     def PredictROI(self):
         selectedVolume = self.VolumeMgr.m_volumeArray
