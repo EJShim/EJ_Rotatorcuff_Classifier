@@ -377,11 +377,11 @@ class E_MainWindow(QMainWindow):
         self.Mgr.SetLog('import Volume')
 
         path = QFileDialog.getOpenFileNames(self, "Import 3D Objects", "~/", "Dicom File(*.dcm)")
-        fileSeries = path[0]    
-
+        fileSeries = path[0] 
+        if len(fileSeries) == 0: return
         dirName = os.path.dirname(str(path[0][0]))
         self.m_saveDir = dirName
-        if dirName == "":return
+
 
         dirName = str(dirName).lower()
 
