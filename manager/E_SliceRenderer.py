@@ -34,6 +34,9 @@ class E_SliceRenderer(vtk.vtkRenderer):
         #     self.centerLineActor.GetProperty().SetColor([0.8, 0.2, 0.8])
         # else:
         self.centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.8])
+
+        self.polygonActor = vtk.vtkActor()
+        self.polygonActor.GetProperty().SetColor(self.lineColor)
         
     def InitSelectedPosition(self):        
 
@@ -78,11 +81,10 @@ class E_SliceRenderer(vtk.vtkRenderer):
         polygonMapper.SetInputData(polygon)
         polygonMapper.Update()
 
-        polygonActor = vtk.vtkActor()
-        polygonActor.SetMapper(polygonMapper)
-        polygonActor.GetProperty().SetColor(self.lineColor)
+        
+        self.polygonActor.SetMapper(polygonMapper)        
 
-        self.AddActor(polygonActor)
+        self.AddActor(self.polygonActor)
 
         
         #Add Center Position
@@ -122,6 +124,7 @@ class E_SliceRenderer(vtk.vtkRenderer):
 
     def RemoveGuide(self):
         self.RemoveActor(self.centerLineActor)
+        self.RemoveActor(self.polygonActor)
         
 
     def UpdateSelectedPosition(self, position):        
