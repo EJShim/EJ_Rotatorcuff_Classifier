@@ -280,7 +280,7 @@ class E_Manager:
 
 
 
-    def PredictObject(self, inputData, label = "unknown"):
+    def PredictObject(self, inputData, label = -1):
         if not self.m_bPred: return
 
         resolution = self.VolumeMgr.resolution
