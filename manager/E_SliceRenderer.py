@@ -13,6 +13,8 @@ class E_SliceRenderer(vtk.vtkRenderer):
         self.centerPos = np.array([0.0, 0.0])
         self.selectedPos = np.array([0.0, 0.0])
 
+
+        self.centerLineActor = vtk.vtkActor()
         self.selectedPositionActor = None
         self.bounds = [0.0, 0.0, 0.0]
 
@@ -24,7 +26,14 @@ class E_SliceRenderer(vtk.vtkRenderer):
         self.GetActiveCamera().SetPosition(0.0, 0.0, 100.0)
         self.GetActiveCamera().ParallelProjectionOn()
 
+        self.Initialize()
         self.InitSelectedPosition()
+        
+    def Initialize(self):
+        # if selectedOrienation == self.viewType:
+        #     self.centerLineActor.GetProperty().SetColor([0.8, 0.2, 0.8])
+        # else:
+        self.centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.8])
         
     def InitSelectedPosition(self):        
 
@@ -106,16 +115,14 @@ class E_SliceRenderer(vtk.vtkRenderer):
         centerLineMapper = vtk.vtkPolyDataMapper()
         centerLineMapper.SetInputData(centerLinePoly)
         centerLineMapper.Update()
+        
+        self.centerLineActor.SetMapper(centerLineMapper)        
 
-        centerLineActor = vtk.vtkActor()
-        centerLineActor.SetMapper(centerLineMapper)        
+        self.AddActor(self.centerLineActor)
 
-        if selectedOrienation == self.viewType:
-            centerLineActor.GetProperty().SetColor([0.8, 0.2, 0.8])
-        else:
-            centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.8])
-
-        self.AddActor(centerLineActor)
+    def RemoveGuide(self):
+        self.RemoveActor(self.centerLineActor)
+        
 
     def UpdateSelectedPosition(self, position):        
         point_bottom = [position[0], 0.0, self.bounds[2]]
@@ -222,5 +229,10 @@ class E_SliceRenderer(vtk.vtkRenderer):
 
         super(E_SliceRenderer, self).AddViewProp(prop)
         self.AddGuide(bounds)
+
+    def RemoveViewProp(self, prop):
+        super(E_SliceRenderer, self).RemoveViewProp(prop)
+        self.RemoveGuide()
+        
         
         
