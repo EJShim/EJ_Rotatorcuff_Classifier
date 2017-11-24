@@ -38,7 +38,7 @@ class E_VolumeManager:
         self.m_resliceActor = [0, 0, 0]
 
         #Color MAp Volume
-        self.m_bShowCAM = True
+        self.m_bShowCAM = False
         self.m_bShowVolume = False
         self.m_colorMapMapper = vtk.vtkSmartVolumeMapper()
         self.m_colorMapVolume = vtk.vtkVolume()
@@ -90,10 +90,6 @@ class E_VolumeManager:
             self.m_resliceMapper[i].SetOrientation(i)
             self.m_resliceActor[i].SetMapper(self.m_resliceMapper[i])
             self.m_resliceActor[i].SetProperty(self.m_imageProperty)
-
-
-        
-        
 
     def SetPresetFunctions(self, idx, update = False):
 
@@ -460,15 +456,13 @@ class E_VolumeManager:
             self.Mgr.mainFrm.m_sliceSlider[i].setRange(minVal, maxVal)
         
         #update Preset OTF
-        if not self.m_bShowVolume:
-            self.ShowVolume()
+        self.ShowVolume()
 
-    def ShowVolume(self):
-        if self.m_bShowVolume: return
+    def ShowVolume(self):        
         #Add Slice
         for i in range(3):            
             #Add SLice
-            rendererIdx = i
+            rendererIdx = i            
             self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_resliceActor[i])
             self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
             self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)

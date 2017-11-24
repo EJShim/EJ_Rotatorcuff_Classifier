@@ -52,15 +52,7 @@ class E_Manager:
             self.mainFrm.m_vtkWidget[i].GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
 
         for i in range(3):            
-            self.m_sliceRenderer[i] = E_SliceRenderer(self,i)
-            # self.m_sliceRenderer[i].SetBackground(0.0, 0.0, 0.0)
-            # self.m_sliceRenderer[i].GetActiveCamera().ParallelProjectionOn()
-
-            #Set Camera position
-            # if i==0:
-            #     self.m_sliceRenderer[i].GetActiveCamera().Azimuth(90)
-            # elif i==1:
-            #     self.m_sliceRenderer[i].GetActiveCamera().Elevation(-90)
+            self.m_sliceRenderer[i] = E_SliceRenderer(self,i)            
 
         for i in range(3):            
             rendererIdx = (i+1)%3

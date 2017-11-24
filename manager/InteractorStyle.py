@@ -64,7 +64,7 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
         ha = 0
         
     def OnRightButtonPressed(self, obj, event):
-        self.renderer.CalculateDiff()        
+        self.renderer.CalculateDiff()
 
     def OnRightButtonReleased(self, obj, event):
         ha = 0
