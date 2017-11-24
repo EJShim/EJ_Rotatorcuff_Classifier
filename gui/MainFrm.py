@@ -356,16 +356,6 @@ class E_MainWindow(QMainWindow):
         self.InitRendererView(MainLayout)                
         
 
-        #dock widget
-        dockwidget = QDockWidget()
-        dockwidget.setMaximumHeight(100)
-        # dockwidget.setFeatures(QDockWidget.DockWidgetMovable)
-        font = QFont()
-        font.setPointSize(16)
-        self.m_logWidget = QPlainTextEdit()
-        self.m_logWidget.setFont(font)
-        dockwidget.setWidget(self.m_logWidget)
-        self.addDockWidget(Qt.BottomDockWidgetArea, dockwidget)
 
         MainLayout.setStretch(0, 1)
         MainLayout.setStretch(1, 1)
@@ -391,7 +381,8 @@ class E_MainWindow(QMainWindow):
 
         dirName = os.path.dirname(str(path[0][0]))
         self.m_saveDir = dirName
-        
+        if dirName == "":return
+
         dirName = str(dirName).lower()
 
     
@@ -420,11 +411,6 @@ class E_MainWindow(QMainWindow):
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-
-            
-            self.Mgr.SetLog(str(exc_type), error=True)
-            self.Mgr.SetLog(str(fname), error=True)
-            self.Mgr.SetLog(str(exc_tb.tb_lineno), error=True)
             self.Mgr.SetLog(str(e), error=True)
 
         self.Mgr.Redraw()
@@ -481,11 +467,6 @@ class E_MainWindow(QMainWindow):
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-
-
-            self.Mgr.SetLog(exc_type, error=True)
-            self.Mgr.SetLog(fname, error=True)
-            self.Mgr.SetLog(exc_tb.tb_lineno, error=True)
             self.Mgr.SetLog(str(e), error=True)
 
     def TogglePrediction(self, pred):        

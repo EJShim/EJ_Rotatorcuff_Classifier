@@ -307,8 +307,6 @@ class E_VolumeManager:
             self.m_shoulderSide = 'R'
         else:
             self.m_shoulderSide = 'L'
-        log = str(crossproZ) + ", " + str(self.m_shoulderSide) + " side -- " + str(axDir) + "//" + str(corDir) + "//" + str(sagDir)
-        self.Mgr.SetLog(log)
     
 
 
@@ -344,8 +342,7 @@ class E_VolumeManager:
 
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
-        self.Mgr.SetLog(str(self.m_bShowCAM))
-
+    
     def ShowClassActivationMap(self):
         
         if self.m_bShowCAM: return
@@ -672,8 +669,6 @@ class E_VolumeManager:
 
              #Make Volume ARray
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
-
-        self.Mgr.SetLog(str(description))
 
         if not description.find('t1') == -1:
             self.Mgr.mainFrm.protocolGroup.itemAt(0).widget().setChecked(True)

@@ -344,39 +344,12 @@ class E_Manager:
 
     def SetLog(self, text, error=False):
         QApplication.processEvents() 
-        self.mainFrm.m_logWidget.appendPlainText(text)
+        self.mainFrm.statusBar().showMessage(msg)(text)
 
     def PredictROI(self):
         selectedVolume = self.VolumeMgr.m_volumeArray
         shape = selectedVolume.shape
-        self.SetLog(str(shape))
         inputData = np.asarray(selectedVolume.reshape(1, 1, shape[0], shape[1], shape[2]), dtype=np.float32)
-        
-        # try:            
-        #     scoreVol = self.scoreFunc(inputData)[0][1]
-        #     self.SetLog(str(scoreVol.shape))
-        # except Exception as e:
-        #     self.SetLog(e)
-
-        # camsum = scoreVol
-        # camsum = scipy.ndimage.zoom(camsum, 16)
-
-        # log = "min : " + str(np.amin(camsum)) + ", max : " + str(np.amax(camsum))
-        # self.SetLog(log)
-        
-
-        # cam_min = np.amin(camsum)
-        # cam_max = np.amax(camsum)
-
-
-        # #Normalize To 0-255
-        # tmp = camsum - cam_min
-        # camsum = tmp / cam_max               
-        # camsum *= 255.0
-        # camsum = camsum.astype(int)
-
-        # self.VolumeMgr.AddClassActivationMap(camsum)
-
         self.SetLog("ROI Prediction")
 
     def SaveSliceImage(self):
