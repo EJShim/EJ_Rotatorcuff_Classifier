@@ -217,8 +217,6 @@ class E_Manager:
 
     def InitNetwork(self):
         self.tensor_in, y, self.keep_prob, last_conv = config_module.get_very_shallow_model()
-        
-
         #Restore Graph
         try:
             saver = tf.train.Saver()
@@ -258,7 +256,6 @@ class E_Manager:
         arr = self.xt[randIdx].reshape(resolution, resolution, resolution)
         self.VolumeMgr.AddVolume(arr)
         self.Redraw2D()
-
         # self.DrawVoxelArray(xt[randIdx])
 
 
@@ -272,16 +269,15 @@ class E_Manager:
         self.VolumeMgr.AddVolume(arr)
 
         if predict:            
-            self.PredictObject(self.xt[idx], int(self.yt[idx]))
+            self.PredictObject(self.xt[idx], int(self.yt[idx]))        
 
     def ShowScore(self, label, softmax):        
         self.mainFrm.SetProgressScore(softmax[0], label)
-        
-
-
 
     def PredictObject(self, inputData, label = -1):
-        if not self.m_bPred: return
+        if not self.m_bPred:             
+            self.VolumeMgr.RemoveClassActivationMap()
+            return
 
         resolution = self.VolumeMgr.resolution
         inputData = np.asarray(inputData.reshape(1, resolution, resolution, resolution, 1), dtype=np.float32)        
@@ -316,8 +312,6 @@ class E_Manager:
         dataMatrix = self.MakeDataMatrix( np.asarray(sample, dtype=np.uint8), 255)
 
         data_string = dataMatrix.tostring()
-
-
         dataImporter = vtk.vtkImageImport()
         dataImporter.CopyImportVoidPointer(data_string, len(data_string))
         dataImporter.SetDataScalarTypeToUnsignedChar()
@@ -341,44 +335,15 @@ class E_Manager:
 
         self.Redraw()
 
-
-
-
-
     def RunGenerativeMode(self):
         self.SetLog("Generative Mode")
         self.SetLog("Reset Renderer")
         self.SetLog("Set View Mode 1view")
         self.SetLog("Run Generative Mode")
 
-    def SyncCamera(self, idx):
-        # other = 1
-        # if idx == 1: other = 0
-        #
-        # cam1 = self.renderer[idx].GetActiveCamera()
-        # cam2 = self.renderer[other].GetActiveCamera()
-        #
-        # cam2.DeepCopy(cam1)
-        #
-        # self.Redraw()
-        return
-
-    def ClearScene(self):
-        for i in range(2):
-            self.renderer[i].RemoveAllViewProps()
-        for i in range(3):
-            self.m_sliceRenderer[i].RemoveAllViewProps()
-
-    def ClearCAM(self):
-        self.renderer[1].RemoveViewProp(self.VolumeMgr.m_colorMapVolume)
-
-        for i in range(3):
-            self.m_sliceRenderer[i].RemoveViewProp(self.VolumeMgr.m_colorMapResliceActor[i])
-
-            
-            # self.m_sliceRenderer[i].RemoveAllViewProps()
-
-        # self.SetLog(str(self.m_sliceRenderer[0].GetViewProps()))
+    def ClearScene(self):        
+        self.VolumeMgr.RemoveVolumeData()
+        self.VolumeMgr.RemoveClassActivationMap()
         
     def RotateCamera(self):
         camera = self.renderer[1].GetActiveCamera()        

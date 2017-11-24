@@ -12,7 +12,7 @@ class E_VolumeManager:
     def __init__(self, Mgr):
         self.Mgr = Mgr
 
-        self.m_volumeArray = None
+        self.m_volumeArray = None        
         self.m_resampledVolumeData = np.array([None])
         self.m_volumeInfo = None
         self.m_selectedIdx = None
@@ -31,13 +31,15 @@ class E_VolumeManager:
         self.m_imageProperty.SetInterpolationTypeToLinear()
 
         #Volume
+        self.volume_data = vtk.vtkImageData()
         self.m_volumeMapper = vtk.vtkSmartVolumeMapper()
-        self.m_volume = vtk.vtkActor()
+        self.m_volume = vtk.vtkVolume()
         self.m_resliceMapper = [0, 0, 0]
         self.m_resliceActor = [0, 0, 0]
 
         #Color MAp Volume
         self.m_bShowCAM = True
+        self.m_bShowVolume = False
         self.m_colorMapMapper = vtk.vtkSmartVolumeMapper()
         self.m_colorMapVolume = vtk.vtkVolume()
         self.m_colorMapResliceMapper = [None, None, None]
@@ -62,11 +64,36 @@ class E_VolumeManager:
 
 
 
-
         #Initialize
-        self.SetPresetFunctions(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex())
+        self.SetPresetFunctions(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex())        
+        self.InitializeVolumeFunctions()
         self.InitializeClassActivationMap()
         # self.InitializeRenderFunctions()
+
+    def InitializeVolumeFunctions(self):
+        #Init Mapper
+        self.m_volumeMapper.SetInputData(self.volume_data)
+        for i in range(3):
+            self.m_resliceMapper[i].SetInputData(self.volume_data)
+
+        # Prepare volume properties.
+        self.m_volumeProperty.SetColor(self.m_colorFunction)
+        self.m_volumeProperty.SetScalarOpacity(self.m_opacityFunction)
+
+        #Init Actor
+        self.m_volume.SetMapper(self.m_volumeMapper)
+        self.m_volume.SetProperty(self.m_volumeProperty)
+        self.m_volume.SetPosition([0, 0, 0])
+
+        #Init Slice
+        for i in range(3):
+            self.m_resliceMapper[i].SetOrientation(i)
+            self.m_resliceActor[i].SetMapper(self.m_resliceMapper[i])
+            self.m_resliceActor[i].SetProperty(self.m_imageProperty)
+
+
+        
+        
 
     def SetPresetFunctions(self, idx, update = False):
 
@@ -315,33 +342,38 @@ class E_VolumeManager:
 
     def ToggleClassActivationMap(self, state):        
         if state == 2:
-            self.m_bShowCAM = True
-
-            #Add To Renderer
-            for i in range(3):
-                rendererIdx = i
-                self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_colorMapResliceActor[i])
-                self.Mgr.m_sliceRenderer[i].ResetCamera()
-                self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(1.5)
-
-            #Add Actor
-            self.Mgr.renderer[1].AddVolume(self.m_colorMapVolume)
-            self.Mgr.renderer[1].ResetCamera()
-        else:
-            self.m_bShowCAM = False
+            self.ShowClassActivationMap()            
+        else:            
             self.RemoveClassActivationMap()
-            
 
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
         self.Mgr.SetLog(str(self.m_bShowCAM))
+
+    def ShowClassActivationMap(self):
+        
+        if self.m_bShowCAM: return
+        #Add To Renderer
+        for i in range(3):
+            rendererIdx = i
+            self.Mgr.m_sliceRenderer[i].AddViewProp(self.m_colorMapResliceActor[i])
+            self.Mgr.m_sliceRenderer[i].ResetCamera()
+            self.Mgr.m_sliceRenderer[i].GetActiveCamera().Zoom(1.5)
+
+        #Add Actor
+        self.Mgr.renderer[1].AddVolume(self.m_colorMapVolume)
+        self.Mgr.renderer[1].ResetCamera()
+        self.m_bShowCAM = True
+        
     def RemoveClassActivationMap(self):
+        if not self.m_bShowCAM: return
         #Remove From Renderer
         for i in range(3):                
             self.Mgr.m_sliceRenderer[i].RemoveViewProp(self.m_colorMapResliceActor[i])
 
         #Add Actor
         self.Mgr.renderer[1].RemoveVolume(self.m_colorMapVolume)
+        self.m_bShowCAM = False
 
     def InitializeClassActivationMap(self):        
         self.cam_data = vtk.vtkImageData()
@@ -401,98 +433,66 @@ class E_VolumeManager:
         
 
     def AddClassActivationMap(self, camArray):        
-        
         #This Function
         self.cam_data.GetPointData().SetScalars(numpy_support.numpy_to_vtk(num_array=camArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT))
 
-        #Add Actor
-        for i in range(3):            
-            #Add SLice
-            rendererIdx = i
-            self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_colorMapResliceActor[i])
-            self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
-            self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)
-
-        self.Mgr.renderer[1].AddVolume(self.m_colorMapVolume)
-        self.Mgr.renderer[1].ResetCamera()
+        if not self.m_bShowCAM: 
+            self.ShowClassActivationMap()
 
         self.Mgr.mainFrm.classCheck.setEnabled(True)
 
 
 
     def AddVolume(self, volumeArray, spacing = [1.0, 1.0, 1.0], origin = [0, 0, 0]):
-
-        data_string = volumeArray.tostring()
-
-        dim = volumeArray.shape
-
-        imgData = vtk.vtkImageData()
-        imgData.SetOrigin(origin)
-        imgData.SetDimensions(dim[2], dim[1], dim[0])
-        imgData.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
-        imgData.SetSpacing(spacing[2], spacing[1], spacing[0])
-
+        dim = volumeArray.shape        
+        self.volume_data.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
+        self.volume_data.SetOrigin(origin)
+        self.volume_data.SetDimensions(dim[2], dim[1], dim[0])        
+        self.volume_data.SetSpacing(spacing[2], spacing[1], spacing[0])
         floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
-        imgData.GetPointData().SetScalars(floatArray)
+        self.volume_data.GetPointData().SetScalars(floatArray)
 
-        self.m_scalarRange = imgData.GetScalarRange()
-
-
-        #update Preset OTF
-
-        self.AddVolumeData(imgData, True)
-
-    def AddVolumeData(self, source, type=False):
-        self.Mgr.ClearScene()
-
-        # Prepare volume properties.
-        self.m_volumeProperty.SetColor(self.m_colorFunction)
-        self.m_volumeProperty.SetScalarOpacity(self.m_opacityFunction)
-
-
-        #Mapper
-        if type:
-            self.m_volumeMapper.SetInputData(source)
-
-            for i in range(3):
-                self.m_resliceMapper[i].SetInputData(source)
-        else:
-            self.m_volumeMapper.SetInputConnection(source)
-            for i in range(3):
-                self.m_resliceMapper[i].SetInputConnection(source)
-
-        #Actor
-        self.m_volume = vtk.vtkVolume()
-        self.m_volume.SetMapper(self.m_volumeMapper)
-        self.m_volume.SetProperty(self.m_volumeProperty)
-        self.m_volume.SetPosition([0, 0, 0])
-
-        #slice Actor
+        self.m_scalarRange = self.volume_data.GetScalarRange()
+        #Update Slider
         for i in range(3):
-            self.m_resliceMapper[i].SetOrientation(i)
-            self.m_resliceActor[i].SetMapper(self.m_resliceMapper[i])
-            self.m_resliceActor[i].SetProperty(self.m_imageProperty)
+            minVal = self.m_resliceMapper[i].GetSliceNumberMinValue()
+            maxVal = self.m_resliceMapper[i].GetSliceNumberMaxValue()
+            self.Mgr.mainFrm.m_sliceSlider[i].setRange(minVal, maxVal)
+        
+        #update Preset OTF
+        if not self.m_bShowVolume:
+            self.ShowVolume()
 
+    def ShowVolume(self):
+        if self.m_bShowVolume: return
+        #Add Slice
+        for i in range(3):            
             #Add SLice
             rendererIdx = i
             self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_resliceActor[i])
             self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
             self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)
-
-
-            #Update Slider
-            minVal = self.m_resliceMapper[i].GetSliceNumberMinValue()
-            maxVal = self.m_resliceMapper[i].GetSliceNumberMaxValue()
-            self.Mgr.mainFrm.m_sliceSlider[i].setRange(minVal, maxVal)
-
-
+            
         #Add Actor
         self.Mgr.renderer[1].AddVolume(self.m_volume)
         self.Mgr.renderer[1].ResetCamera()
 
+        self.m_bShowVolume = True
+
         #Set preset
         self.Mgr.mainFrm.volumeWidget.onChangeIndex(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex(), Update=False)
-        #self.Mgr.Redraw()
+
+    def RemoveVolumeData(self):
+        if not self.m_bShowVolume: return
+        #Add Slice
+        for i in range(3):            
+            #Add SLice
+            rendererIdx = i
+            self.Mgr.m_sliceRenderer[rendererIdx].RemoveViewProp(self.m_resliceActor[i])
+        #Add Actor
+        self.Mgr.renderer[1].RemoveVolume(self.m_volume)        
+        self.m_bShowVolume = False
+        
 
     def ForwardSliceImage(self, idx):
         sliceNum = self.m_resliceMapper[idx].GetSliceNumber()
