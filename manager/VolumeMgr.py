@@ -650,6 +650,7 @@ class E_VolumeManager:
         self.Mgr.mainFrm.m_treeWidget.updateTree(self.m_volumeInfo)
 
     def AddSelectedVolume(self, idx):
+        self.Mgr.ClearScene()
         self.m_resampledVolumeData = np.array([None])
         self.m_decreaseRange = [1.0, 1.0]
         self.m_selectedIdx = idx
