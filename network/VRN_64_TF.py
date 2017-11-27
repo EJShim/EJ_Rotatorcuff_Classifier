@@ -9,7 +9,7 @@ cfg = {
     'dims' : (64, 64, 64),    
     'n_classes' : 2,
     'batches_per_chunk': 1,
-    'max_epochs' : 50,
+    'max_epochs' : 250,
     'n_rotations' : 1,
     'lr':[0.002, 0.0002]
 }

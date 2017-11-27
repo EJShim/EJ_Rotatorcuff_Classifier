@@ -41,7 +41,7 @@ test_targets = test_data_load['targets']
 
 #Get Configuration
 cfg = config_module.cfg
-max_epochs = 5
+max_epochs = cfg['max_epochs']
 batch_size = cfg['batch_size']
 
 #Initialize Figure
@@ -90,6 +90,9 @@ for epoch in range(max_epochs):
     #Run Test, Get Accuracy 
     score = []
     n_true = 0
+    #Class Activation Map Every Batch!
+    cam = sess.run(class_activation_map, feed_dict={x:cam_features, keep_prob:1.0})
+    cam_data.append(cam)
     for idx, t_target in enumerate(test_targets):
         pred, soft= sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[idx]], keep_prob:1.0})
         if pred[0] == t_target:
@@ -121,10 +124,7 @@ for epoch in range(max_epochs):
 
 
         _,loss_out = sess.run([optimize, loss_op], feed_dict={x:input_feed, y_true:label_feed, learning_rate:lr, keep_prob:0.0})
-        
-        #Class Activation Map Every Batch!
-        cam = sess.run(class_activation_map, feed_dict={x:cam_features, keep_prob:1.0})
-        cam_data.append(cam)
+    
         
         loss_data.append(loss_out)
         if epoch < 2:     

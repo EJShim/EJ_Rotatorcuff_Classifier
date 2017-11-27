@@ -381,8 +381,8 @@ class E_VolumeManager:
         scalarRange = [0.0, 255.0]        
         cam_volume_property = vtk.vtkVolumeProperty()
 
-        cam_color_function.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.0, 0.0, 0.0, 1.0)
-        cam_color_function.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.5, 0.0, 1.0, 0.0)
+        cam_color_function.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.4, 0.0, 0.0, 1.0)
+        cam_color_function.AddRGBPoint((scalarRange[0] + scalarRange[1])*0.7, 0.0, 1.0, 0.0)
         cam_color_function.AddRGBPoint(scalarRange[1], 1.0, 0.0, 0.0)
 
         cam_opacity_function.AddPoint((scalarRange[0] + scalarRange[1])*0.0, 0.3)
