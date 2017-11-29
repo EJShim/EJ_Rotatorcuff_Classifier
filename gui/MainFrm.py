@@ -27,9 +27,14 @@ class E_MainWindow(QMainWindow):
     def __init__(self, parent = None):
         super(E_MainWindow, self).__init__(parent)
 
+        
+        self.splash = QSplashScreen(QPixmap(os.path.join(root_path, "data", "screen.png")))
+        self.splash.show()
+        self.splash.finish(self)
+
         self.m_saveDir = None;
 
-        self.setWindowTitle("VRN Rotator-Cuff-Tear Classifier")
+        self.setWindowTitle("RCT Classifier")
         self.keyPlaying = {}
 
 
@@ -66,10 +71,13 @@ class E_MainWindow(QMainWindow):
 
 
         #Initialize
-
+        QApplication.processEvents()
+        self.splash.showMessage("initialize gui")
         self.InitToolbar()
         self.InitCentralWidget()
-        # self.InitSliceViewWidget()
+
+        self.splash.showMessage("initialize manager")
+        QApplication.processEvents() 
         self.InitManager()
 
 

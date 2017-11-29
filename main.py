@@ -10,6 +10,8 @@ from gui import Style
 app = QApplication([])
 app.setStyleSheet(Style.styleData)  
 
+
+
 window = E_MainWindow()
 window.showMaximized()
 window.show()
