@@ -18,7 +18,7 @@ import tensorflow as tf
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "2block_49")
+weight_path = os.path.join(root_path, "weights_build", "2block_49")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 

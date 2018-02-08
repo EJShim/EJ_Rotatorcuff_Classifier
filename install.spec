@@ -7,7 +7,7 @@ a = Analysis(['main.py'],
              binaries=[],
              datas=[                
                  ('icons', './icons'), 
-                 ('weights', './weights'), 
+                 ('weights_build', './weights_build'), 
                  ('data', './data'),                  
                  ('train_test_module/train_record_2block.npz', './train_test_module')
                 ],
