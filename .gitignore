@@ -1,3 +1,4 @@
+.gitignore
 additional/*
 build/
 data/TestData.npz

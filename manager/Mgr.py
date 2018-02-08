@@ -13,12 +13,12 @@ from manager.E_SliceRenderer import *
 import matplotlib.pyplot as plt
 from data import labels
 import tensorflow as tf
-import network.VRN_64_TF as config_module
+# import network.VRN_64_TF as config_module
 
 #define argument path
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-weight_path = os.path.join(root_path, "weights", "2block", "epoch49model.ckpt")
+weight_path = os.path.join(root_path, "weights", "2block_49")
 model_path = os.path.join(root_path, "data", "TestData.npz")
 v_res = 1
 
@@ -29,7 +29,7 @@ class E_Manager:
         self.renderer = [0, 0]
         self.m_sliceRenderer = [0, 0, 0]
 
-        self.sess = tf.InteractiveSession()
+        self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True,log_device_placement=False))
         self.m_bPred = False
 
         #Get Features and Target Data
@@ -207,15 +207,14 @@ class E_Manager:
             self.SetLog('File Extension Not Supported')
         
 
-    def InitNetwork(self):
-        self.tensor_in, y, self.keep_prob, last_conv = config_module.get_very_shallow_model()
-        #Restore Graph
-        try:
-            saver = tf.train.Saver()
-            saver.restore(self.sess, weight_path)            
-        except Exception as e:
-            self.SetLog("trained graph not found" + str(e))
-            self.sess.run(tf.global_variables_initializer())
+    def InitNetwork(self):        
+
+        tf.saved_model.loader.load(self.sess, ['foo-tag'], weight_path)
+        self.tensor_in = tf.get_collection('input_tensor')[0]
+        y = tf.get_collection('output_tensor')[0]
+        self.keep_prob = tf.get_collection('keep_prob')[0]
+        last_conv = tf.get_collection('last_conv')[0]
+        # print()
 
         y = tf.layers.flatten(y)
         self.pred_classes = tf.argmax(y, axis=1)

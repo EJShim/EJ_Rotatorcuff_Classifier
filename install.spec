@@ -3,7 +3,7 @@
 block_cipher = None
 
 a = Analysis(['main.py'],
-             pathex=['D:\\projects\\EJ_ROTATORCUFF_CLASSIFIER'],
+             pathex=['/Users/ej/projects/EJ_ROTATORCUFF_CLASSIFIER'],
              binaries=[],
              datas=[                
                  ('icons', './icons'), 
@@ -11,7 +11,7 @@ a = Analysis(['main.py'],
                  ('data', './data'),                  
                  ('train_test_module/train_record_2block.npz', './train_test_module')
                 ],
-             hiddenimports=['scipy._lib.messagestream'],
+             hiddenimports=['scipy._lib.messagestream', 'pandas._libs.tslibs.timedeltas'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -26,7 +26,7 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=True )
+          console=False )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

@@ -80,10 +80,10 @@ dims, n_classes = tuple(cfg['dims']), cfg['n_classes']
 shape = (None,) + dims + (1,)
 
 
-def get_deep_model():
-    keep_prob = tf.placeholder(dtype=tf.float32)
-    b_training = tf.cast(1.0-keep_prob, tf.bool)
-    l_in = tf.placeholder(dtype=tf.float32, shape=shape)
+def get_deep_model():    
+    keep_prob = tf.placeholder(dtype=tf.float32, name="keep_prob")
+    b_training = tf.cast(1.0-keep_prob, tf.bool, name="b_training")
+    l_in = tf.placeholder(dtype=tf.float32, shape=shape, name="input_holder")
     l_conv0 = tf.layers.conv3d(
         inputs = l_in,
         filters = 32,
