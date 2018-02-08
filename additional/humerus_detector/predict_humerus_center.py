@@ -40,7 +40,7 @@ with tf.Session() as sess:
     print("Model restored.")
 
     
-    img = scipy.ndimage.imread("./humerus_detector/samples/3.jpg")
+    img = scipy.ndimage.imread(file_path + "/samples/4.jpg")
     img = rgb2gray(img)
 
     plt.figure()

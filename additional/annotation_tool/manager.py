@@ -17,7 +17,7 @@ data = np.load(model_path)
 #Load Temp Annotation
 if os.path.isfile(tmp_path):
     tmp_data = np.load(tmp_path)['data']            
-else:
+else: g
     print('tmp file not exists')
     tmp_data = [None] * 200
     np.savez_compressed(tmp_path, data=tmp_data)

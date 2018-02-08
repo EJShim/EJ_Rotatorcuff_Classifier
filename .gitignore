@@ -5,3 +5,4 @@ data/TestData.npz
 __pycache__/
 dist/
 path_tmp
+*.pyc
