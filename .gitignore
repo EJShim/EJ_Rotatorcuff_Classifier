@@ -6,3 +6,6 @@ __pycache__/
 dist/
 path_tmp
 *.pyc
+.DS_Store
+annotation_tool/
+weights/
