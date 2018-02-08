@@ -1,3 +1,4 @@
+#-*- encoding: utf8 -*-
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -5,6 +6,7 @@ from gui.VolumeRenderingWidget import E_VolumeRenderingWidget
 from gui.VolumeListWidget import E_VolumeListWidget
 from gui.VolumeTreeWidget import E_VolumeTreeWidget
 from gui.RendererViewWidget import E_MainRenderingWidget
+import datetime
 
 
 import vtk
@@ -28,11 +30,19 @@ class E_MainWindow(QMainWindow):
         super(E_MainWindow, self).__init__(parent)
 
         
+        self.installEventFilter(self)
+
         self.splash = QSplashScreen(QPixmap(os.path.join(root_path, "data", "screen.png")))
         self.splash.show()
         self.splash.finish(self)
 
         self.m_saveDir = None;
+        try:
+            with open(os.path.join(root_path, 'path_tmp'), 'r') as text_file:
+                self.m_saveDir = text_file.read().replace('\n', '')
+        except:
+            with open(os.path.join(root_path, 'path_tmp'), 'w') as text_file:
+                print(self.m_saveDir, file=text_file)
 
         self.setWindowTitle("RCT Classifier")
         self.keyPlaying = {}
@@ -87,6 +97,15 @@ class E_MainWindow(QMainWindow):
         self.progressBar = QProgressBar()
         self.progressBar.setGeometry(30, 40, 200, 25)        
         self.statusBar().addPermanentWidget(self.progressBar)
+    def eventFilter(self, obj, event):
+        # print(event)
+        if event.type() == QEvent.ShortcutOverride:
+            
+            if event.key() == Qt.Key_Space:          
+                self.onSaveData()
+            return True # means stop event propagation
+        else:
+            return QMainWindow.eventFilter(self, obj, event)
 
 
     def InitToolbar(self):
@@ -210,6 +229,8 @@ class E_MainWindow(QMainWindow):
         self.rctGroup.addWidget(QRadioButton("Medium"))
         self.rctGroup.addWidget(QRadioButton("Large"))
         self.rctGroup.addWidget(QRadioButton("Massive"))
+        self.rctGroup.addWidget(QRadioButton("partial-50"))
+        self.rctGroup.addWidget(QRadioButton("partial+50"))
         self.rctGroup.itemAt(0).widget().setChecked(True)
         objectToolbar.addWidget(groupBoxRCT)
         objectToolbar.addSeparator()
@@ -378,17 +399,21 @@ class E_MainWindow(QMainWindow):
     def onImportObject(self):
         self.Mgr.SetLog('Import 3d Object')
 
-        path = QFileDialog.getOpenFileName(self, "Import 3D Objects", "~/", "Object Files(*.stl *.obj) ;; Object Files(*.stl) ;; Object Files(*.obj)")
+        path = QFileDialog.getOpenFileName(self, "Import 3D Objects", self.m_saveDir, "Object Files(*.stl *.obj) ;; Object Files(*.stl) ;; Object Files(*.obj)")
         self.Mgr.ImportObject(path[0])
 
     def onImportVolume(self):
         self.Mgr.SetLog('import Volume')
 
-        path = QFileDialog.getOpenFileNames(self, "Import 3D Objects", "~/", "Dicom File(*.dcm)")
-        fileSeries = path[0] 
+        path = QFileDialog.getOpenFileNames(self, "Import 3D Objects", self.m_saveDir, "Dicom File(*.dcm)")
+        fileSeries = path[0]
         if len(fileSeries) == 0: return
         dirName = os.path.dirname(str(path[0][0]))
+        
+        #Save SaveDir
         self.m_saveDir = dirName
+        with open(os.path.join(root_path, 'path_tmp'), 'w') as text_file:
+            print(self.m_saveDir, file=text_file)
 
 
         dirName = str(dirName).lower()
@@ -409,11 +434,16 @@ class E_MainWindow(QMainWindow):
         elif not dirName.find('massive') == -1:
             self.Mgr.SetLog("Massive RCT Data")
             self.rctGroup.itemAt(4).widget().setChecked(True)
+        elif not dirName.find('partial') == -1:
+            if not dirName.find('below') == -1:
+                self.Mgr.SetLog("partial below 50")
+                self.rctGroup.itemAt(5).widget().setChecked(True)
+            if not dirName.find('upper') == -1:
+                self.Mgr.SetLog("partial upper 50")
+                self.rctGroup.itemAt(6).widget().setChecked(True)
 
         if len(fileSeries) == 0: return
 
-
-        #Import Volume        
         try :
             self.Mgr.VolumeMgr.ImportVolume(fileSeries)
         except Exception as e:
@@ -461,6 +491,10 @@ class E_MainWindow(QMainWindow):
             yPos = self.m_rangeSlider[1].value() / 1000
 
             savePath = self.m_saveDir + '/' + rct + "_" + orientation + "_" + protocol
+
+            if os.path.exists(savePath + '.npz'):
+                now = datetime.datetime.now()
+                savePath += now.strftime('%H_%M_%S')
             log = "Save Processed Data in (" + savePath   + ".npz" +  ")"            
             self.Mgr.SetLog(log)
             

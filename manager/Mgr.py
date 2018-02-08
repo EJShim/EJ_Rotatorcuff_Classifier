@@ -217,7 +217,7 @@ class E_Manager:
             self.SetLog("trained graph not found" + str(e))
             self.sess.run(tf.global_variables_initializer())
 
-        y = tf.contrib.layers.flatten(y)
+        y = tf.layers.flatten(y)
         self.pred_classes = tf.argmax(y, axis=1)
         self.pred_probs = tf.nn.softmax(y)
 

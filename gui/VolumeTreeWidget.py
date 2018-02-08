@@ -47,6 +47,7 @@ class E_VolumeTreeWidget(QTreeWidget):
 
     def dbcEvent(self, item, col):
         itemName = item.text(col)
-        itemIdx = itemName.split()[1]
-
+        items = itemName.split()
+        if len(items) < 2: return       
+        itemIdx = items[1]
         self.mainFrm.Mgr.VolumeMgr.AddSelectedVolume(itemIdx)

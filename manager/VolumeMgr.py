@@ -1,6 +1,7 @@
 import mudicom
 import vtk
 from vtk.util import numpy_support
+import ctypes
 
 import numpy as np
 import scipy.ndimage
@@ -166,7 +167,8 @@ class E_VolumeManager:
             self.m_volumeMapper.SetBlendModeToComposite()
 
 
-    def get_volume_info(self, path):        
+    def get_volume_info(self, path):
+        #path = path.encode('utf-8')
         mu = mudicom.load(path)        
 
         #0008,1030: Study Description
