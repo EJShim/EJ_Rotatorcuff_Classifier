@@ -1,0 +1,8 @@
+additional/*
+build/
+data/TestData.npz
+*/__pycache__/*
+__pycache__/
+dist/
+install.spec
+path_tmp
