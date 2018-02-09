@@ -12,3 +12,5 @@ path_tmp
 annotation_tool/
 weights/
 .install.spec
+data/TrainData.npz
+theano_modules(deprecated)
