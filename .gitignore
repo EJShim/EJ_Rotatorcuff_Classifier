@@ -11,3 +11,4 @@ path_tmp
 .DS_Store
 annotation_tool/
 weights/
+.install.spec

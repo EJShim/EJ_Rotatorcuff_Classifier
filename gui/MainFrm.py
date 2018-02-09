@@ -103,6 +103,8 @@ class E_MainWindow(QMainWindow):
             
             if event.key() == Qt.Key_Space:          
                 self.onSaveData()
+            if event.key() == Qt.Key_V:
+                self.onImportVolume()
             return True # means stop event propagation
         else:
             return QMainWindow.eventFilter(self, obj, event)

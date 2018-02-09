@@ -3,7 +3,7 @@
 block_cipher = None
 
 a = Analysis(['main.py'],
-             pathex=['/Users/ej/projects/EJ_ROTATORCUFF_CLASSIFIER'],
+             pathex=['D:\\projects\\EJ_ROTATORCUFF_CLASSIFIER'],
              binaries=[],
              datas=[                
                  ('icons', './icons'), 
@@ -11,7 +11,7 @@ a = Analysis(['main.py'],
                  ('data', './data'),                  
                  ('train_test_module/train_record_2block.npz', './train_test_module')
                 ],
-             hiddenimports=['scipy._lib.messagestream', 'pandas._libs.tslibs.timedeltas'],
+             hiddenimports=['scipy._lib.messagestream'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
