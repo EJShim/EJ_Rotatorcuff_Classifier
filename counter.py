@@ -6,6 +6,7 @@ import random
 
 
 numNone = 0
+numPartial = 0
 numSmall = 0
 numMed = 0
 numLarge = 0
@@ -15,7 +16,7 @@ numAXL = 0
 numCOR = 0
 numSAG = 0
 
-listFile = list(glob.iglob('/home/ej/data/Shoulder/RCT_JunKim/**/*.npz', recursive = True))
+listFile = list(glob.iglob('D:/data/Shoulder_rename/**/*.npz', recursive = True))
 random.shuffle(listFile)
 
 total = len(listFile)
@@ -36,20 +37,20 @@ for filename in listFile:
     orientation = data['orientation']
     status = data['status']
 
-    features.append(data['data'])
     
 
-    if orientation == "AXL":
+    if orientation == "AXL":        
         numAXL += 1
     elif orientation == "COR":
         numCOR += 1
-    elif orientation == "SAG":
+    elif orientation == "SAG":        
         numSAG += 1
 
     if status == 'None':
         numNone += 1
         targets.append(0)
     elif status == 'Small':
+        continue
         numSmall += 1
         targets.append(1)
     elif status == 'Medium':
@@ -57,10 +58,16 @@ for filename in listFile:
         targets.append(1)
     elif status == 'Large':
         numLarge += 1
-        targets.append(1)
+        targets.append(2)
     elif status == 'Massive':
         numMessive += 1
-        targets.append(1)
+        targets.append(2)
+    else:
+        continue
+        print("Partial Tear not Included")
+        # numPartial += 1
+        # targets.append(1)
+    features.append(data['data'])
 
     log =  "\rProcessing.... : " + str((cur / total)*100) + "%"
     sys.stdout.write(log)
@@ -68,7 +75,7 @@ for filename in listFile:
 
 
 print("\n None : ", numNone)
-print(" RCT : ", numSmall + numMed + numLarge + numMessive)
+print(" Partial : ", numPartial)
 print(" Small : ", numSmall)
 print(" Medium : ", numMed)
 print(" Large : ", numLarge)
@@ -78,12 +85,12 @@ print("AXL : ", numAXL)
 print("COR : ", numCOR)
 print("SAG : ", numSAG)
 
+
 test_features = features[:200]
 test_targets = targets[:200]
 
 train_features = features[200:]
 train_targets = targets[200:]
-
 
 
 train_features = np.array(train_features)
@@ -95,9 +102,9 @@ test_features = test_features.reshape(test_features.shape[0], 1, test_features.s
 
 
 
-print("Train Data : ", train_features.shape)
-print("Test Data : ", test_features.shape)
+print("Train Data_3class : ", train_features.shape)
+print("Test Data_3class : ", test_features.shape)
 
 
-# np.savez_compressed("./new/TrainData", features=train_features, targets=train_targets)
-# np.savez_compressed("./new/TestData", features=test_features, targets=test_targets)
+np.savez_compressed('./data/TrainData_nonesmall_3cl', features=train_features, targets=train_targets)
+np.savez_compressed("./data/TestData_nonesmall_3cl", features=test_features, targets=test_targets)

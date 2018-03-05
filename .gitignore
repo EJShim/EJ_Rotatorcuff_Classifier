@@ -14,3 +14,11 @@ weights/
 .install.spec
 data/TrainData.npz
 theano_modules(deprecated)
+data/TestData_3cl.npz
+data/TestData_coronal_3cl.npz
+data/TestData_nonesmall_3cl.npz
+data/TrainData_3cl.npz
+data/TrainData_coronal_3cl.npz
+data/TrainData_nonesmall_3cl.npz
+
+

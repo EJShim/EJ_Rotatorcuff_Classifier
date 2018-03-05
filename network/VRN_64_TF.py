@@ -2,12 +2,12 @@ import tensorflow as tf
 
 
 cfg = {
-    'batch_size' : 6,
+    'batch_size' : 4,
     'decay_rate' : 0,
     'reg' : 0.001,
     'momentum' : 0.9,
     'dims' : (64, 64, 64),    
-    'n_classes' : 2,
+    'n_classes' : 3,
     'batches_per_chunk': 1,
     'max_epochs' : 250,
     'n_rotations' : 1,
