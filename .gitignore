@@ -16,5 +16,3 @@ data/TrainData.npz
 theano_modules(deprecated)
 data/*.npz
 tmp/
-
-

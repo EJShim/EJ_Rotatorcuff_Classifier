@@ -14,8 +14,8 @@ sys.path.insert(0, root_path)
 import network.VRN_64_TF as config_module
 
 #Training Data Path
-TRAIN_DATA_PATH = os.path.join(root_path, "data", "TrainData_nonesmall_3cl.npz")
-TEST_DATA_PATH =  os.path.join(root_path, "data", "TestData_nonesmall_3cl.npz")
+TRAIN_DATA_PATH = os.path.join(root_path, "data", "TrainData_ALL_COR_5cl.npz")
+TEST_DATA_PATH =  os.path.join(root_path, "data", "TestData_ALL_COR_5cl.npz")
 BINARY = False
 
 
@@ -54,6 +54,13 @@ test_features = np.reshape(test_features, (test_features.shape[0], test_features
 # cam_features = test_features[116]
 # cam_features = np.reshape(cam_features, (1, cam_features.shape[0], cam_features.shape[1], cam_features.shape[2], cam_features.shape[3]))
 test_targets = test_data_load['targets']
+
+if BINARY:
+    for i,t in enumerate(targets):
+        if t > 1: targets[i] = 1
+    
+    for i,t in enumerate(test_targets):
+        if t > 1: test_targets[i] = 1
 
 
 #Get Configuration
@@ -107,7 +114,7 @@ saver = tf.train.Saver()
 lr = 0.002
 sess.run(init)
 for epoch in range(max_epochs):
-    workbook = xlsxwriter.Workbook(os.path.join(root_path,'tmp','nonesmall_3cls.xlsx'))
+    workbook = xlsxwriter.Workbook(os.path.join(root_path,'tmp','4cls-small-medium.xlsx'))
     worksheet = workbook.add_worksheet()
 
     worksheet.write(0, 0, "Loss")
@@ -131,11 +138,13 @@ for epoch in range(max_epochs):
     # cam_data.append(cam)
     for idx, t_target in enumerate(test_targets):
         pred, soft= sess.run([pred_classes, pred_probs], feed_dict={x:[test_features[idx]], keep_prob:1.0})
+
+        if t_target > 1.0: t_target = t_target - 1.0
         
         if pred[0] == t_target:
                 n_true += 1
                 n_bin_true += 1
-        elif pred[0] + t_target > 1:
+        elif not pred[0] == 0 and not t_target == 0:
                 n_bin_true += 1
 
         score.append(soft[0][1])
@@ -168,7 +177,8 @@ for epoch in range(max_epochs):
         label_feed = targets[idx:idx+batch_size]
         idx = idx+batch_size
 
-        #label_feed = [1.0 if x >= 1.0 else 0.0 for x in label_feed ]
+        #Small + Medium
+        label_feed = [x-1.0 if x > 1.0 else x for x in label_feed ]
 
         _,loss_out = sess.run([optimize, loss_op], feed_dict={x:input_feed, y_true:label_feed, learning_rate:lr, keep_prob:0.0})
     

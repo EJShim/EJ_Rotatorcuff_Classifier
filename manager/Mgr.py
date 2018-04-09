@@ -209,7 +209,7 @@ class E_Manager:
 
     def InitNetwork(self):        
 
-        tf.saved_model.loader.load(self.sess, ['foo-tag'], weight_path)
+        -foo-tag'], weight_path)
         self.tensor_in = tf.get_collection('input_tensor')[0]
         y = tf.get_collection('output_tensor')[0]
         self.keep_prob = tf.get_collection('keep_prob')[0]

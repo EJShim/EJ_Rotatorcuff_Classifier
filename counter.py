@@ -1,4 +1,3 @@
-
 import sys
 import glob
 import numpy as np
@@ -39,34 +38,33 @@ for filename in listFile:
 
     
 
-    if orientation == "AXL":        
+    if orientation == "AXL":
+        continue      
         numAXL += 1
     elif orientation == "COR":
         numCOR += 1
-    elif orientation == "SAG":        
+    elif orientation == "SAG":
+        continue        
         numSAG += 1
 
     if status == 'None':
         numNone += 1
         targets.append(0)
     elif status == 'Small':
-        continue
         numSmall += 1
         targets.append(1)
     elif status == 'Medium':
         numMed += 1
-        targets.append(1)
+        targets.append(2)
     elif status == 'Large':
         numLarge += 1
-        targets.append(2)
+        targets.append(3)
     elif status == 'Massive':
         numMessive += 1
-        targets.append(2)
+        targets.append(3)
     else:
-        continue
-        print("Partial Tear not Included")
-        # numPartial += 1
-        # targets.append(1)
+        targets.append(4)
+        numPartial += 1
     features.append(data['data'])
 
     log =  "\rProcessing.... : " + str((cur / total)*100) + "%"
@@ -106,5 +104,5 @@ print("Train Data_3class : ", train_features.shape)
 print("Test Data_3class : ", test_features.shape)
 
 
-np.savez_compressed('./data/TrainData_nonesmall_3cl', features=train_features, targets=train_targets)
-np.savez_compressed("./data/TestData_nonesmall_3cl", features=test_features, targets=test_targets)
+np.savez_compressed('./data/TrainData_ALL_COR_5cl', features=train_features, targets=train_targets)
+np.savez_compressed("./data/TestData_ALL_COR_5cl", features=test_features, targets=test_targets)

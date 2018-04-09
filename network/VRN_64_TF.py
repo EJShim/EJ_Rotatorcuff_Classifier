@@ -7,7 +7,7 @@ cfg = {
     'reg' : 0.001,
     'momentum' : 0.9,
     'dims' : (64, 64, 64),    
-    'n_classes' : 3,
+    'n_classes' : 4,
     'batches_per_chunk': 1,
     'max_epochs' : 250,
     'n_rotations' : 1,
