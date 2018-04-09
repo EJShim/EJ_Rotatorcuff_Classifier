@@ -15,4 +15,5 @@ weights/
 data/TrainData.npz
 theano_modules(deprecated)
 data/*.npz
+data/old/*.npz
 tmp/
