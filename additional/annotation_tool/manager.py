@@ -6,8 +6,7 @@ import numpy as np
 
 
 file_path = os.path.dirname(os.path.realpath(__file__))
-root_path = os.path.abspath(os.path.join(file_path, os.pardir))
-model_path = os.path.join(root_path, 'data', 'TestData.npz')
+model_path = os.path.join(file_path, 'testdata_all_cor_5cl.npz')
 tmp_path = os.path.join(file_path, 'tmp.npz')
 
 #Load Data
@@ -17,7 +16,7 @@ data = np.load(model_path)
 #Load Temp Annotation
 if os.path.isfile(tmp_path):
     tmp_data = np.load(tmp_path)['data']            
-else: g
+else:
     print('tmp file not exists')
     tmp_data = [None] * 200
     np.savez_compressed(tmp_path, data=tmp_data)

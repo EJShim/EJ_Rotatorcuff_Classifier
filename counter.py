@@ -84,6 +84,9 @@ print("COR : ", numCOR)
 print("SAG : ", numSAG)
 
 
+exit()
+
+
 test_features = features[:200]
 test_targets = targets[:200]
 
