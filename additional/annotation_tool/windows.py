@@ -1,4 +1,5 @@
 import sys,os
+import atexit
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -12,8 +13,6 @@ import manager
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.join(file_path, os.pardir)
-icon_path = os.path.join(root_path, 'icons')
-
 class AnnotationWindow(QMainWindow):    
 
     def __init__(self, parent = None):
@@ -30,36 +29,57 @@ class AnnotationWindow(QMainWindow):
         self.init_list()
         self.init_mainfrm()
         self.set_view_grid()
-
-        timer = QTimer(self)        
-        timer.timeout.connect(self.on_save_labels)
-        timer.start(120000)
+        
 
         self.central_layout.setStretch(0, 1)
         self.central_layout.setStretch(1, 5)
-        
+
+        timer = QTimer(self)        
+        timer.timeout.connect(self.update_timer)
+        timer.start(1000)
+
+        atexit.register(self.on_save_labels)
 
 
     def init_toolbar(self):
         toolbar = QToolBar()
         self.addToolBar(toolbar)
 
-        #Import Object Action
-        save_action = QAction(QIcon(icon_path + "/051-cmyk.png"), "Save Label", self)
-        save_action.triggered.connect(self.on_save_labels)
-        toolbar.addAction(save_action)
+
+        #Add Timer
+        self.timer_widget = QLabel()
+        toolbar.addWidget(self.timer_widget)
+        toolbar.addSeparator()
 
 
+        #Add Controler
         label_control = QGroupBox("data label")
         toolbar.addWidget(label_control)        
-        self.layout_label_control = QVBoxLayout()
+        self.layout_label_control = QHBoxLayout()
         label_control.setLayout(self.layout_label_control)
-        radio_none = QRadioButton("None ('W' key)")
+        
+        radio_none = QRadioButton("None ('Q' key)")
         radio_none.toggled.connect(self.on_none_label)        
-        radio_rct = QRadioButton("RCT ('Q' key)")
-        radio_rct.toggled.connect(self.on_rct_label)
+        
+        radio_partial = QRadioButton("Partial ('W' key)")
+        radio_partial.toggled.connect(self.on_partial_label)
+        
+        radio_small = QRadioButton("Small ('E' key)")
+        radio_small.toggled.connect(self.on_small_label)        
+        
+        radio_medium = QRadioButton("Medium ('R' key)")
+        radio_medium.toggled.connect(self.on_medium_label)
+        
+        radio_large = QRadioButton("Large+Massive ('T' key)")
+        radio_large.toggled.connect(self.on_large_label)        
+        
+
+
         self.layout_label_control.addWidget(radio_none)
-        self.layout_label_control.addWidget(radio_rct)                   
+        self.layout_label_control.addWidget(radio_partial)
+        self.layout_label_control.addWidget(radio_small)
+        self.layout_label_control.addWidget(radio_medium)
+        self.layout_label_control.addWidget(radio_large)
         self.layout_label_control.itemAt(0).widget().setChecked(True)
         
 
@@ -70,6 +90,20 @@ class AnnotationWindow(QMainWindow):
         self.central_layout.addWidget(self.widget_list)
 
         self.update_list()
+
+    def update_timer(self):
+        manager.elapsed_time += 1
+
+        secs = manager.elapsed_time % 60
+        mins = manager.elapsed_time // 60
+        hrs = manager.elapsed_time // 3600
+        message = "elapsed time " + str(hrs).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(secs).zfill(2)
+        self.timer_widget.setText(message)
+
+
+        #Save Label every 2 minutes
+        if manager.elapsed_time % 120 == 0:
+            self.on_save_labels()
 
 
         
@@ -84,12 +118,21 @@ class AnnotationWindow(QMainWindow):
             if data == None:
                 self.widget_list.insertItem(idx, str("(undefined)"))                
             elif data == 0: #NONE_RCT
-                self.widget_list.insertItem(idx, str("None-RCT"))
+                self.widget_list.insertItem(idx, str("None"))
                 self.widget_list.item(idx).setBackground(QBrush(QColor('green')))
-            elif data == 1: #RCT_RCT
-                self.widget_list.insertItem(idx, str("RCT"))
-                self.widget_list.item(idx).setBackground(QBrush(QColor('red')))
-
+            elif data == 1: #Partial_RCT
+                self.widget_list.insertItem(idx, str("Partial"))
+                self.widget_list.item(idx).setBackground(QBrush(QColor(100, 0, 0)))
+            elif data == 2: #RCT_RCT
+                self.widget_list.insertItem(idx, str("Small"))
+                self.widget_list.item(idx).setBackground(QBrush(QColor(150, 0, 0)))
+            elif data == 3: #RCT_RCT
+                self.widget_list.insertItem(idx, str("Medium"))
+                self.widget_list.item(idx).setBackground(QBrush(QColor(200, 0, 0)))                    
+            elif data == 4: #RCT_RCT
+                self.widget_list.insertItem(idx, str("Large"))
+                self.widget_list.item(idx).setBackground(QBrush(QColor(255, 0, 0 )))
+                
             
 
 
@@ -128,7 +171,6 @@ class AnnotationWindow(QMainWindow):
 
     #SLOTS
     def on_save_labels(self):
-        print("label saved")
         manager.save_tmp_data()
     
     def set_view_normal(self):
@@ -164,11 +206,32 @@ class AnnotationWindow(QMainWindow):
         manager.tmp_data[self.selected_idx] = 0
         self.update_list()
 
-    def on_rct_label(self):
+    def on_partial_label(self):
         if self.selected_idx == None:
             return
 
         manager.tmp_data[self.selected_idx] = 1
+        self.update_list()
+
+    def on_small_label(self):
+        if self.selected_idx == None:
+            return
+
+        manager.tmp_data[self.selected_idx] = 2
+        self.update_list()
+
+    def on_medium_label(self):
+        if self.selected_idx == None:
+            return
+
+        manager.tmp_data[self.selected_idx] = 3
+        self.update_list()
+
+    def on_large_label(self):
+        if self.selected_idx == None:
+            return
+
+        manager.tmp_data[self.selected_idx] = 4
         self.update_list()
 
 
@@ -180,12 +243,21 @@ class AnnotationWindow(QMainWindow):
             
             if event.key() == Qt.Key_Space:          
                 self.toggle_view_mode()
-            elif event.key() == Qt.Key_W:
-                self.layout_label_control.itemAt(1).widget().setChecked(True)
-                self.layout_label_control.itemAt(0).widget().setChecked(True)
             elif event.key() == Qt.Key_Q:
+                self.layout_label_control.itemAt(1).widget().setChecked(True)
+                self.layout_label_control.itemAt(0).widget().setChecked(True)
+            elif event.key() == Qt.Key_W:
                 self.layout_label_control.itemAt(0).widget().setChecked(True)
                 self.layout_label_control.itemAt(1).widget().setChecked(True)
+            elif event.key() == Qt.Key_E:
+                self.layout_label_control.itemAt(0).widget().setChecked(True)
+                self.layout_label_control.itemAt(2).widget().setChecked(True)
+            elif event.key() == Qt.Key_R:
+                self.layout_label_control.itemAt(0).widget().setChecked(True)
+                self.layout_label_control.itemAt(3).widget().setChecked(True)
+            elif event.key() == Qt.Key_T:
+                self.layout_label_control.itemAt(0).widget().setChecked(True)
+                self.layout_label_control.itemAt(4).widget().setChecked(True)
                 
 
             return True # means stop event propagation

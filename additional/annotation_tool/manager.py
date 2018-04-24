@@ -6,8 +6,8 @@ import numpy as np
 
 
 file_path = os.path.dirname(os.path.realpath(__file__))
-model_path = os.path.join(file_path, 'testdata_all_cor_5cl.npz')
-tmp_path = os.path.join(file_path, 'tmp.npz')
+model_path = os.path.join(file_path, 'data', '5cl_gt.npz')
+tmp_path = os.path.join(file_path, 'data', 'saved_label.npz')
 
 #Load Data
 data = np.load(model_path)
@@ -15,11 +15,15 @@ data = np.load(model_path)
 
 #Load Temp Annotation
 if os.path.isfile(tmp_path):
-    tmp_data = np.load(tmp_path)['data']            
+    loader = np.load(tmp_path)
+    
+    tmp_data = loader['data']
+    elapsed_time = loader['time']
 else:
     print('tmp file not exists')
     tmp_data = [None] * 200
-    np.savez_compressed(tmp_path, data=tmp_data)
+    elapsed_time = 0
+    np.savez_compressed(tmp_path, data=tmp_data, time=elapsed_time)
 
 
 #Initialize Renderers
@@ -62,8 +66,9 @@ for i in range(3):
 def get_tmp_data():
     return tmp_data
 
+
 def save_tmp_data():
-    np.savez_compressed(tmp_path, data=tmp_data)
+    np.savez_compressed(tmp_path, data=tmp_data, time=elapsed_time)
 
 def get_volume(idx = None):
     volume_list = data['features']

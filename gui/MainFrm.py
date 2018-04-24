@@ -407,18 +407,14 @@ class E_MainWindow(QMainWindow):
     def onImportVolume(self):
         self.Mgr.SetLog('import Volume')
 
-        path = QFileDialog.getOpenFileNames(self, "Import 3D Objects", self.m_saveDir, "Dicom File(*.dcm)")
-        fileSeries = path[0]
-        if len(fileSeries) == 0: return
-        dirName = os.path.dirname(str(path[0][0]))
+        #Get Selected Path
+        path = QFileDialog.getExistingDirectory(self, "Import 3D Objects", self.m_saveDir)
         
         #Save SaveDir
-        self.m_saveDir = dirName
+        self.m_saveDir = path
         with open(os.path.join(root_path, 'path_tmp'), 'w') as text_file:
             print(self.m_saveDir, file=text_file)
-
-
-        dirName = str(dirName).lower()
+        dirName = str(path).lower()
 
     
         if not dirName.find('none') == -1:
@@ -444,10 +440,8 @@ class E_MainWindow(QMainWindow):
                 self.Mgr.SetLog("partial upper 50")
                 self.rctGroup.itemAt(6).widget().setChecked(True)
 
-        if len(fileSeries) == 0: return
-
         try :
-            self.Mgr.VolumeMgr.ImportVolume(fileSeries)
+            self.Mgr.VolumeMgr.ImportVolume(path)
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]

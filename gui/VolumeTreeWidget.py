@@ -2,6 +2,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+# import itk
 
 class E_VolumeTreeWidget(QTreeWidget):
     def __init__(self, parent = None):
@@ -13,6 +14,7 @@ class E_VolumeTreeWidget(QTreeWidget):
         self.setHeaderHidden(False)
         self.setAlternatingRowColors(True)
         self.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.setSortingEnabled(False)
 
         self.itemDoubleClicked.connect(self.dbcEvent)
 
@@ -21,18 +23,21 @@ class E_VolumeTreeWidget(QTreeWidget):
         self.clear()
         parent = QTreeWidgetItem(self)
         parent.setText(0, info['name'])
+        self.addTopLevelItem(parent)
+
 
         serieses = info['serieses']
         for series in serieses:
-            itemName = 'series ' + series + ' : ' + serieses[series]['description'] + '(' + serieses[series]['orientation'] + ')'
-            
-            child = QTreeWidgetItem(parent)
-            child.setText(0, itemName)
+            dicomIO = series.GetImageIO()
+            metadict = dicomIO.GetMetaDataDictionary()
+            series_description = metadict["0008|103e"]
 
-            description = serieses[series]['description'].lower()
+            child = QTreeWidgetItem()
+            child.setText(0, series_description)
+            parent.addChild(child)
 
+            description = series_description.lower()
             #Fat Supression
-        
             if not description.find('fs/') == -1 or not description.find('fs ') == -1 or not description.find('fat') == -1 or not description.find('f/s') == -1 or description.endswith('fs') or not description.find('fs_') == -1 or not description.find('spir') == -1 or not description.find('spair') == -1:                
                 child.setBackground(0, QBrush(QColor('green')))
                 
@@ -46,8 +51,9 @@ class E_VolumeTreeWidget(QTreeWidget):
 
 
     def dbcEvent(self, item, col):
-        itemName = item.text(col)
-        items = itemName.split()
-        if len(items) < 2: return       
-        itemIdx = items[1]
-        self.mainFrm.Mgr.VolumeMgr.AddSelectedVolume(itemIdx)
+        #Double-click Event
+        if item.parent() == None:
+            return
+        
+        idx = item.parent().indexOfChild(item)        
+        self.mainFrm.Mgr.VolumeMgr.AddSelectedVolume(idx)

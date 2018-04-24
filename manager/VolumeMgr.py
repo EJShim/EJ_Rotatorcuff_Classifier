@@ -1,4 +1,4 @@
-import mudicom
+import itk
 import vtk
 from vtk.util import numpy_support
 import ctypes
@@ -8,6 +8,9 @@ import scipy.ndimage
 from collections import Counter
 
 import matplotlib.pyplot as plt
+
+
+ImageType = itk.Image[itk.F, 3]
 
 class E_VolumeManager:
     def __init__(self, Mgr):
@@ -169,11 +172,31 @@ class E_VolumeManager:
 
     def get_volume_info(self, path):
         #path = path.encode('utf-8')
+
+        print(path)
+        return
         mu = mudicom.load(path)        
 
         #0008,1030: Study Description
         #0008, 103E : Series Description
         #0018,0020 : Scanning Sequence
+        #0018, 0022 : Scanning Options
+        
+
+
+        data = dict(series='', instance='', orientation = '', position='', spacing='', pixelSpacing='', seriesDescription = '', scanningSequence = '')
+        data['series'] = int(list(mu.find(0x0020, 0x0011))[0].value)
+        data['instance'] = int(list(mu.find(0x0020, 0x0013))[0].value)
+        
+        
+        try:
+            data['seriesDescription'] = list(mu.find(0x0008, 0x103E))[0].value
+        except Exception as e:
+            print("Failed to load Series Description")
+        try:
+            data['scanningSequence'] = list(mu.find(0x0018, 0x0020))[0].value
+        except Exception as e:
+            print("Failed to load Scanning Sequence")                
         #0018, 0022 : Scanning Options
         
 
@@ -229,6 +252,35 @@ class E_VolumeManager:
         #Series = 0x0020, 0x0011
         #Instance = 0x0020, 0x0013
 
+        namesGenerator = itk.GDCMSeriesFileNames.New()
+        namesGenerator.SetUseSeriesDetails(True)
+        namesGenerator.AddSeriesRestriction("0008|0021")
+        namesGenerator.SetGlobalWarningDisplay(False)
+        namesGenerator.SetDirectory(fileSeries)
+        seriesUID = namesGenerator.GetSeriesUIDs()
+
+        serieses = []
+        studyDescription = None
+        for seriesIdentifier in seriesUID:
+            fileNames = namesGenerator.GetFileNames(seriesIdentifier)
+            reader = itk.ImageSeriesReader[ImageType].New()
+            dicomIO = itk.GDCMImageIO.New()
+            reader.SetImageIO(dicomIO)
+            reader.SetFileNames(fileNames)
+            reader.Update()
+            serieses.append(reader)
+
+            if studyDescription == None:
+                studyDescription = dicomIO.GetMetaDataDictionary()["0008|1030"]
+                
+
+        patient = dict(name=studyDescription, serieses = serieses)
+        self.m_volumeInfo = patient
+        self.UpdateVolumeTree()
+
+        self.Mgr.ClearScene()
+        return
+        ##Will be deprecated very very soon
         seriesArr = list(map(self.get_volume_info, fileSeries))
         metaInfo = Counter(tok['series'] for tok in seriesArr)
         
@@ -439,14 +491,14 @@ class E_VolumeManager:
 
 
     def AddVolume(self, volumeArray, spacing = [1.0, 1.0, 1.0], origin = [0, 0, 0]):
-        dim = volumeArray.shape        
-        self.volume_data.AllocateScalars(vtk.VTK_UNSIGNED_INT, 1);
+        floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
+        
+        dim = volumeArray.shape
+        #self.volume_data.AllocateScalars(vtk.VTK_UNSIGNVTK_ED_INT, 1);
         self.volume_data.SetOrigin(origin)
         self.volume_data.SetDimensions(dim[2], dim[1], dim[0])        
-        self.volume_data.SetSpacing(spacing[2], spacing[1], spacing[0])
-        floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
+        self.volume_data.SetSpacing(spacing)
         self.volume_data.GetPointData().SetScalars(floatArray)
-
         self.m_scalarRange = self.volume_data.GetScalarRange()
         #Update Slider
         for i in range(3):
@@ -592,7 +644,6 @@ class E_VolumeManager:
 
 
     def MakeVolumeData(self, volume, spacing, rot = 0):
-
         # return volume, spacing
 
         if np.argmin(volume.shape) == 0:
@@ -638,7 +689,6 @@ class E_VolumeManager:
         self.m_resampledVolumeData = volumeData
 
     def UpdateVolumeTree(self):
-
         if self.m_volumeInfo == None: return
         self.Mgr.mainFrm.m_treeWidget.updateTree(self.m_volumeInfo)
 
@@ -647,6 +697,25 @@ class E_VolumeManager:
         self.m_resampledVolumeData = np.array([None])
         self.m_decreaseRange = [1.0, 1.0]
         self.m_selectedIdx = idx
+
+        selected_data = self.m_volumeInfo['serieses'][idx]
+        orienter = itk.OrientImageFilter[ImageType, ImageType].New()
+        orienter.UseImageDirectionOn()
+        orienter.SetInput(selected_data.GetOutput())
+        orienter.Update()
+
+        itk_image = orienter.GetOutput()
+
+        volumeArray = itk.GetArrayFromImage(itk_image)
+        spacing = itk_image.GetSpacing()
+
+        print(itk_image)
+
+        self.AddVolume(volumeArray, spacing)        
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
+        
+        return
 
         #Get Volume Info        
         SeriesData = self.m_volumeInfo['serieses'][idx] 
