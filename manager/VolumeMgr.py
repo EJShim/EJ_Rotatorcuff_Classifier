@@ -170,85 +170,6 @@ class E_VolumeManager:
 
             self.m_volumeMapper.SetBlendModeToComposite()
 
-
-    def get_volume_info(self, path):
-        #path = path.encode('utf-8')
-
-        print(path)
-        return
-        mu = mudicom.load(path)        
-
-        #0008,1030: Study Description
-        #0008, 103E : Series Description
-        #0018,0020 : Scanning Sequence
-        #0018, 0022 : Scanning Options
-        
-
-
-        data = dict(series='', instance='', orientation = '', position='', spacing='', pixelSpacing='', seriesDescription = '', scanningSequence = '')
-        data['series'] = int(list(mu.find(0x0020, 0x0011))[0].value)
-        data['instance'] = int(list(mu.find(0x0020, 0x0013))[0].value)
-        
-        
-        try:
-            data['seriesDescription'] = list(mu.find(0x0008, 0x103E))[0].value
-        except Exception as e:
-            print("Failed to load Series Description")
-        try:
-            data['scanningSequence'] = list(mu.find(0x0018, 0x0020))[0].value
-        except Exception as e:
-            print("Failed to load Scanning Sequence")                
-        #0018, 0022 : Scanning Options
-        
-
-
-        data = dict(series='', instance='', orientation = '', position='', spacing='', pixelSpacing='', seriesDescription = '', scanningSequence = '')
-        data['series'] = int(list(mu.find(0x0020, 0x0011))[0].value)
-        data['instance'] = int(list(mu.find(0x0020, 0x0013))[0].value)
-        
-        
-        try:
-            data['seriesDescription'] = list(mu.find(0x0008, 0x103E))[0].value
-        except Exception as e:
-            print("Failed to load Series Description")
-        try:
-            data['scanningSequence'] = list(mu.find(0x0018, 0x0020))[0].value
-        except Exception as e:
-            print("Failed to load Scanning Sequence")                
-        try:
-            data['spacing'] = float(list(mu.find(0x0018, 0x0088))[0].value)
-        except Exception as e:
-            print("Failed to load Spacing")
-        try:
-            pixelSpacing = list(mu.find(0x0028, 0x0030))[0].value
-            data['pixelSpacing'] = list(map(float, [x.strip() for x in pixelSpacing.split('\\')]))
-        except Exception as e:
-            print("Failed to load Pixel Size")
-
-        try:
-            orientation = list(mu.find(0x0020, 0x0037))[0].value
-            # print(orientation)
-            data['orientation'] = list(map(float, [x.strip() for x in orientation.split('\\')]))
-        except Exception as e:
-            print("Failed to load Orientation")
-
-        try:
-            position = list(mu.find(0x0020, 0x0032))[0].value
-            # print(orientation)
-            data['position'] = list(map(float, [x.strip() for x in position.split('\\')]))
-        except Exception as e:
-            print("Failed to load position")
-
-
-        img = mu.image.numpy
-        # shape = img.shape 
-        # img = img.reshape(shape[1], shape[0])
-
-        data['imageData'] = img
-
-
-        return data
-
     def ImportVolume(self, fileSeries):
         #Series = 0x0020, 0x0011
         #Instance = 0x0020, 0x0013
@@ -281,106 +202,106 @@ class E_VolumeManager:
 
         self.Mgr.ClearScene()
         return
-        ##Will be deprecated very very soon
-        seriesArr = list(map(self.get_volume_info, fileSeries))
-        metaInfo = Counter(tok['series'] for tok in seriesArr)
+        # ##Will be deprecated very very soon
+        # seriesArr = list(map(self.get_volume_info, fileSeries))
+        # metaInfo = Counter(tok['series'] for tok in seriesArr)
         
 
-        serieses = dict()
-        for i in metaInfo:        
-            serieses[str(i)] = dict(description = '', 
-                                    protocol = '',                                     
-                                    direction='', 
-                                    orientation = '', 
-                                    spacing='', 
-                                    pixelSpacing='',                                     
-                                    data = [])
-        axDir = np.asarray([None])
-        corDir = np.asarray([None])
-        sagDir = np.asarray([None])
+        # serieses = dict()
+        # for i in metaInfo:        
+        #     serieses[str(i)] = dict(description = '', 
+        #                             protocol = '',                                     
+        #                             direction='', 
+        #                             orientation = '', 
+        #                             spacing='', 
+        #                             pixelSpacing='',                                     
+        #                             data = [])
+        # axDir = np.asarray([None])
+        # corDir = np.asarray([None])
+        # sagDir = np.asarray([None])
 
-        self.m_reverseSagittal = False
-        self.m_reverseAxial = False
+        # self.m_reverseSagittal = False
+        # self.m_reverseAxial = False
         
-        for series in seriesArr:
-            datadict =  serieses[ str(series['series']) ]
-            if datadict['description'] == '':
-                datadict['description'] = series['seriesDescription']
-                description = series['seriesDescription'].lower()
+        # for series in seriesArr:
+        #     datadict =  serieses[ str(series['series']) ]
+        #     if datadict['description'] == '':
+        #         datadict['description'] = series['seriesDescription']
+        #         description = series['seriesDescription'].lower()
                 
 
-                #Direction
-                if datadict['direction'] == '':                    
-                    orientationx = np.asarray(series['orientation'])[:3]
-                    orientationy = np.asarray(series['orientation'])[3:]
-                    datadict['direction'] = np.cross(orientationx, orientationy)
+        #         #Direction
+        #         if datadict['direction'] == '':                    
+        #             orientationx = np.asarray(series['orientation'])[:3]
+        #             orientationy = np.asarray(series['orientation'])[3:]
+        #             datadict['direction'] = np.cross(orientationx, orientationy)
 
-                    self.volumeDirections = [None, None, None]
+        #             self.volumeDirections = [None, None, None]
                 
-                #Orientation
-                orientation = 'unknown'                                
-                if not description.find('ax') == -1 or not description.find('tra') == -1:
-                    orientation = 'AXL'
-                    if axDir.any() == None:
-                        axDir = datadict['direction']
-                if not description.find('cor') == -1:
-                    orientation = 'COR'
-                    if corDir.any() == None:
-                        corDir = datadict['direction']
-                if not description.find('sag') == -1:
-                    orientation = 'SAG'           
-                    if sagDir.any() == None:
-                        sagDir = datadict['direction']     
-                datadict['orientation'] = orientation
+        #         #Orientation
+        #         orientation = 'unknown'                                
+        #         if not description.find('ax') == -1 or not description.find('tra') == -1:
+        #             orientation = 'AXL'
+        #             if axDir.any() == None:
+        #                 axDir = datadict['direction']
+        #         if not description.find('cor') == -1:
+        #             orientation = 'COR'
+        #             if corDir.any() == None:
+        #                 corDir = datadict['direction']
+        #         if not description.find('sag') == -1:
+        #             orientation = 'SAG'           
+        #             if sagDir.any() == None:
+        #                 sagDir = datadict['direction']     
+        #         datadict['orientation'] = orientation
 
-                #Protocol
-                if not description.find('t1') == -1:
-                    datadict['protocol'] = 'T1'
-                if not description.find('t2') == -1:
-                    datadict['protocol'] = 'T2'
+        #         #Protocol
+        #         if not description.find('t1') == -1:
+        #             datadict['protocol'] = 'T1'
+        #         if not description.find('t2') == -1:
+        #             datadict['protocol'] = 'T2'
                     
                                 
-            #Spacing
-            if datadict['spacing'] == '':
-                datadict['spacing'] = series['spacing']
-            if datadict['pixelSpacing'] == '':
-                datadict['pixelSpacing'] = series['pixelSpacing']
+        #     #Spacing
+        #     if datadict['spacing'] == '':
+        #         datadict['spacing'] = series['spacing']
+        #     if datadict['pixelSpacing'] == '':
+        #         datadict['pixelSpacing'] = series['pixelSpacing']
             
-            datadict['data'].append(series)
+        #     datadict['data'].append(series)
         
 
         
         
-        crossproZ = np.cross(corDir, sagDir)[2]
-        if crossproZ < 0 or crossproZ < 0 and corDir[2] * sagDir[2] < 0:
-            self.m_reverseSagittal = True
+        # crossproZ = np.cross(corDir, sagDir)[2]
+        # if crossproZ < 0 or crossproZ < 0 and corDir[2] * sagDir[2] < 0:
+        #     self.m_reverseSagittal = True
         
-        #Check Shoulder Side
-        if corDir[0] < 0 and corDir[1] < 0:
-            self.m_reverseAxial = True
-        if corDir[0] > 0 and  corDir[1] > 0:            
-            self.m_shoulderSide = 'R'
-        else:
-            self.m_shoulderSide = 'L'
+        # #Check Shoulder Side
+        # if corDir[0] < 0 and corDir[1] < 0:
+        #     self.m_reverseAxial = True
+        # if corDir[0] > 0 and  corDir[1] > 0:            
+        #     self.m_shoulderSide = 'R'
+        # else:
+        #     self.m_shoulderSide = 'L'
     
 
 
-        #Reverse Data List if real direction and annotated direction is reversed
-        for series in seriesArr:
-            datadict =  serieses[ str(series['series']) ]
+        # #Reverse Data List if real direction and annotated direction is reversed
+        # for series in seriesArr:
+        #     datadict =  serieses[ str(series['series']) ]
 
-            if len(datadict['data']) < 2: continue
+        #     if len(datadict['data']) < 2: continue
 
-            realDir = np.asarray(datadict['data'][1]['position']) - np.asarray(datadict['data'][0]['position'])
-            if np.dot(realDir, datadict['direction']) <  0:
-                datadict['data'].reverse()
+        #     realDir = np.asarray(datadict['data'][1]['position']) - np.asarray(datadict['data'][0]['position'])
+        #     if np.dot(realDir, datadict['direction']) <  0:
+        #         datadict['data'].reverse()
 
-            # print("Series ", str(series['series'])  ,"length : " ,len(serieses[ str(series['series']) ]['data']))
+        #     # print("Series ", str(series['series'])  ,"length : " ,len(serieses[ str(series['series']) ]['data']))
 
 
-        patient = dict(name='patient', serieses = serieses)
-        self.m_volumeInfo = patient
-        self.UpdateVolumeTree()
+        # patient = dict(name='patient', serieses = serieses)
+        # self.m_volumeInfo = patient
+        # self.UpdateVolumeTree()
 
 
     def IsAxial(self, orientation):
