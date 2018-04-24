@@ -1,6 +1,7 @@
+
+from vtk.util import numpy_support
 import itk
 import vtk
-from vtk.util import numpy_support
 import ctypes
 
 import numpy as np
@@ -569,10 +570,14 @@ class E_VolumeManager:
         #spacing to [1, 1, 1]
         new_spacing = np.array([1, 1, 1])
 
+        resize_factor = np.amin(spacing)
+        print(resize_factor)
+        # new_real_shape = volume.shape * resize_factor
+        resample_shape = volume.shape
+        resample_shape[np.argmin(resample_shape)]*=resize_factor
+        new_shape = np.round(resample_shape)
+        print(spacing, volume.shape)
 
-        resize_factor = spacing / new_spacing
-        new_real_shape = volume.shape * resize_factor
-        new_shape = np.round(new_real_shape)
         real_resize_factor = new_shape / volume.shape
         new_spacing = spacing / real_resize_factor
 
@@ -699,17 +704,66 @@ class E_VolumeManager:
         self.m_selectedIdx = idx
 
         selected_data = self.m_volumeInfo['serieses'][idx]
+
+        #Adjust Orientation
+        # itk_image=selected_data.GetOutput()
         orienter = itk.OrientImageFilter[ImageType, ImageType].New()
         orienter.UseImageDirectionOn()
         orienter.SetInput(selected_data.GetOutput())
         orienter.Update()
-
         itk_image = orienter.GetOutput()
-
-        volumeArray = itk.GetArrayFromImage(itk_image)
+        
+        #Resample to 64
+        dims = itk_image.GetLargestPossibleRegion().GetSize()
         spacing = itk_image.GetSpacing()
+        origin = itk_image.GetOrigin()
+        direction = itk_image.GetDirection()        
+                
+        new_size = itk.Size[3]()
+        new_spacing = itk.Vector[itk.D,3]()        
+        for i in range(3):
+            if i==np.argmin(dims):
+                new_size[i] = 64
+                new_spacing[i] = np.amax(spacing) * (dims[i]/64)
+            else:
+                new_size[i] = dims[i] 
+                new_spacing[i] = spacing[i]
+        
+        # #Resample Image
+        # transform = itk.IdentityTransform[itk.D, 3].New()
+        # interpolator = itk.LinearInterpolateImageFunction[ImageType, itk.D].New()
+        resampler = itk.ResampleImageFilter[ImageType, ImageType].New()
+        resampler.SetInput(itk_image)        
+        resampler.SetSize(new_size)
+        resampler.SetOutputSpacing(new_spacing)        
+        resampler.SetOutputOrigin(origin)
+        resampler.SetOutputDirection(direction)
+        resampler.UpdateLargestPossibleRegion()
+        resampler.Update()
+        itk_image = resampler.GetOutput()
+        
+        dims = itk_image.GetLargestPossibleRegion().GetSize()
+        spacing = itk_image.GetSpacing()
+        origin = itk_image.GetOrigin()
+        direction = itk_image.GetDirection()
+        
+        volumeBuffer = itk.GetArrayFromImage(itk_image)
+        volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
+        
 
-        print(itk_image)
+        # if self.m_shoulderSide == 'L':
+        #     volumeArray = np.flip(volumeArray, 2)
+        #1,2 = z axes
+        #0,2 = y axes
+        #0,1 = x axes
+        # volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, spacing)
+
+        #Normalize It
+        volumeArray = (volumeArray * 255.0) / np.amax(volumeArray)        
+        self.m_volumeArray = volumeArray
+        print(volumeArray.shape)
+
+        
 
         self.AddVolume(volumeArray, spacing)        
         self.Mgr.Redraw()

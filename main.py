@@ -5,13 +5,8 @@ from gui.MainFrm import E_MainWindow
 from gui import Style
 
 
-
-
 app = QApplication([])
-app.setStyleSheet(Style.styleData)  
-
-
-
+app.setStyleSheet(Style.styleData)
 window = E_MainWindow()
 window.showMaximized()
 window.show()

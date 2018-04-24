@@ -21,6 +21,8 @@ targets = data_load['targets']
 print(features.shape)
 print(targets.shape)
 
+exit()
+
 #Config
 batch_size = 32
 max_epochs = 3
