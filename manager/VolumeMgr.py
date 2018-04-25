@@ -51,37 +51,19 @@ class E_VolumeManager:
         self.m_colorMapResliceMapper = [None, None, None]
         self.m_colorMapResliceActor = [None, None, None]
 
-<<<<<<< HEAD
-
         self.resolution = 64
 
-
-=======
-        self.resolution = 64
-
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         for i in range(3):
             self.m_resliceMapper[i] = vtk.vtkImageSliceMapper()
             self.m_resliceActor[i] = vtk.vtkImageSlice()
             self.m_colorMapResliceMapper[i] = vtk.vtkImageSliceMapper()
-<<<<<<< HEAD
-            self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()
-
-        
-=======
             self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()        
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
 
         self.m_resliceActor[0].RotateY(90)
         self.m_resliceActor[1].RotateX(-90)
         self.m_colorMapResliceActor[0] .RotateY(90) 
         self.m_colorMapResliceActor[1] .RotateX(-90)
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         #Initialize
         self.SetPresetFunctions(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex())        
         self.InitializeVolumeFunctions()
@@ -212,121 +194,8 @@ class E_VolumeManager:
         patient = dict(name=studyDescription, serieses = serieses)
         self.m_volumeInfo = patient
         self.UpdateVolumeTree()
-<<<<<<< HEAD
-
         self.Mgr.ClearScene()
         return
-        # ##Will be deprecated very very soon
-        # seriesArr = list(map(self.get_volume_info, fileSeries))
-        # metaInfo = Counter(tok['series'] for tok in seriesArr)
-        
-
-        # serieses = dict()
-        # for i in metaInfo:        
-        #     serieses[str(i)] = dict(description = '', 
-        #                             protocol = '',                                     
-        #                             direction='', 
-        #                             orientation = '', 
-        #                             spacing='', 
-        #                             pixelSpacing='',                                     
-        #                             data = [])
-        # axDir = np.asarray([None])
-        # corDir = np.asarray([None])
-        # sagDir = np.asarray([None])
-
-        # self.m_reverseSagittal = False
-        # self.m_reverseAxial = False
-        
-        # for series in seriesArr:
-        #     datadict =  serieses[ str(series['series']) ]
-        #     if datadict['description'] == '':
-        #         datadict['description'] = series['seriesDescription']
-        #         description = series['seriesDescription'].lower()
-                
-
-        #         #Direction
-        #         if datadict['direction'] == '':                    
-        #             orientationx = np.asarray(series['orientation'])[:3]
-        #             orientationy = np.asarray(series['orientation'])[3:]
-        #             datadict['direction'] = np.cross(orientationx, orientationy)
-
-        #             self.volumeDirections = [None, None, None]
-                
-        #         #Orientation
-        #         orientation = 'unknown'                                
-        #         if not description.find('ax') == -1 or not description.find('tra') == -1:
-        #             orientation = 'AXL'
-        #             if axDir.any() == None:
-        #                 axDir = datadict['direction']
-        #         if not description.find('cor') == -1:
-        #             orientation = 'COR'
-        #             if corDir.any() == None:
-        #                 corDir = datadict['direction']
-        #         if not description.find('sag') == -1:
-        #             orientation = 'SAG'           
-        #             if sagDir.any() == None:
-        #                 sagDir = datadict['direction']     
-        #         datadict['orientation'] = orientation
-
-        #         #Protocol
-        #         if not description.find('t1') == -1:
-        #             datadict['protocol'] = 'T1'
-        #         if not description.find('t2') == -1:
-        #             datadict['protocol'] = 'T2'
-                    
-                                
-        #     #Spacing
-        #     if datadict['spacing'] == '':
-        #         datadict['spacing'] = series['spacing']
-        #     if datadict['pixelSpacing'] == '':
-        #         datadict['pixelSpacing'] = series['pixelSpacing']
-            
-        #     datadict['data'].append(series)
-        
-
-        
-        
-        # crossproZ = np.cross(corDir, sagDir)[2]
-        # if crossproZ < 0 or crossproZ < 0 and corDir[2] * sagDir[2] < 0:
-        #     self.m_reverseSagittal = True
-        
-        # #Check Shoulder Side
-        # if corDir[0] < 0 and corDir[1] < 0:
-        #     self.m_reverseAxial = True
-        # if corDir[0] > 0 and  corDir[1] > 0:            
-        #     self.m_shoulderSide = 'R'
-        # else:
-        #     self.m_shoulderSide = 'L'
-    
-
-
-        # #Reverse Data List if real direction and annotated direction is reversed
-        # for series in seriesArr:
-        #     datadict =  serieses[ str(series['series']) ]
-
-        #     if len(datadict['data']) < 2: continue
-
-        #     realDir = np.asarray(datadict['data'][1]['position']) - np.asarray(datadict['data'][0]['position'])
-        #     if np.dot(realDir, datadict['direction']) <  0:
-        #         datadict['data'].reverse()
-
-        #     # print("Series ", str(series['series'])  ,"length : " ,len(serieses[ str(series['series']) ]['data']))
-
-
-        # patient = dict(name='patient', serieses = serieses)
-        # self.m_volumeInfo = patient
-        # self.UpdateVolumeTree()
-
-
-    def IsAxial(self, orientation):
-        ori = np.round(np.abs(orientation))
-        axl =  np.array([1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
-
-        return np.array_equal(ori, axl)
-=======
-        self.Mgr.ClearScene()
-        return
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
 
     def ToggleClassActivationMap(self, state):        
         if state == 2:
@@ -439,11 +308,7 @@ class E_VolumeManager:
         self.volume_data.SetDimensions(dim[2], dim[1], dim[0])        
         self.volume_data.SetSpacing(spacing)
         self.volume_data.GetPointData().SetScalars(floatArray)
-<<<<<<< HEAD
-        self.m_scalarRange = self.volume_data.GetScalarRange()
-=======
         self.m_scalarRange = self.volume_data.GetScalarRange()        
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         #Update Slider
         for i in range(3):
             minVal = self.m_resliceMapper[i].GetSliceNumberMinValue()
@@ -509,134 +374,6 @@ class E_VolumeManager:
         self.m_colorMapResliceMapper[idx].SetSliceNumber(sliceNum)        
         self.Mgr.Redraw2D()
 
-<<<<<<< HEAD
-    def ResampleVolumeData(self, volume, spacing):
-        #spacing to [1, 1, 1]
-        new_spacing = np.array([1, 1, 1])
-
-        resize_factor = np.amin(spacing)
-        print(resize_factor)
-        # new_real_shape = volume.shape * resize_factor
-        resample_shape = volume.shape
-        resample_shape[np.argmin(resample_shape)]*=resize_factor
-        new_shape = np.round(resample_shape)
-        print(spacing, volume.shape)
-
-        real_resize_factor = new_shape / volume.shape
-        new_spacing = spacing / real_resize_factor
-
-        real_resize_factor = np.absolute(real_resize_factor)
-        #
-        # print(real_resize_factor)
-
-        new_volume = scipy.ndimage.zoom(volume, real_resize_factor, mode='nearest')
-
-        return new_volume, new_spacing
-
-    def MakeVolumeDataWithResampled(self, volume, xPos = 0.5, yPos = 0.5, rot = 0):
-            # return volume, spacing
-            if np.argmin(volume.shape) == 0: ##COR0                
-                rDim = volume.shape[0]
-
-                #Possible X Range
-                xMax = volume.shape[1] - rDim
-                yMax = volume.shape[2] - rDim
-
-                xMin = int(xMax * xPos)
-                yMin = int(yMax * yPos)
-
-                volume = volume[:, xMin:,yMin:]
-                volume = volume[:, :rDim,:rDim]
-
-                self.m_decreaseRange = [rDim / xMax, rDim / yMax]
-            elif np.argmin(volume.shape) == 1:                
-                                        
-                rDim = volume.shape[1]
-
-                #Possible X Range
-                xMax = volume.shape[2] - rDim
-                yMax = volume.shape[0] - rDim
-                
-
-                xMin = int(xMax * xPos)
-                yMin = int(yMax * yPos)
-
-                volume = volume[xMin:, :, yMin:]
-                volume = volume[:rDim, :, :rDim]
-
-                self.m_decreaseRange = [rDim / xMax, rDim / yMax]
-            else:                
-                rDim = volume.shape[2]
-
-                #Possible X, Y Range
-                xMax = volume.shape[0] - rDim
-                yMax = volume.shape[1] - rDim
-                
-
-                xMin = int(xMax * xPos)
-                yMin = int(yMax * yPos)
-
-                #Crop Volume
-                volume = volume[xMin:,yMin:, :]
-                volume = volume[:rDim,:rDim, :]
-
-                self.m_decreaseRange = [rDim / xMax, rDim / yMax]
-
-            
-            volume = scipy.ndimage.zoom(volume, ( self.resolution / volume.shape[0], self.resolution /volume.shape[1] , self.resolution / volume.shape[2]), order=5)  
-            
-
-            #rotate around y-axis
-            volume = np.rot90(volume, rot)
-
-            return volume
-
-
-    def MakeVolumeData(self, volume, spacing, rot = 0):
-        # return volume, spacing
-
-        if np.argmin(volume.shape) == 0:
-            channel = spacing[0]
-            voxelSize = min([spacing[1], spacing[2]])
-
-            rDim = int(volume.shape[0] * channel / voxelSize)
-            xMin = int((volume.shape[1] - rDim) / 4.0)
-            yMin = int((volume.shape[2] - rDim) / 1.6)
-
-            volume = volume[:, xMin:,yMin:]
-            volume = volume[:, :rDim,:rDim]
-        else:
-            channel = spacing[2]
-            voxelSize = min([spacing[0], spacing[1]])
-
-            rDim = int(volume.shape[2] * channel / voxelSize)
-            xMin = int((volume.shape[0] - rDim) / 3.5)
-            yMin = int((volume.shape[1] - rDim) / 3.5)
-
-            #Crop Volume
-            volume = volume[xMin:,yMin:, :]
-            volume = volume[:rDim,:rDim, :]
-
-
-        #Resample Volume ARray , update spacing info
-        volume = scipy.ndimage.zoom(volume, ( self.resolution / volume.shape[0], self.resolution /volume.shape[1] , self.resolution / volume.shape[2]), order=5)
-        spacing = [voxelSize, voxelSize, voxelSize]
-
-        #rotate around y-axis
-        volume = np.rot90(volume, rot)
-
-        return volume, spacing
-
-    def UpdateVolumeDataCrop(self, xP, yP):
-        #if self.m_volumeArray == 0.0: return
-
-        volumeData = self.MakeVolumeDataWithResampled(self.m_volumeArray, xPos = xP, yPos = yP)
-        # volumeData = (volumeData * 255.0) / np.amax(self.m_volumeArray)
-        self.AddVolume(volumeData, [1, 1, 1])        
-        self.Mgr.PredictObject(volumeData)
-
-        self.m_resampledVolumeData = volumeData
-=======
     def UpdateVolumeDataCrop(self, xP, yP):
         #Get Selected ITK image
         selected_image = self.m_selectedImage
@@ -675,24 +412,12 @@ class E_VolumeManager:
         self.Mgr.Redraw2D()
 
         return
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
 
     def UpdateVolumeTree(self):
         if self.m_volumeInfo == None: return
         self.Mgr.mainFrm.m_treeWidget.updateTree(self.m_volumeInfo)
 
     def AddSelectedVolume(self, idx):
-<<<<<<< HEAD
-        self.Mgr.ClearScene()
-        self.m_resampledVolumeData = np.array([None])
-        self.m_decreaseRange = [1.0, 1.0]
-        self.m_selectedIdx = idx
-
-        selected_data = self.m_volumeInfo['serieses'][idx]
-
-        #Adjust Orientation
-        # itk_image=selected_data.GetOutput()
-=======
         #Clear Scene
         self.Mgr.ClearScene()        
         
@@ -700,53 +425,10 @@ class E_VolumeManager:
         selected_data = self.m_volumeInfo['serieses'][idx]
 
         #Adjust Orientation        
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         orienter = itk.OrientImageFilter[ImageType, ImageType].New()
         orienter.UseImageDirectionOn()
         orienter.SetInput(selected_data.GetOutput())
         orienter.Update()
-<<<<<<< HEAD
-        itk_image = orienter.GetOutput()
-        
-        #Resample to 64
-        dims = itk_image.GetLargestPossibleRegion().GetSize()
-        spacing = itk_image.GetSpacing()
-        origin = itk_image.GetOrigin()
-        direction = itk_image.GetDirection()        
-                
-        new_size = itk.Size[3]()
-        new_spacing = itk.Vector[itk.D,3]()        
-        for i in range(3):
-            if i==np.argmin(dims):
-                new_size[i] = 64
-                new_spacing[i] = np.amax(spacing) * (dims[i]/64)
-            else:
-                new_size[i] = dims[i] 
-                new_spacing[i] = spacing[i]
-        
-        # #Resample Image
-        # transform = itk.IdentityTransform[itk.D, 3].New()
-        # interpolator = itk.LinearInterpolateImageFunction[ImageType, itk.D].New()
-        resampler = itk.ResampleImageFilter[ImageType, ImageType].New()
-        resampler.SetInput(itk_image)        
-        resampler.SetSize(new_size)
-        resampler.SetOutputSpacing(new_spacing)        
-        resampler.SetOutputOrigin(origin)
-        resampler.SetOutputDirection(direction)
-        resampler.UpdateLargestPossibleRegion()
-        resampler.Update()
-        itk_image = resampler.GetOutput()
-        
-        dims = itk_image.GetLargestPossibleRegion().GetSize()
-        spacing = itk_image.GetSpacing()
-        origin = itk_image.GetOrigin()
-        direction = itk_image.GetDirection()
-        
-        volumeBuffer = itk.GetArrayFromImage(itk_image)
-        volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
-        
-
-=======
         
         #Rescale Image Intensity 0 ~ 255
         normalizer = itk.RescaleIntensityImageFilter[ImageType, ImageType].New()
@@ -761,7 +443,6 @@ class E_VolumeManager:
         volumeBuffer = itk.GetArrayFromImage(itk_image)        
         
         #Adjust Shoulder Side
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         # if self.m_shoulderSide == 'L':
         #     volumeArray = np.flip(volumeArray, 2)
         #1,2 = z axes
@@ -769,104 +450,6 @@ class E_VolumeManager:
         #0,1 = x axes
         # volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, spacing)
 
-<<<<<<< HEAD
-        #Normalize It
-        volumeArray = (volumeArray * 255.0) / np.amax(volumeArray)        
-        self.m_volumeArray = volumeArray
-        print(volumeArray.shape)
-
-        
-
-        self.AddVolume(volumeArray, spacing)        
-        self.Mgr.Redraw()
-        self.Mgr.Redraw2D()
-        
-        return
-
-        #Get Volume Info        
-        SeriesData = self.m_volumeInfo['serieses'][idx] 
-        data = SeriesData['data']
-        description = SeriesData['description'].lower()
-        spacing = SeriesData['spacing']
-        pixelSpacing = SeriesData['pixelSpacing']
-        orientation = SeriesData['orientation']
-        direction = SeriesData['direction']
-
-        self.Mgr.mainFrm.m_SeriesNumber.setText(str(idx))
-        
-
-        #Rotate Volume According to patient coordiante
-        renderSpacing = np.array([spacing, pixelSpacing[0], pixelSpacing[1]])        
-
-        #Make Volume Data
-        volumeBuffer = []
-        for dic in data:
-            volumeBuffer.append(dic['imageData'])
-
-
-             #Make Volume ARray
-        volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
-
-        if not description.find('t1') == -1:
-            self.Mgr.mainFrm.protocolGroup.itemAt(0).widget().setChecked(True)
-        elif not description.find('t2') == -1:
-            self.Mgr.mainFrm.protocolGroup.itemAt(1).widget().setChecked(True)
-            
-
-
-        if orientation == 'AXL':
-            
-            volumeArray = np.rot90(volumeArray, axes=(0,1))
-            renderSpacing = [renderSpacing[1], renderSpacing[0], renderSpacing[2]]
-            
-            
-            if not self.m_reverseAxial:
-                volumeArray = np.rot90(volumeArray,2, axes=(0,2))
-
-            self.Mgr.mainFrm.orientationGroup.itemAt(0).widget().setChecked(True)
-        else:
-            volumeArray = np.rot90(volumeArray, 2, axes=(1,2))
-            self.Mgr.mainFrm.orientationGroup.itemAt(1).widget().setChecked(True)
-
-            if orientation == 'SAG':                            
-                if self.m_reverseSagittal:                    
-                    volumeArray = np.rot90(volumeArray,3, axes=(0,2))
-                else:
-                    volumeArray = np.rot90(volumeArray, axes=(0,2))
-                renderSpacing = [renderSpacing[2], renderSpacing[1], renderSpacing[0]]
-                self.Mgr.mainFrm.orientationGroup.itemAt(2).widget().setChecked(True)
-
-        self.m_orientation = orientation
-
-
-        if self.m_shoulderSide == 'L':
-            volumeArray = np.flip(volumeArray, 2)
-
-        #1,2 = z axes
-        #0,2 = y axes
-        #0,1 = x axes
-        
-        volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, renderSpacing)
-
-        #Normalize It
-        volumeArray = (volumeArray * 255.0) / np.amax(volumeArray)
-        self.m_volumeArray = volumeArray    
-
-        
-        self.AddVolume(volumeArray, renderSpacing)
-        #self.Mgr.PredictObject(volumeData)
-        self.Mgr.Redraw()
-        self.Mgr.Redraw2D()
-    
-    def GetSelectedSeries(self):
-        if self.m_selectedIdx == None:
-            self.Mgr.SetLog("No Series selected!")
-            return;
-
-
-        return self.m_volumeInfo['serieses'][self.m_selectedIdx]
-         
-=======
         
 
         self.AddVolume(volumeBuffer, itk_image.GetSpacing())        
@@ -904,4 +487,3 @@ class E_VolumeManager:
             self.crop_position[1] = (size[1]*spacing[1]-length_of_cube)/new_spacing
         
         return
->>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
