@@ -16,16 +16,17 @@ ImageType = itk.Image[itk.F, 3]
 class E_VolumeManager:
     def __init__(self, Mgr):
         self.Mgr = Mgr
-
-        self.m_volumeArray = None        
+                
         self.m_resampledVolumeData = np.array([None])
         self.m_volumeInfo = None
         self.m_selectedIdx = None
-        self.m_reverseSagittal = False
-        self.m_reverseAxial = False
-        self.m_shoulderSide = 'L'
-        self.m_decreaseRange = [1.0, 1.0]
-        self.m_orientation = 'AXL'
+        self.m_selectedImage = None        
+
+
+        # self.m_reverseSagittal = False
+        # self.m_reverseAxial = False
+        self.m_shoulderSide = 'L'        
+        self.m_orientation = 'AXL' ##AXL:1, COR:0, SAG:2
 
         #Selected Volume CFGS
         self.m_colorFunction = vtk.vtkColorTransferFunction()
@@ -50,25 +51,37 @@ class E_VolumeManager:
         self.m_colorMapResliceMapper = [None, None, None]
         self.m_colorMapResliceActor = [None, None, None]
 
+<<<<<<< HEAD
 
         self.resolution = 64
 
 
+=======
+        self.resolution = 64
+
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         for i in range(3):
             self.m_resliceMapper[i] = vtk.vtkImageSliceMapper()
             self.m_resliceActor[i] = vtk.vtkImageSlice()
             self.m_colorMapResliceMapper[i] = vtk.vtkImageSliceMapper()
+<<<<<<< HEAD
             self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()
 
         
+=======
+            self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()        
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
 
         self.m_resliceActor[0].RotateY(90)
         self.m_resliceActor[1].RotateX(-90)
         self.m_colorMapResliceActor[0] .RotateY(90) 
         self.m_colorMapResliceActor[1] .RotateX(-90)
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         #Initialize
         self.SetPresetFunctions(self.Mgr.mainFrm.volumeWidget.GetCurrentColorIndex())        
         self.InitializeVolumeFunctions()
@@ -199,6 +212,7 @@ class E_VolumeManager:
         patient = dict(name=studyDescription, serieses = serieses)
         self.m_volumeInfo = patient
         self.UpdateVolumeTree()
+<<<<<<< HEAD
 
         self.Mgr.ClearScene()
         return
@@ -309,6 +323,10 @@ class E_VolumeManager:
         axl =  np.array([1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
 
         return np.array_equal(ori, axl)
+=======
+        self.Mgr.ClearScene()
+        return
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
 
     def ToggleClassActivationMap(self, state):        
         if state == 2:
@@ -421,7 +439,11 @@ class E_VolumeManager:
         self.volume_data.SetDimensions(dim[2], dim[1], dim[0])        
         self.volume_data.SetSpacing(spacing)
         self.volume_data.GetPointData().SetScalars(floatArray)
+<<<<<<< HEAD
         self.m_scalarRange = self.volume_data.GetScalarRange()
+=======
+        self.m_scalarRange = self.volume_data.GetScalarRange()        
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         #Update Slider
         for i in range(3):
             minVal = self.m_resliceMapper[i].GetSliceNumberMinValue()
@@ -487,6 +509,7 @@ class E_VolumeManager:
         self.m_colorMapResliceMapper[idx].SetSliceNumber(sliceNum)        
         self.Mgr.Redraw2D()
 
+<<<<<<< HEAD
     def ResampleVolumeData(self, volume, spacing):
         #spacing to [1, 1, 1]
         new_spacing = np.array([1, 1, 1])
@@ -613,12 +636,53 @@ class E_VolumeManager:
         self.Mgr.PredictObject(volumeData)
 
         self.m_resampledVolumeData = volumeData
+=======
+    def UpdateVolumeDataCrop(self, xP, yP):
+        #Get Selected ITK image
+        selected_image = self.m_selectedImage
+        crop_position = [0, 0, 0]
+
+        if self.m_orientation == 'AXL':
+            crop_position[0] = int(self.crop_position[0] * xP)
+            crop_position[2] = int(self.crop_position[2] * yP)            
+        elif self.m_orientation == 'COR':
+            crop_position[0] = int(self.crop_position[0] * xP)
+            crop_position[1] = int(self.crop_position[1] * yP)
+        else:
+            crop_position[2] = int(self.crop_position[2] * xP)
+            crop_position[1] = int(self.crop_position[1] * yP)        
+
+
+        #Crop + Resample
+        resampler = itk.ResampleImageFilter[ImageType, ImageType].New()
+        resampler.SetInput(selected_image)        
+        resampler.SetOutputStartIndex(crop_position)
+        resampler.SetSize([64,64,64])
+        resampler.SetOutputSpacing(self.resample_spacing)
+        resampler.SetOutputOrigin(selected_image.GetOrigin())
+        resampler.SetOutputDirection(selected_image.GetDirection())
+        resampler.UpdateLargestPossibleRegion()
+        resampler.Update()
+        output_image = resampler.GetOutput()
+
+        #Make Array
+        volumeBuffer = itk.GetArrayFromImage(output_image)
+
+        #Add Volume
+        self.AddVolume(volumeBuffer, [1, 1, 1])
+        self.Mgr.PredictObject(volumeBuffer)
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
+
+        return
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
 
     def UpdateVolumeTree(self):
         if self.m_volumeInfo == None: return
         self.Mgr.mainFrm.m_treeWidget.updateTree(self.m_volumeInfo)
 
     def AddSelectedVolume(self, idx):
+<<<<<<< HEAD
         self.Mgr.ClearScene()
         self.m_resampledVolumeData = np.array([None])
         self.m_decreaseRange = [1.0, 1.0]
@@ -628,10 +692,20 @@ class E_VolumeManager:
 
         #Adjust Orientation
         # itk_image=selected_data.GetOutput()
+=======
+        #Clear Scene
+        self.Mgr.ClearScene()        
+        
+        self.m_selectedIdx = idx
+        selected_data = self.m_volumeInfo['serieses'][idx]
+
+        #Adjust Orientation        
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         orienter = itk.OrientImageFilter[ImageType, ImageType].New()
         orienter.UseImageDirectionOn()
         orienter.SetInput(selected_data.GetOutput())
         orienter.Update()
+<<<<<<< HEAD
         itk_image = orienter.GetOutput()
         
         #Resample to 64
@@ -672,6 +746,22 @@ class E_VolumeManager:
         volumeArray = np.asarray(volumeBuffer, dtype=np.uint16)
         
 
+=======
+        
+        #Rescale Image Intensity 0 ~ 255
+        normalizer = itk.RescaleIntensityImageFilter[ImageType, ImageType].New()
+        normalizer.SetInput(orienter.GetOutput())
+        normalizer.SetOutputMinimum(0)
+        normalizer.SetOutputMaximum(255)
+        normalizer.Update()
+        itk_image = normalizer.GetOutput()
+
+        self.m_selectedImage = itk_image
+        
+        volumeBuffer = itk.GetArrayFromImage(itk_image)        
+        
+        #Adjust Shoulder Side
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96
         # if self.m_shoulderSide == 'L':
         #     volumeArray = np.flip(volumeArray, 2)
         #1,2 = z axes
@@ -679,6 +769,7 @@ class E_VolumeManager:
         #0,1 = x axes
         # volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, spacing)
 
+<<<<<<< HEAD
         #Normalize It
         volumeArray = (volumeArray * 255.0) / np.amax(volumeArray)        
         self.m_volumeArray = volumeArray
@@ -775,3 +866,42 @@ class E_VolumeManager:
 
         return self.m_volumeInfo['serieses'][self.m_selectedIdx]
          
+=======
+        
+
+        self.AddVolume(volumeBuffer, itk_image.GetSpacing())        
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
+
+
+        #Update Resample Information        
+        size = itk_image.GetLargestPossibleRegion().GetSize()
+        spacing = itk_image.GetSpacing()
+        # direction = itk_image.GetDirection()        
+        # origin = itk_image.GetOrigin()
+        
+        #Get Volume Thickness
+        length_of_cube = np.amax(spacing) * np.amin(size)
+        new_spacing = length_of_cube / 64
+
+        #New Size and Spacing        
+        self.resample_spacing = itk.Vector[itk.D,3]([new_spacing, new_spacing, new_spacing])
+        
+        #Calculate Crop Position && Save Orientation                 
+        self.crop_position =  [0,0,0]   
+        orientation = np.argmin(volumeBuffer.shape)
+        if orientation == 1:
+            self.m_orientation = 'AXL'
+            self.crop_position[0] = (size[0]*spacing[0]-length_of_cube)/new_spacing
+            self.crop_position[2] = (size[2]*spacing[2]-length_of_cube)/new_spacing
+        elif orientation == 0:
+            self.m_orientation = 'COR'
+            self.crop_position[0] = (size[0]*spacing[0]-length_of_cube)/new_spacing
+            self.crop_position[1] = (size[1]*spacing[1]-length_of_cube)/new_spacing
+        else:
+            self.m_orientation = 'SAG'
+            self.crop_position[2] = (size[2]*spacing[2]-length_of_cube)/new_spacing
+            self.crop_position[1] = (size[1]*spacing[1]-length_of_cube)/new_spacing
+        
+        return
+>>>>>>> 155a6a050b620c79b3d0b91c98e00d5d80164a96

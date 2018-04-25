@@ -48,13 +48,13 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
 
     def OnLeftButtonPressed(self, obj, event):
         
-        if self.renderer ==None: return
-                
+        if self.renderer ==None: return                
         position = self.GetInteractor().GetEventPosition()
+        print(position)
         picker = vtk.vtkPropPicker()
         picker.Pick(position[0], position[1], 0, self.renderer)
-
         self.renderer.UpdateSelectedPosition(picker.GetPickPosition())
+        
 
         self.Mgr.mainFrm 
 

@@ -170,35 +170,6 @@ class E_SliceRenderer(vtk.vtkRenderer):
 
         if self.Mgr.VolumeMgr.m_resampledVolumeData.any() == None:
             self.Mgr.SetLog("Select From Original Image")
-
-            pos = [0, 0]
-            pos[0] = int((self.selectedPos[0] / self.bounds[0]) * 800.0)
-            pos[1] = int((self.selectedPos[1] / self.bounds[1]) * 800.0)
-            if selectedOrientation == 'SAG':
-                pos = [pos[1], pos[0]]
-
-            self.Mgr.SetLog(str(pos))
-
-
-            self.Mgr.mainFrm.m_rangeSlider[0].setSliderPosition(pos[1])
-            self.Mgr.mainFrm.m_rangeSlider[1].setSliderPosition(pos[0])
-
-            return
-
-        decreaseRange = self.Mgr.VolumeMgr.m_decreaseRange
-
-        diff = self.selectedPos - self.centerPos        
-        diff[0] = int((diff[0] / self.bounds[0]) * decreaseRange[1] * 1000.0)
-        diff[1] = int((diff[1] / self.bounds[1]) * decreaseRange[0] * 1000.0)
-        
-        if selectedOrientation == 'SAG':
-            diff = [diff[1], diff[0]]
-                            
-        curX = self.Mgr.mainFrm.m_rangeSlider[0].value()
-        curY = self.Mgr.mainFrm.m_rangeSlider[1].value()            
-    
-        self.Mgr.mainFrm.m_rangeSlider[0].setSliderPosition(curX + diff[1])
-        self.Mgr.mainFrm.m_rangeSlider[1].setSliderPosition(curY + diff[0])
     
 
     def AddViewProp(self, prop):
