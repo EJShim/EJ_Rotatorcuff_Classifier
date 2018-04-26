@@ -76,7 +76,8 @@ class E_MainWindow(QMainWindow):
         self.m_sliceSlider = [0, 0, 0]
 
         #vtk Renderer Widget
-        self.m_vtkWidget = [0, 0]
+        self.m_vtkWidget = None
+        self.m_croppingWidget = None
         self.m_vtkSliceWidget = [0,0,0]      
 
 
@@ -116,18 +117,14 @@ class E_MainWindow(QMainWindow):
         objectToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         objectToolbar.setMovable(False)
         self.addToolBar(Qt.RightToolBarArea, objectToolbar)
-        # mainTab.addTab(objectToolbar, "3D Objects")
-
-        #Import Object Action
-        importAction = QAction(QIcon(icon_path + "/051-cmyk.png"), "Import Object", self)
-        importAction.triggered.connect(self.onImportObject)
-        objectToolbar.addAction(importAction)
+        # mainTab.addTab(objectToolbar, "3D Objects")        
 
         #Import Volume addAction
         volumeAction = QAction(QIcon(icon_path + "/051-document.png"), "Import Volume", self)
         volumeAction.triggered.connect(self.onImportVolume)
         objectToolbar.addAction(volumeAction)
         objectToolbar.addSeparator()
+
 
         self.volumeWidget = E_VolumeRenderingWidget()
         objectToolbar.addWidget(self.volumeWidget)
@@ -154,10 +151,10 @@ class E_MainWindow(QMainWindow):
         listViewCheck.stateChanged.connect(self.onListViewState)
         checkLayout.addWidget(listViewCheck)
 
-        meshViewCheck = QCheckBox("Mesh View")
-        meshViewCheck.setCheckState(0)
-        meshViewCheck.stateChanged.connect(self.onMeshViewState)
-        checkLayout.addWidget(meshViewCheck)
+        croppingViewCheck = QCheckBox("Cropping View")
+        croppingViewCheck.setCheckState(1)
+        croppingViewCheck.stateChanged.connect(self.onCroppingViewState)
+        checkLayout.addWidget(croppingViewCheck)
 
         volumeViewCheck = QCheckBox("Volume View")
         volumeViewCheck.setCheckState(2)
@@ -346,11 +343,8 @@ class E_MainWindow(QMainWindow):
 
 
         #Initialize Renderers
-        for i in range(2):
-            self.m_vtkWidget[i] = QVTKRenderWindowInteractor();
-            self.renderViewWidget.AddMainRenderer(self.m_vtkWidget[i])
-
-        self.m_vtkWidget[0].hide()
+        self.m_vtkWidget = QVTKRenderWindowInteractor();
+        self.renderViewWidget.AddMainRenderer(self.m_vtkWidget)
 
 
         for i in range(3):            
@@ -375,12 +369,24 @@ class E_MainWindow(QMainWindow):
         MainLayout.setContentsMargins(0,0,0,0)
         self.m_centralWidget.setLayout(MainLayout)
 
+
+        leftWidget = QWidget()
+        leftWidget.setMaximumWidth(350)
+        leftLayout = QVBoxLayout()
+        leftWidget.setLayout(leftLayout)
+        MainLayout.addWidget(leftWidget)
+
+
+
         self.m_listWidget = E_VolumeListWidget(self)        
         self.m_listWidget.hide()
-        MainLayout.addWidget(self.m_listWidget)
+        leftLayout.addWidget(self.m_listWidget)
 
         self.m_treeWidget = E_VolumeTreeWidget(self)
-        MainLayout.addWidget(self.m_treeWidget)
+        leftLayout.addWidget(self.m_treeWidget)
+
+        self.m_croppingWidget = QVTKRenderWindowInteractor();
+        leftLayout.addWidget(self.m_croppingWidget)
 
 
         #Initialize Main View
@@ -390,19 +396,12 @@ class E_MainWindow(QMainWindow):
 
         MainLayout.setStretch(0, 1)
         MainLayout.setStretch(1, 1)
-        MainLayout.setStretch(2, 5)   
+        MainLayout.setStretch(2, 5)        
 
     def InitManager(self):
         self.Mgr = E_Manager(self)
         self.volumeWidget.SetManager(self.Mgr)
 
-
-
-    def onImportObject(self):
-        self.Mgr.SetLog('Import 3d Object')
-
-        path = QFileDialog.getOpenFileName(self, "Import 3D Objects", self.m_saveDir, "Object Files(*.stl *.obj) ;; Object Files(*.stl) ;; Object Files(*.obj)")
-        self.Mgr.ImportObject(path[0])
 
     def onImportVolume(self):
         self.Mgr.SetLog('import Volume')
@@ -529,17 +528,17 @@ class E_MainWindow(QMainWindow):
         else:
             self.m_listWidget.hide()
 
-    def onMeshViewState(self, state):
+    def onCroppingViewState(self, state):        
         if state == 2: #show
-            self.m_vtkWidget[0].show()
+            self.m_croppingWidget.show()
         else:
-            self.m_vtkWidget[0].hide()
+            self.m_croppingWidget.hide()
 
     def onVolumeViewState(self, state):
         if state == 2: #show
-            self.m_vtkWidget[1].show()
+            self.m_vtkWidget.show()
         else:
-            self.m_vtkWidget[1].hide()
+            self.m_vtkWidget.hide()
 
     def onVolumeTreeState(self, state):
         if state == 2: #show
@@ -680,7 +679,7 @@ class E_MainWindow(QMainWindow):
 
     def GetScreenShot(self):        
     
-        savers = [self.m_vtkWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[0].GetRenderWindow(), self.m_vtkSliceWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[2].GetRenderWindow()]
+        savers = [self.m_vtkWidget.GetRenderWindow(), self.m_vtkSliceWidget[0].GetRenderWindow(), self.m_vtkSliceWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[2].GetRenderWindow()]
         save_name = ["capture_main.png", "capture_axl.png", "capture_cor.png", "capture_sag.png"]
         original_size = []
 

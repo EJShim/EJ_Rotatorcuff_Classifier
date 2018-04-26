@@ -2,13 +2,9 @@ import vtk
 import numpy as np
 import math
 
-class E_SliceRenderer(vtk.vtkRenderer):
-    def __init__(self, mgr, idx = 0):        
-        view = ['SAG', 'AXL', 'COR']
-        self.idx = idx
-        self.viewType = view[idx]
-        self.lineColor = [0.0, 0.0, 0.0]
-        self.lineColor[(idx+2)%3] = 1.0
+class E_CroppingRenderer(vtk.vtkRenderer):
+    def __init__(self, mgr):                         
+        self.lineColor = [0.0, 0.0, 1.0]        
 
         self.centerPos = np.array([0.0, 0.0])
         self.selectedPos = np.array([0.0, 0.0])
@@ -44,8 +40,6 @@ class E_SliceRenderer(vtk.vtkRenderer):
     def AddGuide(self, bounds = [0.0, 0.0, 0.0]):                
 
         self.bounds = bounds
-        
-        selectedOrienation = self.Mgr.VolumeMgr.m_orientation
 
         #ADD Outer Line   
         points = vtk.vtkPoints()
@@ -124,12 +118,6 @@ class E_SliceRenderer(vtk.vtkRenderer):
 
     def UpdateSelectedPosition(self, position = [0, 0]):
 
-        selectedOrientation = self.Mgr.VolumeMgr.m_orientation
-        if not selectedOrientation == self.viewType:
-            log = "should select crop position from " + selectedOrientation + " view"
-            self.Mgr.SetLog(log)            
-            return
-
         crop_rate = self.Mgr.VolumeMgr.max_crop_rate
         max_bounds = [self.bounds[0] * crop_rate[0], self.bounds[1] * crop_rate[1]]        
         cube_length = [self.bounds[0]-max_bounds[0], self.bounds[1]-max_bounds[1]]
@@ -195,13 +183,6 @@ class E_SliceRenderer(vtk.vtkRenderer):
             self.m_bShowGuide = True
 
     def CalculateDiff(self):                
-        
-        #Only When it is preprocessed, selected original orientation case..        
-        selectedOrientation = self.Mgr.VolumeMgr.m_orientation
-        if not selectedOrientation == self.viewType:
-            log = "Selected from " + selectedOrientation + "view"
-            self.Mgr.SetLog(log)
-            return
 
         #Select From Original Image
         crop_rate = self.Mgr.VolumeMgr.max_crop_rate
@@ -214,7 +195,7 @@ class E_SliceRenderer(vtk.vtkRenderer):
     def AddViewProp(self, prop):
         self.RemoveGuide()
         bounds = [prop.GetMaxXBound(), prop.GetMaxYBound(), prop.GetMaxZBound()]
-        super(E_SliceRenderer, self).AddViewProp(prop)                
+        super(E_CroppingRenderer, self).AddViewProp(prop)                
         self.AddGuide(bounds)
         
         
