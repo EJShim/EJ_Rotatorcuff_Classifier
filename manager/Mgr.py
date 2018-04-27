@@ -8,8 +8,11 @@ from time import gmtime, strftime
 from PyQt5.QtWidgets import QApplication
 from manager.InteractorStyle import E_InteractorStyle
 from manager.InteractorStyle import E_InteractorStyle2D
+from manager.InteractorStyle import E_InteractorStyleCropper
+
 from manager.VolumeMgr import E_VolumeManager
 from manager.E_SliceRenderer import *
+from manager.E_CroppingRenderer import *
 import matplotlib.pyplot as plt
 from data import labels
 import tensorflow as tf
@@ -26,7 +29,7 @@ class E_Manager:
     def __init__(self, mainFrm):
         self.mainFrm = mainFrm
         self.VolumeMgr = E_VolumeManager(self)
-        self.renderer = [0, 0]
+        self.renderer = None
         self.m_sliceRenderer = [0, 0, 0]
 
         self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True,log_device_placement=False))
@@ -42,22 +45,28 @@ class E_Manager:
             self.xt = []
             self.yt = []
 
-        for i in range(2):
-            interactor = E_InteractorStyle(self, i)
+        #Initialize Main Renderer With interactor        
+        self.renderer = vtk.vtkRenderer()
+        self.renderer.SetBackground(0.0, 0.0, 0.0)
+        self.mainFrm.m_vtkWidget.GetRenderWindow().AddRenderer(self.renderer)
+        self.mainFrm.m_vtkWidget.GetRenderWindow().Render()
+        self.mainFrm.m_vtkWidget.GetRenderWindow().GetInteractor().SetInteractorStyle( E_InteractorStyle(self))
 
-            self.renderer[i] = vtk.vtkRenderer()
-            self.renderer[i].SetBackground(0.0, 0.0, 0.0)
-            self.mainFrm.m_vtkWidget[i].GetRenderWindow().AddRenderer(self.renderer[i])
-            self.mainFrm.m_vtkWidget[i].GetRenderWindow().Render()
-            self.mainFrm.m_vtkWidget[i].GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
+        #Add Cropping Renderer
+        self.cropping_renderer = E_CroppingRenderer(self)
+        interactor = E_InteractorStyleCropper(self)
+        self.cropping_renderer.SetBackground(0.1, 0.02, 0.2)
+        self.mainFrm.m_croppingWidget.GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
+        interactor.AddRenderer(self.cropping_renderer)
 
+
+        #Add Slice Renderer
         for i in range(3):            
             self.m_sliceRenderer[i] = E_SliceRenderer(self,i)            
 
         for i in range(3):            
             rendererIdx = (i+1)%3
-            interactor = E_InteractorStyle2D(self, rendererIdx)            
-            # self.mainFrm.m_vtkSliceWidget[i].GetRenderWindow().AddRenderer()            
+            interactor = E_InteractorStyle2D(self, rendererIdx)
             self.mainFrm.m_vtkSliceWidget[i].GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
             interactor.AddRenderer(self.m_sliceRenderer[rendererIdx])
             
@@ -70,15 +79,13 @@ class E_Manager:
 
     def InitObject(self):
         #Orientatio WIdget
-        self.orWidget = [0, 0]
-        for i in range(len(self.orWidget)):
-            axis = vtk.vtkAxesActor()
-            self.orWidget[i] = vtk.vtkOrientationMarkerWidget()
-            self.orWidget[i].SetOutlineColor(0.9300, 0.5700, 0.1300)
-            self.orWidget[i].SetOrientationMarker(axis)
-            self.orWidget[i].SetInteractor(  self.mainFrm.m_vtkWidget[i].GetRenderWindow().GetInteractor() )
-            self.orWidget[i].SetViewport(0.0, 0.0, 0.3, 0.3)
-
+        axis = vtk.vtkAxesActor()
+        self.orWidget = vtk.vtkOrientationMarkerWidget()
+        self.orWidget.SetOutlineColor(0.9300, 0.5700, 0.1300)
+        self.orWidget.SetOrientationMarker(axis)
+        self.orWidget.SetInteractor(  self.mainFrm.m_vtkWidget.GetRenderWindow().GetInteractor() )
+        self.orWidget.SetViewport(0.0, 0.0, 0.3, 0.3)
+        
         self.Redraw()
         self.Redraw2D()    
  
@@ -147,64 +154,14 @@ class E_Manager:
         self.PredictObject(scalarData)
 
     def Redraw(self):
-        for i in range(2):
-            self.mainFrm.m_vtkWidget[i].GetRenderWindow().Render()
-            self.orWidget[i].SetEnabled(1)
-    def Redraw2D(self):
+        self.mainFrm.m_vtkWidget.GetRenderWindow().Render()
+        self.orWidget.SetEnabled(1)        
+
+    def Redraw2D(self):        
+        self.cropping_renderer.GetRenderWindow().Render()
         for i in range(3):
             self.m_sliceRenderer[i].GetRenderWindow().Render()
             # self.sliceOrWidget[i].SetEnabled(1)
-
-    def ImportObject(self, path):
-        self.SetLog(path)
-        filename, file_extension = os.path.splitext(path)
-
-        if file_extension == ".stl":
-
-            #Remove All Actors
-            self.ClearScene()
-
-            reader = vtk.vtkSTLReader()
-            reader.SetFileName(path)
-            reader.Update()
-
-
-            self.VoxelizeObject(reader)
-
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(reader.GetOutputPort())
-
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
-
-            self.renderer[0].AddActor(actor)
-            self.renderer[0].ResetCamera()
-            self.Redraw()
-
-        elif file_extension == ".obj":
-            #Remove All Actors
-            self.ClearScene()
-
-            reader = vtk.vtkOBJReader()
-            reader.SetFileName(path)
-            reader.Update()
-
-
-            self.VoxelizeObject(reader)
-
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(reader.GetOutputPort())
-
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
-
-            self.renderer[0].AddActor(actor)
-            self.renderer[0].ResetCamera()
-            self.Redraw()
-
-
-        else:
-            self.SetLog('File Extension Not Supported')
         
 
     def InitNetwork(self):        
@@ -320,7 +277,7 @@ class E_Manager:
         bbActor.SetMapper(bbmapper)
         bbActor.GetProperty().SetColor(1, 0, 0)
 
-        self.renderer[1].AddActor(bbActor)
+        self.renderer.AddActor(bbActor)
 
         self.Redraw()
 
@@ -335,7 +292,7 @@ class E_Manager:
         self.VolumeMgr.RemoveClassActivationMap()
         
     def RotateCamera(self):
-        camera = self.renderer[1].GetActiveCamera()        
+        camera = self.renderer.GetActiveCamera()        
         camera.Azimuth(1)
         camera.SetViewUp(0.0, 1.0, 0.0)
 
