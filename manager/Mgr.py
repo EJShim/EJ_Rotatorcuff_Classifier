@@ -56,7 +56,7 @@ class E_Manager:
         self.cropping_renderer = E_CroppingRenderer(self)
         interactor = E_InteractorStyleCropper(self)
         self.cropping_renderer.SetBackground(0.1, 0.02, 0.2)
-        self.mainFrm.m_croppingWidget.GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
+        self.mainFrm.m_cropRenderer.GetRenderWindow().GetInteractor().SetInteractorStyle(interactor)
         interactor.AddRenderer(self.cropping_renderer)
 
 
@@ -296,9 +296,13 @@ class E_Manager:
         camera.Azimuth(1)
         camera.SetViewUp(0.0, 1.0, 0.0)
 
-    def SetLog(self, text, error=False):
+    def SetLog(self, *kwargs):
+        log = ""
+        for txt in kwargs:
+            log += txt + " "        
+
         QApplication.processEvents() 
-        self.mainFrm.statusBar().showMessage(text)
+        self.mainFrm.statusBar().showMessage(log)
 
     def PredictROI(self):
         selectedVolume = self.VolumeMgr.m_volumeArray

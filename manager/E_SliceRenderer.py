@@ -212,7 +212,9 @@ class E_SliceRenderer(vtk.vtkRenderer):
     
 
     def AddViewProp(self, prop):
-        self.RemoveGuide()
+        self.RemoveGuide()        
+
+
         bounds = [prop.GetMaxXBound(), prop.GetMaxYBound(), prop.GetMaxZBound()]
         super(E_SliceRenderer, self).AddViewProp(prop)                
         self.AddGuide(bounds)

@@ -119,12 +119,6 @@ class E_MainWindow(QMainWindow):
         self.addToolBar(Qt.RightToolBarArea, objectToolbar)
         # mainTab.addTab(objectToolbar, "3D Objects")        
 
-        #Import Volume addAction
-        volumeAction = QAction(QIcon(icon_path + "/051-document.png"), "Import Volume", self)
-        volumeAction.triggered.connect(self.onImportVolume)
-        objectToolbar.addAction(volumeAction)
-        objectToolbar.addSeparator()
-
 
         self.volumeWidget = E_VolumeRenderingWidget()
         objectToolbar.addWidget(self.volumeWidget)
@@ -152,7 +146,7 @@ class E_MainWindow(QMainWindow):
         checkLayout.addWidget(listViewCheck)
 
         croppingViewCheck = QCheckBox("Cropping View")
-        croppingViewCheck.setCheckState(1)
+        croppingViewCheck.setCheckState(2)
         croppingViewCheck.stateChanged.connect(self.onCroppingViewState)
         checkLayout.addWidget(croppingViewCheck)
 
@@ -188,32 +182,7 @@ class E_MainWindow(QMainWindow):
         viewcontrolLayout.addWidget(radioNormal)
         viewcontrolLayout.addWidget(radioGrid)                   
         viewcontrolLayout.itemAt(0).widget().setChecked(True)        
-        objectToolbar.addWidget(viewControl)
-
-        objectToolbar.addSeparator()        
-
-
-
-        cropWidget = QWidget()
-        objectToolbar.addWidget(cropWidget)
-        cropLayout = QVBoxLayout()
-        cropWidget.setLayout(cropLayout)
-
-        self.m_rangeSlider = [0, 0]
-
-        self.m_rangeSlider[0] = QSlider(Qt.Horizontal)
-        self.m_rangeSlider[0].setRange(0.0, 1000)
-        self.m_rangeSlider[0].setSingleStep(1)
-        self.m_rangeSlider[0].setSliderPosition( 500 )
-        cropLayout.addWidget(self.m_rangeSlider[0])
-        self.m_rangeSlider[0].valueChanged.connect(self.onRangeSliderValueChanged)
-
-        self.m_rangeSlider[1] = QSlider(Qt.Horizontal)
-        self.m_rangeSlider[1].setRange(0.0, 1000)
-        self.m_rangeSlider[1].setSingleStep(1)
-        self.m_rangeSlider[1].setSliderPosition( 500 )
-        cropLayout.addWidget(self.m_rangeSlider[1])
-        self.m_rangeSlider[1].valueChanged.connect(self.onRangeSliderValueChanged)
+        objectToolbar.addWidget(viewControl)        
         
         objectToolbar.addSeparator()
 
@@ -287,31 +256,11 @@ class E_MainWindow(QMainWindow):
         self.addToolBar(networkToolbar)
         # mainTab.addTab(networkToolbar, "VRN")
 
-        self.trainAction = QAction(QIcon(icon_path + "/051-pantone-2.png"), "Predict Off", self)
-        self.trainAction.setCheckable(True)
-        self.trainAction.toggled.connect(self.TogglePrediction)
-        networkToolbar.addAction(self.trainAction)
 
-        networkToolbar.addSeparator()
-
-        self.listAnimation = QAction(QIcon(icon_path + "/051-pantone-1.png"), "List Animation", self)
-        self.listAnimation.setCheckable(True)
-        self.listAnimation.triggered.connect(self.onListAnimation)
-        networkToolbar.addAction(self.listAnimation)
-
-        self.camAnimation = QAction(QIcon(icon_path + "/051-cmyk.png"), "CAM Animation", self)        
-        self.camAnimation.triggered.connect(self.onCAMAnimation)
-        networkToolbar.addAction(self.camAnimation)
-
-
-        # self.roiAnimation = QAction(QIcon(icon_path + "/051-cmyk.png"), "Predict ROI(experimental)", self)        
-        # self.roiAnimation.triggered.connect(self.PredictROI)
-        # networkToolbar.addAction(self.roiAnimation)
-
-
-        # self.saveSlice = QAction(QIcon(icon_path + "/051-cmyk.png"), "Save Slice", self)        
-        # self.saveSlice.triggered.connect(self.onSaveSliceImage)
-        # networkToolbar.addAction(self.saveSlice)
+        #Import Volume addAction
+        volumeAction = QAction(QIcon(icon_path + "/051-document.png"), "Import Volume", self)
+        volumeAction.triggered.connect(self.onImportVolume)
+        networkToolbar.addAction(volumeAction)        
 
         #Add Score Progress bar        
         style2 = "QProgressBar::chunk {background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0,stop: 0 #F10350,stop: 0.4999 #FF3320,stop: 0.5 #FF0019,stop: 1 #F0F150 );}"
@@ -335,6 +284,12 @@ class E_MainWindow(QMainWindow):
         self.save_screen.triggered.connect(self.GetScreenShot)
         networkToolbar.addAction(self.save_screen)
         networkToolbar.addSeparator()
+
+        #Predict On, Of
+        self.trainAction = QAction(QIcon(icon_path + "/051-pantone-2.png"), "Predict Off", self)
+        self.trainAction.setCheckable(True)
+        self.trainAction.toggled.connect(self.TogglePrediction)
+        networkToolbar.addAction(self.trainAction)
 
     def InitRendererView(self, layout):
 
@@ -385,8 +340,33 @@ class E_MainWindow(QMainWindow):
         self.m_treeWidget = E_VolumeTreeWidget(self)
         leftLayout.addWidget(self.m_treeWidget)
 
-        self.m_croppingWidget = QVTKRenderWindowInteractor();
+
+        ## ADD Crop widgets
+        self.m_croppingWidget = QWidget()        
+        cropLayout = QVBoxLayout()
+        self.m_croppingWidget.setLayout(cropLayout)
+
+        self.m_cropRenderer = QVTKRenderWindowInteractor();
+        cropLayout.addWidget(self.m_cropRenderer)
+
+        self.m_rangeSlider = [0, 0]
+        self.m_rangeSlider[0] = QSlider(Qt.Horizontal)
+        self.m_rangeSlider[0].setRange(0.0, 1000)
+        self.m_rangeSlider[0].setSingleStep(1)
+        self.m_rangeSlider[0].setSliderPosition( 500 )
+        cropLayout.addWidget(self.m_rangeSlider[0])
+        self.m_rangeSlider[0].valueChanged.connect(self.onRangeSliderValueChanged)
+
+        self.m_rangeSlider[1] = QSlider(Qt.Horizontal)
+        self.m_rangeSlider[1].setRange(0.0, 1000)
+        self.m_rangeSlider[1].setSingleStep(1)
+        self.m_rangeSlider[1].setSliderPosition( 500 )
+        cropLayout.addWidget(self.m_rangeSlider[1])
+        self.m_rangeSlider[1].valueChanged.connect(self.onRangeSliderValueChanged)
+
         leftLayout.addWidget(self.m_croppingWidget)
+        
+        
 
 
         #Initialize Main View
@@ -512,10 +492,7 @@ class E_MainWindow(QMainWindow):
         if pred:
             self.trainAction.setText("Predict On")
         else:
-            self.trainAction.setText("Predict Off")
-        # self.Mgr.InitNetwork()
-        # self.trainAction.setEnabled(False)
-        # self.listAnimation.setEnabled(False)
+            self.trainAction.setText("Predict Off")        
 
 
     def onRandomPred(self):        
@@ -597,15 +574,6 @@ class E_MainWindow(QMainWindow):
 
     def SetViewModeGrid(self):
         self.renderViewWidget.SetViewGridView()
-
-
-    def onListAnimation(self, e):
-        if e:
-            self.timer.start(30/1000)
-            self.th_randomPred.start()
-        else:
-            self.th_randomPred.terminate()
-            self.timer.stop()
 
 
     def onCAMAnimation(self, e):

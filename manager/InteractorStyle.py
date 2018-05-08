@@ -26,7 +26,7 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
         self.AddObserver("LeftButtonPressEvent", self.OnLeftButtonPressed)
         self.AddObserver("LeftButtonReleaseEvent", self.OnLeftButtonReleased)
         self.AddObserver("RightButtonPressEvent", self.OnRightButtonPressed)
-        self.AddObserver("RightButtonReleaseEvent", self.OnRightButtonReleased)
+        self.AddObserver("RightButtonReleaseEvent", self.OnRightButtonReleased)        
         
         
 
@@ -45,16 +45,16 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
         self.Mgr.VolumeMgr.BackwardSliceImage(self.idx)
 
     def OnLeftButtonPressed(self, obj, event):
-        
-        if self.renderer ==None: return                
-        position = self.GetInteractor().GetEventPosition()        
-        picker = vtk.vtkPropPicker()
-        picker.Pick(position[0], position[1], 0, self.renderer)
+        ha = 0
+        # if self.renderer ==None: return                
+        # position = self.GetInteractor().GetEventPosition()        
+        # picker = vtk.vtkPropPicker()
+        # picker.Pick(position[0], position[1], 0, self.renderer)
 
-        self.renderer.UpdateSelectedPosition(picker.GetPickPosition())
+        # self.renderer.UpdateSelectedPosition(picker.GetPickPosition())
         
 
-        self.Mgr.mainFrm 
+        # self.Mgr.mainFrm 
 
         
 
@@ -62,7 +62,7 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
         ha = 0
         
     def OnRightButtonPressed(self, obj, event):
-        self.renderer.CalculateDiff()
+        ha = 0
 
     def OnRightButtonReleased(self, obj, event):
         ha = 0
@@ -71,7 +71,8 @@ class E_InteractorStyle2D(vtk.vtkInteractorStyleImage):
 
 class E_InteractorStyleCropper(vtk.vtkInteractorStyleImage):
     def __init__(self, Manager):
-        self.Mgr = Manager;        
+        self.Mgr = Manager;
+        self.bMouseClicked = False
 
         self.AddObserver("MouseWheelForwardEvent", self.OnMouseWheelForward)
         self.AddObserver("MouseWheelBackwardEvent", self.OnMouseWheelBackward)
@@ -79,6 +80,7 @@ class E_InteractorStyleCropper(vtk.vtkInteractorStyleImage):
         self.AddObserver("LeftButtonReleaseEvent", self.OnLeftButtonReleased)
         self.AddObserver("RightButtonPressEvent", self.OnRightButtonPressed)
         self.AddObserver("RightButtonReleaseEvent", self.OnRightButtonReleased)
+        self.AddObserver("MouseMoveEvent", self.OnMouseMove)
         
         
 
@@ -97,24 +99,33 @@ class E_InteractorStyleCropper(vtk.vtkInteractorStyleImage):
         print("wheel backward")
 
     def OnLeftButtonPressed(self, obj, event):
-        
-        if self.renderer ==None: return                
+
+        self.bMouseClicked = True        
+        if self.renderer ==None: return
         position = self.GetInteractor().GetEventPosition()        
         picker = vtk.vtkPropPicker()
         picker.Pick(position[0], position[1], 0, self.renderer)
-
-        self.renderer.UpdateSelectedPosition(picker.GetPickPosition())
-        
-
-        self.Mgr.mainFrm 
+        self.renderer.UpdateSelectedPosition(picker.GetPickPosition())        
 
         
 
     def OnLeftButtonReleased(self, obj, event):
-        ha = 0
+        self.bMouseClicked = False
         
     def OnRightButtonPressed(self, obj, event):
+        self.bMouseClicked = False
         self.renderer.CalculateDiff()
 
     def OnRightButtonReleased(self, obj, event):
-        ha = 0
+        self.bMouseClicked = False
+        
+    
+    def OnMouseMove(self, obj, event):
+        if self.renderer ==None: return
+        if self.bMouseClicked:                            
+            position = self.GetInteractor().GetEventPosition()        
+            picker = vtk.vtkPropPicker()
+            picker.Pick(position[0], position[1], 0, self.renderer)
+            self.renderer.UpdateSelectedPosition(picker.GetPickPosition())
+
+            self.renderer.CalculateDiff()

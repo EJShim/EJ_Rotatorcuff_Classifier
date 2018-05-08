@@ -3,8 +3,7 @@ import numpy as np
 import math
 
 class E_CroppingRenderer(vtk.vtkRenderer):
-    def __init__(self, mgr):                         
-        self.lineColor = [0.0, 0.0, 1.0]        
+    def __init__(self, mgr):                                       
 
         self.centerPos = np.array([0.0, 0.0])
         self.selectedPos = np.array([0.0, 0.0])
@@ -23,10 +22,7 @@ class E_CroppingRenderer(vtk.vtkRenderer):
     def Initialize(self):
         self.centerLineActor = vtk.vtkActor()
         self.polygonActor = vtk.vtkActor()
-        self.selectedPositionActor = vtk.vtkActor()
-
-        self.centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.8])
-        self.polygonActor.GetProperty().SetColor(self.lineColor)
+        self.selectedPositionActor = vtk.vtkActor()        
         self.selectedPositionActor.GetProperty().SetColor([0.7, 0.7, 0.0])
         
         #Initialize Center selection
@@ -143,11 +139,7 @@ class E_CroppingRenderer(vtk.vtkRenderer):
         point_bottom_right = [upper_bound[0], lower_bound[1], self.bounds[2]]
         point_top_right= [upper_bound[0], upper_bound[1], self.bounds[2]]
 
-        
-
         # print(self.selectedPos, self.bounds)
-
-
         #Center Line
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(4)
@@ -182,8 +174,7 @@ class E_CroppingRenderer(vtk.vtkRenderer):
             self.AddActor(self.selectedPositionActor)
             self.m_bShowGuide = True
 
-    def CalculateDiff(self):                
-
+    def CalculateDiff(self):
         #Select From Original Image
         crop_rate = self.Mgr.VolumeMgr.max_crop_rate
         max_bounds = [self.bounds[0] * crop_rate[0], self.bounds[1] * crop_rate[1]]
@@ -194,6 +185,19 @@ class E_CroppingRenderer(vtk.vtkRenderer):
 
     def AddViewProp(self, prop):
         self.RemoveGuide()
+
+        orientation = self.Mgr.VolumeMgr.m_orientation
+        if orientation == 'AXL':
+            self.polygonActor.GetProperty().SetColor([0.8, 0.0, 0.0])
+            self.centerLineActor.GetProperty().SetColor([0.4, 0.0, 0.0])
+        elif orientation == 'COR':
+            self.polygonActor.GetProperty().SetColor([0.0, 0.8, 0.0])
+            self.centerLineActor.GetProperty().SetColor([0.0, 0.4, 0.0])
+        elif orientation == 'SAG':
+            self.polygonActor.GetProperty().SetColor([0.0, 0.0, 0.8])
+            self.centerLineActor.GetProperty().SetColor([0.0, 0.0, 0.4])
+
+
         bounds = [prop.GetMaxXBound(), prop.GetMaxYBound(), prop.GetMaxZBound()]
         super(E_CroppingRenderer, self).AddViewProp(prop)                
         self.AddGuide(bounds)

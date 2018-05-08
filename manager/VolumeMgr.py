@@ -25,7 +25,7 @@ class E_VolumeManager:
         # self.m_reverseSagittal = False
         # self.m_reverseAxial = False
         self.m_shoulderSide = 'L'        
-        self.m_orientation = 'AXL' ##AXL:1, COR:0, SAG:2
+        self.m_orientation = None ##AXL:1, COR:0, SAG:2
 
         #Selected Volume CFGS
         self.m_colorFunction = vtk.vtkColorTransferFunction()
@@ -65,8 +65,7 @@ class E_VolumeManager:
             self.m_resliceActor[i] = vtk.vtkImageSlice()
             self.m_colorMapResliceMapper[i] = vtk.vtkImageSliceMapper()
             self.m_colorMapResliceActor[i] = vtk.vtkImageSlice()        
-
-        self.croppingActor.RotateY(90)
+        
         self.m_resliceActor[0].RotateY(90)
         self.m_resliceActor[1].RotateX(-90)
         self.m_colorMapResliceActor[0] .RotateY(90) 
@@ -99,8 +98,7 @@ class E_VolumeManager:
             self.m_resliceMapper[i].SetOrientation(i)
             self.m_resliceActor[i].SetMapper(self.m_resliceMapper[i])
             self.m_resliceActor[i].SetProperty(self.m_imageProperty)
-
-        self.croppingMapper.SetOrientation(0)
+        
         self.croppingActor.SetMapper(self.croppingMapper)
         self.croppingActor.SetProperty(self.m_imageProperty)
 
@@ -310,8 +308,19 @@ class E_VolumeManager:
 
         self.Mgr.mainFrm.classCheck.setEnabled(True)
 
+    def AddCropSlice(self):
+        #Should Be Called After "Add Volume"
+        self.volume_cropper.DeepCopy(self.volume_data)
+        self.croppingMapper.SetSliceNumber(self.croppingMapper.GetSliceNumberMaxValue()//2)
 
-    def AddVolume(self, volumeArray, spacing = [1.0, 1.0, 1.0], initial=False):
+    def ShowCropSlice(self):
+        #Add Cropping        
+        self.Mgr.cropping_renderer.AddViewProp(self.croppingActor)
+        self.Mgr.cropping_renderer.ResetCamera()
+        self.Mgr.cropping_renderer.GetActiveCamera().Zoom(1.5)
+
+
+    def AddVolume(self, volumeArray, spacing=[1.0, 1.0, 1.0]):
         floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
         
         dim = volumeArray.shape
@@ -321,19 +330,16 @@ class E_VolumeManager:
         self.volume_data.SetSpacing(spacing)
         self.volume_data.GetPointData().SetScalars(floatArray)
 
-        #Save Original Volume
-        if initial:
-            self.volume_cropper.DeepCopy(self.volume_data)
+        #Get Scalar Range
+        self.m_scalarRange = self.volume_data.GetScalarRange()
 
-        self.m_scalarRange = self.volume_data.GetScalarRange()        
         #Update Slider
         for i in range(3):
             minVal = self.m_resliceMapper[i].GetSliceNumberMinValue()
             maxVal = self.m_resliceMapper[i].GetSliceNumberMaxValue()
-            self.Mgr.mainFrm.m_sliceSlider[i].setRange(minVal, maxVal)
-        
-        #update Preset OTF
-        self.ShowVolume()
+            self.Mgr.mainFrm.m_sliceSlider[i].setRange(minVal, maxVal)   
+
+       
 
     def ShowVolume(self):        
         #Add Slice
@@ -342,12 +348,7 @@ class E_VolumeManager:
             rendererIdx = i            
             self.Mgr.m_sliceRenderer[rendererIdx].AddViewProp(self.m_resliceActor[i])
             self.Mgr.m_sliceRenderer[rendererIdx].ResetCamera()
-            self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)
-
-        #Add Cropping        
-        self.Mgr.cropping_renderer.AddViewProp(self.croppingActor)
-        self.Mgr.cropping_renderer.ResetCamera()
-        self.Mgr.cropping_renderer.GetActiveCamera().Zoom(1.5)
+            self.Mgr.m_sliceRenderer[rendererIdx].GetActiveCamera().Zoom(1.5)        
             
         #Add Actor
         self.Mgr.renderer.AddVolume(self.m_volume)
@@ -430,7 +431,12 @@ class E_VolumeManager:
 
         #Add Volume
         self.AddVolume(volumeBuffer, [1, 1, 1])
+        self.ShowVolume()
+
+        #Predict if it is enabled
         self.Mgr.PredictObject(volumeBuffer)
+
+        #Redraw
         self.Mgr.Redraw()
         self.Mgr.Redraw2D()
 
@@ -471,19 +477,12 @@ class E_VolumeManager:
         #1,2 = z axes
         #0,2 = y axes
         #0,1 = x axes
-        # volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, spacing)
-
-        self.AddVolume(volumeBuffer, spacing=itk_image.GetSpacing(), initial=True)
-        
-        self.Mgr.Redraw()
-        self.Mgr.Redraw2D()
+        # volumeArray, renderSpacing = self.ResampleVolumeData(volumeArray, spacing)        
 
 
         #Update Resample Information        
         size = itk_image.GetLargestPossibleRegion().GetSize()
-        spacing = itk_image.GetSpacing()
-        # direction = itk_image.GetDirection()        
-        # origin = itk_image.GetOrigin()
+        spacing = itk_image.GetSpacing()        
         
         #Get Volume Thickness
         length_of_cube = np.amax(spacing) * np.amin(size)
@@ -496,6 +495,14 @@ class E_VolumeManager:
         self.crop_position =  [0,0,0]
         self.max_crop_rate = [0, 0]
         orientation = np.argmin(volumeBuffer.shape)
+
+        #Reset Cropping Actor
+        if self.m_orientation == 'AXL':
+            self.croppingActor.RotateX(90)            
+        elif self.m_orientation == 'SAG':
+            self.croppingActor.RotateY(-90)        
+
+
         if orientation == 1:
             self.m_orientation = 'AXL'
             self.crop_position[0] = (size[0]*spacing[0]-length_of_cube)/new_spacing
@@ -503,6 +510,11 @@ class E_VolumeManager:
 
             self.max_crop_rate[0] = 1 - length_of_cube/(size[0]*spacing[0])
             self.max_crop_rate[1] = 1 - length_of_cube/(size[2]*spacing[2])
+
+            #Update Cropping Reference
+            self.croppingMapper.SetOrientation(1)
+            self.croppingActor.RotateX(-90)
+                        
         elif orientation == 0:
             self.m_orientation = 'COR'
             self.crop_position[0] = (size[0]*spacing[0]-length_of_cube)/new_spacing
@@ -510,6 +522,9 @@ class E_VolumeManager:
 
             self.max_crop_rate[0] = 1 - length_of_cube/(size[0]*spacing[0])
             self.max_crop_rate[1] = 1 - length_of_cube/(size[1]*spacing[1])
+
+            self.croppingMapper.SetOrientation(2)
+            
         else:
             self.m_orientation = 'SAG'
             self.crop_position[2] = (size[2]*spacing[2]-length_of_cube)/new_spacing
@@ -517,5 +532,22 @@ class E_VolumeManager:
 
             self.max_crop_rate[0] = 1 - length_of_cube/(size[2]*spacing[2])
             self.max_crop_rate[1] = 1 - length_of_cube/(size[1]*spacing[1])
+
+            self.croppingMapper.SetOrientation(0)
+            self.croppingActor.RotateY(90)
+
+        self.Mgr.SetLog("Reslice Orientaiton : ", str(self.m_orientation))
+
+        #Render Volume
+        self.AddVolume(volumeBuffer, spacing=itk_image.GetSpacing())
+        self.ShowVolume()
+
+        #Render Crop Slice
+        self.AddCropSlice()
+        self.ShowCropSlice()
+        
+        #Redraw
+        self.Mgr.Redraw()
+        self.Mgr.Redraw2D()
         
         return
