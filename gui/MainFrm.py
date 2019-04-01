@@ -10,6 +10,12 @@ import datetime
 
 
 import vtk
+# pipe vtk output errors to file
+errOut = vtk.vtkFileOutputWindow()
+errOut.SetFileName("VTK Error Out.txt")
+vtkStdErrOut = vtk.vtkOutputWindow()
+vtkStdErrOut.SetInstance(errOut)
+
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import sys, os
 from manager.Mgr import E_Manager
@@ -33,10 +39,8 @@ class E_MainWindow(QMainWindow):
         self.installEventFilter(self)
 
         self.splash = QSplashScreen(QPixmap(os.path.join(root_path, "data", "screen.png")))
-        self.splash.show()
-        self.splash.finish(self)
-
-        self.m_saveDir = None;
+        self.splash.show()        
+        self.m_saveDir = '~/'
         try:
             with open(os.path.join(root_path, 'path_tmp'), 'r') as text_file:
                 self.m_saveDir = text_file.read().replace('\n', '')
@@ -44,7 +48,17 @@ class E_MainWindow(QMainWindow):
             with open(os.path.join(root_path, 'path_tmp'), 'w') as text_file:
                 print(self.m_saveDir, file=text_file)
 
-        self.setWindowTitle("RCT Classifier")
+        self.m_capDir = '~/'
+        try:
+            with open(os.path.join(root_path, 'capture_path'), 'r') as text_file:
+                self.m_capDir = text_file.read().replace('\n', '')
+        except:
+            with open(os.path.join(root_path, 'capture_path'), 'w') as text_file:
+                print(self.m_capDir, file=text_file)
+
+
+        self.setWindowTitle("KRCTC")
+        self.setWindowIcon(QIcon(icon_path + "/kistlogo.ico"))
         self.keyPlaying = {}
 
 
@@ -98,6 +112,14 @@ class E_MainWindow(QMainWindow):
         self.progressBar = QProgressBar()
         self.progressBar.setGeometry(30, 40, 200, 25)        
         self.statusBar().addPermanentWidget(self.progressBar)
+
+        #Finish splash
+        self.splash.finish(self)
+
+    def __close__(self):
+        print("delete")
+
+
     def eventFilter(self, obj, event):
         # print(event)
         if event.type() == QEvent.ShortcutOverride:
@@ -117,6 +139,7 @@ class E_MainWindow(QMainWindow):
         objectToolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         objectToolbar.setMovable(False)
         self.addToolBar(Qt.RightToolBarArea, objectToolbar)
+        objectToolbar.hide()
         # mainTab.addTab(objectToolbar, "3D Objects")        
 
 
@@ -298,7 +321,7 @@ class E_MainWindow(QMainWindow):
 
 
         #Initialize Renderers
-        self.m_vtkWidget = QVTKRenderWindowInteractor();
+        self.m_vtkWidget = QVTKRenderWindowInteractor()
         self.renderViewWidget.AddMainRenderer(self.m_vtkWidget)
 
 
@@ -388,6 +411,8 @@ class E_MainWindow(QMainWindow):
 
         #Get Selected Path
         path = QFileDialog.getExistingDirectory(self, "Import 3D Objects", self.m_saveDir)
+
+        if len(path) == 0 : return
         
         #Save SaveDir
         self.m_saveDir = path
@@ -421,6 +446,8 @@ class E_MainWindow(QMainWindow):
 
         try :
             self.Mgr.VolumeMgr.ImportVolume(path)
+            #TEMP
+            self.Mgr.VolumeMgr.AddSelectedVolume(0)
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -626,6 +653,7 @@ class E_MainWindow(QMainWindow):
 
 
         if not label == -1:
+            if label >= 1: label = 1
 
             pred_class = np.argmax(score)
             if int(label) == pred_class:
@@ -648,7 +676,7 @@ class E_MainWindow(QMainWindow):
     def GetScreenShot(self):        
     
         savers = [self.m_vtkWidget.GetRenderWindow(), self.m_vtkSliceWidget[0].GetRenderWindow(), self.m_vtkSliceWidget[1].GetRenderWindow(), self.m_vtkSliceWidget[2].GetRenderWindow()]
-        save_name = ["capture_main.png", "capture_axl.png", "capture_cor.png", "capture_sag.png"]
+        save_name = ["_main.png", "_axl.png", "_cor.png", "_sag.png"]
         original_size = []
 
         png_writer = vtk.vtkPNGWriter()
@@ -656,9 +684,16 @@ class E_MainWindow(QMainWindow):
         image_filter.SetInputBufferTypeToRGB()
 
 
-        dir_path = QFileDialog.getExistingDirectory(self, "Save Captured Image Directory", "~/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        if dir_path == "": 
+        dir_path = QFileDialog.getSaveFileName(self, "Save Captured Image Directory", self.m_capDir + '/capture', "Image(*.png)")
+        if dir_path[0] == "": 
             return
+    
+
+        self.m_capDir = os.path.dirname(dir_path[0])
+        with open(os.path.join(root_path, 'capture_path'), 'w') as text_file:
+            print(self.m_capDir, file=text_file)
+
+
 
         for idx, ren_win in enumerate(savers):
             original_size.append(ren_win.GetSize())
@@ -666,7 +701,7 @@ class E_MainWindow(QMainWindow):
             image_filter.SetInput(ren_win)
             image_filter.Update()
 
-            png_writer.SetFileName(os.path.join(dir_path, save_name[idx]))
+            png_writer.SetFileName(dir_path[0][:-4]+save_name[idx])
             png_writer.SetInputConnection(image_filter.GetOutputPort())
             png_writer.Write()
 

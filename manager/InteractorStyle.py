@@ -10,8 +10,6 @@ class E_InteractorStyle(vtk.vtkInteractorStyleSwitch):
         self.SetCurrentStyleToTrackballCamera()
         self.GetCurrentStyle().AddObserver("MouseMoveEvent", self.MouseMoveEvent)
 
-
-
     def MouseMoveEvent(self, obj, event):
         self.GetCurrentStyle().OnMouseMove()
 
@@ -106,6 +104,7 @@ class E_InteractorStyleCropper(vtk.vtkInteractorStyleImage):
         picker = vtk.vtkPropPicker()
         picker.Pick(position[0], position[1], 0, self.renderer)
         self.renderer.UpdateSelectedPosition(picker.GetPickPosition())        
+        self.renderer.CalculateDiff() 
 
         
 

@@ -17,3 +17,6 @@ theano_modules(deprecated)
 data/*.npz
 data/old/*.npz
 tmp/
+weights_build
+VTK Error Out.txt
+capture_path

@@ -8,9 +8,6 @@ import numpy as np
 import scipy.ndimage
 from collections import Counter
 
-import matplotlib.pyplot as plt
-
-
 ImageType = itk.Image[itk.F, 3]
 
 class E_VolumeManager:
@@ -132,13 +129,13 @@ class E_VolumeManager:
 
         elif idx == 1: #CT_SKIN
             self.m_colorFunction.AddRGBPoint(self.m_scalarRange[0], 0.0, 0.0, 0.0, 0.5, 0.0)
-            self.m_colorFunction.AddRGBPoint((-1000 + 1024) / rangeFactor , 0.62, 0.36, 0.18, 0.5, 0.0)
-            self.m_colorFunction.AddRGBPoint((-500 + 1024) / rangeFactor , 0.88, 0.60, 0.29, 0.33, 0.45)
+            self.m_colorFunction.AddRGBPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/3.0 , 0.62, 0.36, 0.18, 0.5, 0.0)
+            self.m_colorFunction.AddRGBPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/2.0 , 0.88, 0.60, 0.29, 0.33, 0.45)
             self.m_colorFunction.AddRGBPoint(self.m_scalarRange[1], 0.83, 0.66, 1.0, 0.5, 0.0)
 
             self.m_opacityFunction.AddPoint(self.m_scalarRange[0],0.0, 0.5, 0.0)
-            self.m_opacityFunction.AddPoint((-1000 + 1024) / rangeFactor, 0.0, 0.5, 0.0)
-            self.m_opacityFunction.AddPoint((-500 + 1024) / rangeFactor, 1.0, 0.33, 0.45)
+            self.m_opacityFunction.AddPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/3.0, 0.0, 0.5, 0.0)
+            self.m_opacityFunction.AddPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/2.0, 1.0, 0.33, 0.45)
             self.m_opacityFunction.AddPoint(self.m_scalarRange[1], 1.0, 0.5, 0.0)
 
             self.m_volumeProperty.ShadeOn()
@@ -149,13 +146,13 @@ class E_VolumeManager:
 
         elif idx == 2: #CT_BONE
             self.m_colorFunction.AddRGBPoint(self.m_scalarRange[0], 0.0, 0.0, 0.0, 0.5, 0.0)
-            self.m_colorFunction.AddRGBPoint((-16 + 1024) / rangeFactor , 0.73, 0.25, 0.30, 0.49, 0.0)
-            self.m_colorFunction.AddRGBPoint((641 + 1024) / rangeFactor , 0.90, 0.82, 0.56, 0.5, 0.0)
+            self.m_colorFunction.AddRGBPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/3.0 , 0.73, 0.25, 0.30, 0.49, 0.0)
+            self.m_colorFunction.AddRGBPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/2.0 , 0.90, 0.82, 0.56, 0.5, 0.0)
             self.m_colorFunction.AddRGBPoint(self.m_scalarRange[1], 1.0, 1.0, 1.0, 0.5, 0.0)
 
             self.m_opacityFunction.AddPoint(self.m_scalarRange[0],0.0, 0.5, 0.0)
-            self.m_opacityFunction.AddPoint((-16 + 1024) / rangeFactor, 0.0, 0.49, 0.61)
-            self.m_opacityFunction.AddPoint((-641 + 1024) / rangeFactor, 0.72, 0.5, 0.0)
+            self.m_opacityFunction.AddPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/3.0, 0.0, 0.49, 0.61)
+            self.m_opacityFunction.AddPoint((self.m_scalarRange[0] + self.m_scalarRange[1])/2.0, 0.72, 0.5, 0.0)
             self.m_opacityFunction.AddPoint(self.m_scalarRange[1], 0.71, 0.5, 0.0)
 
             self.m_volumeProperty.ShadeOn()
@@ -179,6 +176,10 @@ class E_VolumeManager:
     def ImportVolume(self, fileSeries):
         #Series = 0x0020, 0x0011
         #Instance = 0x0020, 0x0013
+
+        print(fileSeries)
+
+
 
         namesGenerator = itk.GDCMSeriesFileNames.New()
         namesGenerator.SetUseSeriesDetails(True)
@@ -324,6 +325,7 @@ class E_VolumeManager:
         floatArray = numpy_support.numpy_to_vtk(num_array=volumeArray.ravel(), deep=True, array_type = vtk.VTK_FLOAT)
         
         dim = volumeArray.shape
+
         #self.volume_data.AllocateScalars(vtk.VTK_UNSIGNVTK_ED_INT, 1);
         self.volume_data.SetOrigin([0,0,0])
         self.volume_data.SetDimensions(dim[2], dim[1], dim[0])        
@@ -453,12 +455,17 @@ class E_VolumeManager:
         self.m_selectedIdx = idx
         selected_data = self.m_volumeInfo['serieses'][idx]
 
-        #Adjust Orientation        
-        orienter = itk.OrientImageFilter[ImageType, ImageType].New()
-        orienter.UseImageDirectionOn()
-        orienter.SetInput(selected_data.GetOutput())
-        orienter.Update()
-        
+        #Adjust Orientation
+        try:
+
+            orienter = itk.OrientImageFilter[ImageType, ImageType].New()
+            orienter.UseImageDirectionOn()
+            orienter.SetInput(selected_data.GetOutput())
+            orienter.Update()
+        except Exception as e:
+            print(e)
+            return
+
         #Rescale Image Intensity 0 ~ 255
         normalizer = itk.RescaleIntensityImageFilter[ImageType, ImageType].New()
         normalizer.SetInput(orienter.GetOutput())

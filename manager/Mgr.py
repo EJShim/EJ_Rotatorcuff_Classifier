@@ -13,7 +13,6 @@ from manager.InteractorStyle import E_InteractorStyleCropper
 from manager.VolumeMgr import E_VolumeManager
 from manager.E_SliceRenderer import *
 from manager.E_CroppingRenderer import *
-import matplotlib.pyplot as plt
 from data import labels
 import tensorflow as tf
 # import network.VRN_64_TF as config_module
@@ -22,7 +21,7 @@ import tensorflow as tf
 file_path = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(os.path.join(file_path, os.pardir))
 weight_path = os.path.join(root_path, "weights_build", "2block_49")
-model_path = os.path.join(root_path, "data", "TestData.npz")
+model_path = os.path.join(root_path, "data", "5cl_gt.npz")
 v_res = 1
 
 class E_Manager:
@@ -33,7 +32,9 @@ class E_Manager:
         self.m_sliceRenderer = [0, 0, 0]
 
         self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True,log_device_placement=False))
-        self.m_bPred = False
+
+
+        self.m_bPred = True
 
         #Get Features and Target Data
         try:
@@ -46,8 +47,8 @@ class E_Manager:
             self.yt = []
 
         #Initialize Main Renderer With interactor        
-        self.renderer = vtk.vtkRenderer()
-        self.renderer.SetBackground(0.0, 0.0, 0.0)
+        self.renderer = vtk.vtkRenderer()        
+        self.renderer.SetBackground(0.0, 0.0, 0.0)        
         self.mainFrm.m_vtkWidget.GetRenderWindow().AddRenderer(self.renderer)
         self.mainFrm.m_vtkWidget.GetRenderWindow().Render()
         self.mainFrm.m_vtkWidget.GetRenderWindow().GetInteractor().SetInteractorStyle( E_InteractorStyle(self))
@@ -171,7 +172,6 @@ class E_Manager:
         self.tensor_in = tf.get_collection('input_tensor')[0]
         y = tf.get_collection('output_tensor')[0]
         self.keep_prob = tf.get_collection('keep_prob')[0]
-        last_conv = tf.get_collection('last_conv')[0]
         # print()
 
         y = tf.layers.flatten(y)
@@ -179,12 +179,15 @@ class E_Manager:
         self.pred_probs = tf.nn.softmax(y)
 
 
+        last_conv = tf.get_collection('last_conv')[0][0]
+        last_weight = tf.get_default_graph().get_tensor_by_name('fc/kernel:0')[:,:,:,:,1]
 
-        gr = tf.get_default_graph()
-        last_weight = gr.get_tensor_by_name('fc/kernel:0')
-        last_conv = last_conv[0]
-        last_weight = last_weight[:,:,:,:,1]
+        print(last_conv.shape, last_weight.shape)
         self.class_activation_map =tf.nn.relu( tf.reduce_sum(tf.multiply(last_weight, last_conv), axis=3))
+
+        #input dummy tensor
+        inputData = np.zeros((1,64,64,64,1), dtype=np.float32)     
+        self.predict_tensor(inputData)
 
 
     def predict_tensor(self, input):
@@ -213,6 +216,7 @@ class E_Manager:
     def RenderPreProcessedObject(self, idx, predict=True):
         arr = self.xt[idx][0]
         self.VolumeMgr.AddVolume(arr)
+        self.VolumeMgr.ShowVolume()
 
         if predict:            
             self.PredictObject(self.xt[idx], int(self.yt[idx]))        

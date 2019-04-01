@@ -16,7 +16,7 @@ class E_VolumeTreeWidget(QTreeWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.setSortingEnabled(False)
 
-        self.itemDoubleClicked.connect(self.dbcEvent)
+        self.itemClicked.connect(self.dbcEvent)
 
     def updateTree(self, info):
     
