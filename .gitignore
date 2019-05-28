@@ -11,6 +11,7 @@ path_tmp
 .DS_Store
 annotation_tool/
 weights/
+weights_build
 .install.spec
 data/TrainData.npz
 theano_modules(deprecated)
